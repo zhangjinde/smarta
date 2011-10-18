@@ -22,7 +22,7 @@
 #ifndef _WIN32
 #include <stdint.h>
 #else
-#include "ostypes.h"
+typedef unsigned __int64 uint64_t; 
 #endif
 
 /* timing functions */
