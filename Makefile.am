@@ -22,7 +22,7 @@ libstrophe_a_CFLAGS=$(STROPHE_FLAGS) $(PARSER_CFLAGS)
 libstrophe_a_SOURCES = src/auth.c src/conn.c src/ctx.c \
 	src/event.c src/handler.c src/hash.c \
 	src/jid.c src/md5.c src/sasl.c src/sha1.c \
-	src/snprintf.c src/sock.c src/stanza.c src/thread.c \
+	src/snprintf.c src/sock.c src/stanza.c \
 	src/tls_openssl.c src/util.c
 if PARSER_EXPAT
 libstrophe_a_SOURCES += src/parser_expat.c

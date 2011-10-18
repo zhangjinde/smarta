@@ -89,7 +89,7 @@ libstrophe_a_LIBADD =
 am__libstrophe_a_SOURCES_DIST = src/auth.c src/conn.c src/ctx.c \
 	src/event.c src/handler.c src/hash.c src/jid.c src/md5.c \
 	src/sasl.c src/sha1.c src/snprintf.c src/sock.c src/stanza.c \
-	src/thread.c src/tls_openssl.c src/util.c src/parser_expat.c \
+	src/tls_openssl.c src/util.c src/parser_expat.c \
 	src/parser_libxml2.c
 am__objects_1 =  \
 	src/libstrophe_a-parser_expat.$(OBJEXT)
@@ -105,7 +105,6 @@ am_libstrophe_a_OBJECTS = src/libstrophe_a-auth.$(OBJEXT) \
 	src/libstrophe_a-snprintf.$(OBJEXT) \
 	src/libstrophe_a-sock.$(OBJEXT) \
 	src/libstrophe_a-stanza.$(OBJEXT) \
-	src/libstrophe_a-thread.$(OBJEXT) \
 	src/libstrophe_a-tls_openssl.$(OBJEXT) \
 	src/libstrophe_a-util.$(OBJEXT) $(am__objects_1) \
 	$(am__objects_2)
@@ -172,11 +171,11 @@ DIST_ARCHIVES = $(distdir).tar.gz
 GZIP_ENV = --best
 distuninstallcheck_listfiles = find . -type f -print
 distcleancheck_listfiles = find . -type f -print
-ACLOCAL = ${SHELL} /opt/source/libstrophe/missing --run aclocal-1.11
-AMTAR = ${SHELL} /opt/source/libstrophe/missing --run tar
-AUTOCONF = ${SHELL} /opt/source/libstrophe/missing --run autoconf
-AUTOHEADER = ${SHELL} /opt/source/libstrophe/missing --run autoheader
-AUTOMAKE = ${SHELL} /opt/source/libstrophe/missing --run automake-1.11
+ACLOCAL = ${SHELL} /opt/csmarta/missing --run aclocal-1.11
+AMTAR = ${SHELL} /opt/csmarta/missing --run tar
+AUTOCONF = ${SHELL} /opt/csmarta/missing --run autoconf
+AUTOHEADER = ${SHELL} /opt/csmarta/missing --run autoheader
+AUTOMAKE = ${SHELL} /opt/csmarta/missing --run automake-1.11
 AWK = gawk
 CC = gcc
 CCDEPMODE = depmode=gcc3
@@ -201,7 +200,7 @@ LDFLAGS =
 LIBOBJS = 
 LIBS = 
 LTLIBOBJS = 
-MAKEINFO = ${SHELL} /opt/source/libstrophe/missing --run makeinfo
+MAKEINFO = ${SHELL} /opt/csmarta/missing --run makeinfo
 MKDIR_P = /opt/local/bin/gmkdir -p
 OBJEXT = o
 PACKAGE = libstrophe
@@ -221,10 +220,10 @@ SET_MAKE =
 SHELL = /bin/sh
 STRIP = 
 VERSION = trunk
-abs_builddir = /opt/source/libstrophe
-abs_srcdir = /opt/source/libstrophe
-abs_top_builddir = /opt/source/libstrophe
-abs_top_srcdir = /opt/source/libstrophe
+abs_builddir = /opt/csmarta
+abs_srcdir = /opt/csmarta
+abs_top_builddir = /opt/csmarta
+abs_top_srcdir = /opt/csmarta
 ac_ct_CC = gcc
 am__include = include
 am__leading_dot = .
@@ -245,7 +244,7 @@ host_alias =
 htmldir = ${docdir}
 includedir = ${prefix}/include
 infodir = ${datarootdir}/info
-install_sh = ${SHELL} /opt/source/libstrophe/install-sh
+install_sh = ${SHELL} /opt/csmarta/install-sh
 libdir = ${exec_prefix}/lib
 libexecdir = ${exec_prefix}/libexec
 libxml2_CFLAGS = 
@@ -277,7 +276,7 @@ lib_LIBRARIES = libstrophe.a libexpat.a
 libstrophe_a_CFLAGS = $(STROPHE_FLAGS) $(PARSER_CFLAGS)
 libstrophe_a_SOURCES = src/auth.c src/conn.c src/ctx.c src/event.c \
 	src/handler.c src/hash.c src/jid.c src/md5.c src/sasl.c \
-	src/sha1.c src/snprintf.c src/sock.c src/stanza.c src/thread.c \
+	src/sha1.c src/snprintf.c src/sock.c src/stanza.c \
 	src/tls_openssl.c src/util.c $(am__append_1) $(am__append_2)
 libexpat_a_CFLAGS = -DXML_DTD -DXML_NS -DXML_CONTEXT_BYTES=1024 -DXML_STATIC \
 	-I$(top_srcdir)/expat/lib
@@ -418,8 +417,6 @@ src/libstrophe_a-sock.$(OBJEXT): src/$(am__dirstamp) \
 	src/$(DEPDIR)/$(am__dirstamp)
 src/libstrophe_a-stanza.$(OBJEXT): src/$(am__dirstamp) \
 	src/$(DEPDIR)/$(am__dirstamp)
-src/libstrophe_a-thread.$(OBJEXT): src/$(am__dirstamp) \
-	src/$(DEPDIR)/$(am__dirstamp)
 src/libstrophe_a-tls_openssl.$(OBJEXT): src/$(am__dirstamp) \
 	src/$(DEPDIR)/$(am__dirstamp)
 src/libstrophe_a-util.$(OBJEXT): src/$(am__dirstamp) \
@@ -500,7 +497,6 @@ mostlyclean-compile:
 	-rm -f src/libstrophe_a-snprintf.$(OBJEXT)
 	-rm -f src/libstrophe_a-sock.$(OBJEXT)
 	-rm -f src/libstrophe_a-stanza.$(OBJEXT)
-	-rm -f src/libstrophe_a-thread.$(OBJEXT)
 	-rm -f src/libstrophe_a-tls_openssl.$(OBJEXT)
 	-rm -f src/libstrophe_a-util.$(OBJEXT)
 	-rm -f tests/tests_check_parser-check_parser.$(OBJEXT)
@@ -530,7 +526,6 @@ include src/$(DEPDIR)/libstrophe_a-sha1.Po
 include src/$(DEPDIR)/libstrophe_a-snprintf.Po
 include src/$(DEPDIR)/libstrophe_a-sock.Po
 include src/$(DEPDIR)/libstrophe_a-stanza.Po
-include src/$(DEPDIR)/libstrophe_a-thread.Po
 include src/$(DEPDIR)/libstrophe_a-tls_openssl.Po
 include src/$(DEPDIR)/libstrophe_a-util.Po
 include tests/$(DEPDIR)/tests_check_parser-check_parser.Po
@@ -775,19 +770,6 @@ src/libstrophe_a-stanza.obj: src/stanza.c
 #	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
 #	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libstrophe_a_CFLAGS) $(CFLAGS) -c -o src/libstrophe_a-stanza.obj `if test -f 'src/stanza.c'; then $(CYGPATH_W) 'src/stanza.c'; else $(CYGPATH_W) '$(srcdir)/src/stanza.c'; fi`
 
-src/libstrophe_a-thread.o: src/thread.c
-	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libstrophe_a_CFLAGS) $(CFLAGS) -MT src/libstrophe_a-thread.o -MD -MP -MF src/$(DEPDIR)/libstrophe_a-thread.Tpo -c -o src/libstrophe_a-thread.o `test -f 'src/thread.c' || echo '$(srcdir)/'`src/thread.c
-	$(am__mv) src/$(DEPDIR)/libstrophe_a-thread.Tpo src/$(DEPDIR)/libstrophe_a-thread.Po
-#	source='src/thread.c' object='src/libstrophe_a-thread.o' libtool=no \
-#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
-#	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libstrophe_a_CFLAGS) $(CFLAGS) -c -o src/libstrophe_a-thread.o `test -f 'src/thread.c' || echo '$(srcdir)/'`src/thread.c
-
-src/libstrophe_a-thread.obj: src/thread.c
-	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libstrophe_a_CFLAGS) $(CFLAGS) -MT src/libstrophe_a-thread.obj -MD -MP -MF src/$(DEPDIR)/libstrophe_a-thread.Tpo -c -o src/libstrophe_a-thread.obj `if test -f 'src/thread.c'; then $(CYGPATH_W) 'src/thread.c'; else $(CYGPATH_W) '$(srcdir)/src/thread.c'; fi`
-	$(am__mv) src/$(DEPDIR)/libstrophe_a-thread.Tpo src/$(DEPDIR)/libstrophe_a-thread.Po
-#	source='src/thread.c' object='src/libstrophe_a-thread.obj' libtool=no \
-#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
-#	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libstrophe_a_CFLAGS) $(CFLAGS) -c -o src/libstrophe_a-thread.obj `if test -f 'src/thread.c'; then $(CYGPATH_W) 'src/thread.c'; else $(CYGPATH_W) '$(srcdir)/src/thread.c'; fi`
 
 src/libstrophe_a-tls_openssl.o: src/tls_openssl.c
 	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libstrophe_a_CFLAGS) $(CFLAGS) -MT src/libstrophe_a-tls_openssl.o -MD -MP -MF src/$(DEPDIR)/libstrophe_a-tls_openssl.Tpo -c -o src/libstrophe_a-tls_openssl.o `test -f 'src/tls_openssl.c' || echo '$(srcdir)/'`src/tls_openssl.c

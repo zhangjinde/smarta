@@ -44,8 +44,4 @@ int sock_is_recoverable(const int error);
 /* checks for an error after connect, return 0 if connect successful */
 int sock_connect_error(const sock_t sock);
 
-int sock_srv_lookup(const char *service, const char *proto,
-		     const char *domain, char *resulttarget,
-		     int resulttargetlength, int *resultport);
-
 #endif /* __LIBSTROPHE_SOCK_H__ */
