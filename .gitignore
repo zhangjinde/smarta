@@ -11,4 +11,5 @@ examples/roster
 expat/lib/libexpat_a-xmlparse.o
 expat/lib/libexpat_a-xmlrole.o
 expat/lib/libexpat_a-xmltok.o
-rc/.deps/*
+src/.deps/*
+config.log
