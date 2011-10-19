@@ -6,6 +6,7 @@
 */
 
 #include <stdio.h>
+#include <stdarg.h>
 #include <time.h>
 #include <stdlib.h>
 #include <string.h>
@@ -111,7 +112,7 @@ void conn_handler(xmpp_conn_t * const conn, const xmpp_conn_event_t status,
 
     if (status == XMPP_CONN_CONNECT) {
 	xmpp_stanza_t* pres;
-	fprintf(stderr, "DEBUG: connected\n");
+	fprintf(stdout, "DEBUG: smarta is connected\n");
 	xmpp_handler_add(conn,version_handler, "jabber:iq:version", "iq", NULL, ctx);
 	xmpp_handler_add(conn,message_handler, NULL, "message", NULL, ctx);
 	
@@ -141,6 +142,7 @@ void usage() {
 void init_config() {
     smarta.isslave = 0;
     smarta.verbosity = 0;
+    smarta.logfile = "smarta.log";
     smarta.daemonize = 1;
     smarta.services = listCreate();
 }
@@ -295,4 +297,26 @@ int main(int argc, char **argv) {
     return 0;
 }
 
+void xmpp_log(int level, const char *fmt, ...) {
+    const char *levels[] = {"DEBUG", "INFO", "WARN", "ERROR"};
+    time_t now = time(NULL);
+    va_list ap;
+    FILE *fp;
+    char buf[64];
+    char msg[MAX_LOGMSG_LEN];
 
+    if (level < smarta.verbosity) return;
+
+    fp = (smarta.logfile == NULL) ? stdout : fopen(smarta.logfile,"a");
+    if (!fp) return;
+
+    va_start(ap, fmt);
+    vsnprintf(msg, sizeof(msg), fmt, ap);
+    va_end(ap);
+
+    strftime(buf,sizeof(buf),"%d %b %H:%M:%S",localtime(&now));
+    fprintf(fp,"%s[%s] %s\n",buf,levels[level],msg);
+    fflush(fp);
+
+    if (smarta.logfile) fclose(fp);
+}

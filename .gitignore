@@ -20,3 +20,4 @@ config.status
 plugins
 smarta
 configure
+smarta.log

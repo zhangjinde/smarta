@@ -23,7 +23,7 @@ void sched_services(xmpp_ctx_t *ctx, xmpp_conn_t *conn) {
     while((node = listNext(iter)) != NULL) {
         service = (service_t *)node->value;
         printf("sched service: %s\n", service->name);
-        //FUCK: could only add one handler!!!
+        //FUCK: could only add one handler!!! *60
         handler_add_timed(conn, check_service, service->period*60*1000, service);
     }
 }
