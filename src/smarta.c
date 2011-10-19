@@ -8,9 +8,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <sched.h>
-
 #include <strophe.h>
+
+#include "sched.h"
 
 int version_handler(xmpp_conn_t * const conn, xmpp_stanza_t * const stanza, void * const userdata)
 {
