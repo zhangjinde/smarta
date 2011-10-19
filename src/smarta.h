@@ -1,11 +1,31 @@
 #ifndef _SMARTA_H_
 #define _SMARTA_H_
 
-typedef struct service_t {
+#include "adlist.h"
+#include "sds.h"
+
+typedef struct _service_t {
     char *name;
     long period;
-    char *cmd;
-    struct service_t *next;
-} service;
+    char *command;
+} service_t;
+
+typedef struct _smarta_t {
+    char *name;
+    char *server;
+    char *apikey;
+    int isslave;
+    char *pidfile;
+    int daemonize;
+    char *masterhost;
+    char *masterauth;
+    int masterport;
+    list *services;
+} smarta_t;
+
+typedef struct _command_t {
+    char *name;
+    char *usage;
+} command_t;
 
 #endif

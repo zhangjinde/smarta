@@ -6,13 +6,22 @@
 */
 
 #include <stdio.h>
+#include <time.h>
 #include <stdlib.h>
 #include <string.h>
 #include "xmpp.h"
 
 #include "sched.h"
+#include "sds.h"
+#include "adlist.h"
+#include "smarta.h"
 
-service *service_list;
+#define CONFIGLINE_MAX 1024
+#define IN_SMARTA_BLOCK 1
+#define IN_SERVICE_BLOCK 2
+#define IN_COMMADN_BLOCK 3
+
+smarta_t smarta;
 
 int version_handler(xmpp_conn_t * const conn, xmpp_stanza_t * const stanza, void * const userdata)
 {
@@ -118,21 +127,138 @@ void conn_handler(xmpp_conn_t * const conn, const xmpp_conn_event_t status,
     }
 }
 
-int main(int argc, char **argv)
-{
+void version() {
+    printf("Smart agent version 0.1\n");
+    exit(0);
+}
+
+void usage() {
+    fprintf(stderr,"Usage: ./smarta [/path/to/smarta.conf]\n");
+    exit(1);
+}
+
+
+void init_config() {
+    smarta.isslave = 0;
+    smarta.daemonize = 1;
+    smarta.services = listCreate();
+}
+
+int yesnotoi(char *s) {
+    if (!strcasecmp(s,"yes")) return 1;
+    else if (!strcasecmp(s,"no")) return 0;
+    else return -1;
+}
+
+char *zstrdup(const char *s) {
+    size_t l = strlen(s)+1;
+    char *p = malloc(l);
+
+    memcpy(p,s,l);
+    return p;
+}
+
+void load_config(char *filename) {
+    FILE *fp;
+    char buf[CONFIGLINE_MAX+1], *err = NULL;
+    int linenum = 0;
+    sds line = NULL;
+    int state = 0;
+    service_t *service;
+
+    if ((fp = fopen(filename,"r")) == NULL) {
+        //redisLog(REDIS_WARNING, "Fatal error, can't open config file '%s'", filename);
+        printf("Fatal error, can't open config file '%s'", filename);
+        exit(1);
+    }
+
+    while(fgets(buf,CONFIGLINE_MAX+1,fp) != NULL) {
+        sds *argv;
+        int argc, j;
+
+        linenum++;
+        line = sdsnew(buf);
+        line = sdstrim(line," \t\r\n");
+
+        /* Skip comments and blank lines*/
+        if (line[0] == '#' || line[0] == '\0') {
+            sdsfree(line);
+            continue;
+        }
+
+        /* Split into arguments */
+        argv = sdssplitargs(line,&argc);
+        sdstolower(argv[0]);
+
+        /* Execute config directives */
+        if (!strcasecmp(argv[0],"smarta") && !strcasecmp(argv[1],"{") && argc == 2) {
+            state = IN_SMARTA_BLOCK;
+        } else if ((state == IN_SMARTA_BLOCK) && !strcasecmp(argv[0], "}") && argc == 1) {
+            printf("smarta.name: %s\n", smarta.name);
+            printf("smarta.server: %s\n", smarta.server);
+            printf("smarta.apikey: %s\n\n", smarta.apikey);
+            state = 0;
+        } else if ((state == IN_SERVICE_BLOCK) && !strcasecmp(argv[0], "}") && argc == 1) {
+            printf("service.name: %s\n", service->name);
+            printf("service.period: %d\n", (int)service->period);
+            printf("service.command: %s\n\n", service->command);
+            listAddNodeTail(smarta.services, service);
+            state = 0;
+        } else if (!strcasecmp(argv[0],"service") && !strcasecmp(argv[1],"{") && argc == 2) {
+            state = IN_SERVICE_BLOCK;
+            service = malloc(sizeof(service_t));
+        } else if ((state == IN_SMARTA_BLOCK) && !strcasecmp(argv[0],"name") && argc == 2) {
+            smarta.name = zstrdup(argv[1]);
+        } else if ((state == IN_SMARTA_BLOCK) && !strcasecmp(argv[0],"server") && argc == 2) {
+            smarta.server = zstrdup(argv[1]);
+        } else if ((state == IN_SMARTA_BLOCK) && !strcasecmp(argv[0],"apikey") && argc == 2) {
+            smarta.apikey = zstrdup(argv[1]);
+        } else if ((state == IN_SERVICE_BLOCK) && !strcasecmp(argv[0],"name") && argc == 2) {
+            service->name = zstrdup(argv[1]);
+        } else if ((state == IN_SERVICE_BLOCK) && !strcasecmp(argv[0],"period") && argc == 2) {
+            service->period = atoi(argv[1]);
+        } else if ((state == IN_SERVICE_BLOCK) && !strcasecmp(argv[0],"command") && argc == 2) {
+            service->command = zstrdup(argv[1]);
+        } else {
+            err = "Bad directive or wrong number of arguments"; goto loaderr;
+        }
+        for (j = 0; j < argc; j++)
+            sdsfree(argv[j]);
+        free(argv);
+        sdsfree(line);
+    }
+    fclose(fp);
+    return;
+
+loaderr:
+    fprintf(stderr, "\n*** FATAL CONFIG FILE ERROR ***\n");
+    fprintf(stderr, "Reading the configuration file, at line %d\n", linenum);
+    fprintf(stderr, ">>> '%s'\n", line);
+    fprintf(stderr, "%s\n", err);
+    exit(1);
+}
+
+int main(int argc, char **argv) {
+    //time_t start;
     xmpp_ctx_t *ctx;
     xmpp_conn_t *conn;
     xmpp_log_t *log;
     char *jid, *pass;
 
-    /* take a jid and password on the command line */
-    if (argc != 3) {
-	fprintf(stderr, "Usage: bot <jid> <pass>\n\n");
-	return 1;
-    }
-    
-    jid = argv[1];
-    pass = argv[2];
+    init_config();
+
+    if (argc == 2) {
+        if (strcmp(argv[1], "-v") == 0 ||
+            strcmp(argv[1], "--version") == 0) version();
+        if (strcmp(argv[1], "-h") == 0 ||
+            strcmp(argv[1], "--help") == 0) usage();
+        load_config(argv[1]);
+    } else {
+        usage();
+    } 
+
+    jid = smarta.name;
+    pass = smarta.apikey;
 
     /* init library */
     xmpp_initialize();
@@ -167,3 +293,4 @@ int main(int argc, char **argv)
 
     return 0;
 }
+

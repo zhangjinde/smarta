@@ -19,7 +19,7 @@ libsmarta_a_SOURCES = src/auth.c src/conn.c src/ctx.c \
 	src/jid.c src/md5.c src/sasl.c src/sha1.c \
 	src/snprintf.c src/sock.c src/stanza.c \
 	src/tls_openssl.c src/util.c src/parser.c \
-    src/sched.c src/sds.c src/dict.c
+    src/sched.c src/sds.c src/dict.c src/adlist.c
 
 libexpat_a_CFLAGS=-DXML_DTD -DXML_NS -DXML_CONTEXT_BYTES=1024 -DXML_STATIC \
 	-I$(top_srcdir)/expat/lib

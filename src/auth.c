@@ -23,6 +23,7 @@
 #include "xmpp.h"
 #include "common.h"
 #include "sasl.h"
+#include "sds.h"
 
 #ifdef _WIN32
 #define strcasecmp stricmp
