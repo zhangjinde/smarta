@@ -12,7 +12,7 @@ examples/examples_bot-bot.o examples/examples_bot-bot.o: examples/bot.c \
   /usr/include/libkern/_OSByteOrder.h \
   /usr/include/libkern/i386/_OSByteOrder.h /usr/include/alloca.h \
   /usr/include/machine/types.h /usr/include/i386/types.h \
-  /usr/include/string.h strophe.h
+  /usr/include/string.h xmpp.h
 
 /usr/include/stdio.h:
 
@@ -68,4 +68,4 @@ examples/examples_bot-bot.o examples/examples_bot-bot.o: examples/bot.c \
 
 /usr/include/string.h:
 
-strophe.h:
+xmpp.h:

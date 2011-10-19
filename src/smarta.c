@@ -12,6 +12,8 @@
 
 #include "sched.h"
 
+service *service_list;
+
 int version_handler(xmpp_conn_t * const conn, xmpp_stanza_t * const stanza, void * const userdata)
 {
 	xmpp_stanza_t *reply, *query, *name, *version, *text;

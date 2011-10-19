@@ -1,7 +1,7 @@
 examples/examples_basic-basic.o examples/examples_basic-basic.o:  \
  examples/basic.c /usr/include/stdio.h /usr/include/_types.h \
   /usr/include/sys/_types.h /usr/include/sys/cdefs.h \
-  /usr/include/machine/_types.h /usr/include/i386/_types.h strophe.h
+  /usr/include/machine/_types.h /usr/include/i386/_types.h xmpp.h
 
 /usr/include/stdio.h:
 
@@ -15,4 +15,4 @@ examples/examples_basic-basic.o examples/examples_basic-basic.o:  \
 
 /usr/include/i386/_types.h:
 
-strophe.h:
+xmpp.h:
