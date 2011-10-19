@@ -51,15 +51,15 @@ int check_service(xmpp_conn_t *conn, void *userdata) {
 void send_message(xmpp_conn_t *conn, sds result) {
     xmpp_stanza_t *reply, *body, *text;
     
-	reply = xmpp_stanza_new(ctx);
+	reply = xmpp_stanza_new();
 	xmpp_stanza_set_name(reply, "message");
 	xmpp_stanza_set_type(reply, "chat");
 	xmpp_stanza_set_attribute(reply, "to", "erylee@nodehub.cn");
 	
-	body = xmpp_stanza_new(ctx);
+	body = xmpp_stanza_new();
 	xmpp_stanza_set_name(body, "body");
 	
-	text = xmpp_stanza_new(ctx);
+	text = xmpp_stanza_new();
 	xmpp_stanza_set_text(text, result);
 	xmpp_stanza_add_child(body, text);
 	xmpp_stanza_add_child(reply, body);

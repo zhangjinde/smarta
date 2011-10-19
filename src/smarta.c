@@ -140,6 +140,7 @@ void usage() {
 
 void init_config() {
     smarta.isslave = 0;
+    smarta.verbosity = 0;
     smarta.daemonize = 1;
     smarta.services = listCreate();
 }
@@ -293,4 +294,5 @@ int main(int argc, char **argv) {
 
     return 0;
 }
+
 

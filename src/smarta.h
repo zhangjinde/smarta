@@ -21,6 +21,8 @@ typedef struct _smarta_t {
     char *masterauth;
     int masterport;
     list *services;
+    char *logfile;
+    int verbosity;
 } smarta_t;
 
 typedef struct _command_t {

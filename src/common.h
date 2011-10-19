@@ -48,52 +48,25 @@ typedef struct _xmpp_connlist_t {
 
 struct _xmpp_ctx_t {
     const xmpp_mem_t *mem;
-    const xmpp_log_t *log;
 
     xmpp_loop_status_t loop_status;
     xmpp_connlist_t *connlist;
 };
 
-
 /* convenience functions for accessing the context */
-void *xmpp_alloc(const xmpp_ctx_t * const ctx, const size_t size);
-void *xmpp_realloc(const xmpp_ctx_t * const ctx, void *p, 
-		   const size_t size);
-char *xmpp_strdup(const xmpp_ctx_t * const ctx, const char * const s);
-
-void xmpp_log(const xmpp_ctx_t * const ctx, 
-	      const xmpp_log_level_t level,
-	      const char * const area,
-	      const char * const fmt, 
-	      va_list ap);
-
-/* wrappers for xmpp_log at specific levels */
-void xmpp_error(const xmpp_ctx_t * const ctx,
-		const char * const area,
-		const char * const fmt,
-		...);
-void xmpp_warn(const xmpp_ctx_t * const ctx,
-		const char * const area,
-		const char * const fmt,
-		...);
-void xmpp_info(const xmpp_ctx_t * const ctx,
-		const char * const area,
-		const char * const fmt,
-		...);
-void xmpp_debug(const xmpp_ctx_t * const ctx,
-		const char * const area,
-		const char * const fmt,
-		...);
+void *xmpp_alloc(const size_t size);
+void *xmpp_realloc(void *p, const size_t size);
+char *xmpp_strdup(const char * const s);
 
 /** jid */
 /* these return new strings that must be xmpp_free()'d */
-char *xmpp_jid_new(xmpp_ctx_t *ctx, const char *node,
+char *xmpp_jid_new(const char *node,
                                     const char *domain,
                                     const char *resource);
-char *xmpp_jid_bare(xmpp_ctx_t *ctx, const char *jid);
-char *xmpp_jid_node(xmpp_ctx_t *ctx, const char *jid);
-char *xmpp_jid_domain(xmpp_ctx_t *ctx, const char *jid);
-char *xmpp_jid_resource(xmpp_ctx_t *ctx, const char *jid);
+char *xmpp_jid_bare(const char *jid);
+char *xmpp_jid_node(const char *jid);
+char *xmpp_jid_domain(const char *jid);
+char *xmpp_jid_resource(const char *jid);
 
 
 /** connection **/
@@ -228,7 +201,6 @@ typedef enum {
 
 struct _xmpp_stanza_t {
     int ref;
-    xmpp_ctx_t *ctx;
 
     xmpp_stanza_type_t type;
     

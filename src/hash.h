@@ -21,11 +21,10 @@
 
 typedef struct _hash_t hash_t;
 
-typedef void (*hash_free_func)(const xmpp_ctx_t * const ctx, void *p);
+typedef void (*hash_free_func)(void *p);
 
 /** allocate and initialize a new hash table */
-hash_t *hash_new(xmpp_ctx_t * const ctx, const int size,
-		 hash_free_func free);
+hash_t *hash_new(const int size, hash_free_func free);
 
 /** allocate a new reference to an existing hash table */
 hash_t *hash_clone(hash_t * const table);

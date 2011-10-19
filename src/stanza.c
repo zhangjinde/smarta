@@ -20,6 +20,7 @@
  */
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 #include "xmpp.h"
@@ -41,14 +42,13 @@
  *
  *  @ingroup Stanza
  */
-xmpp_stanza_t *xmpp_stanza_new(xmpp_ctx_t *ctx)
+xmpp_stanza_t *xmpp_stanza_new()
 {
     xmpp_stanza_t *stanza;
 
-    stanza = xmpp_alloc(ctx, sizeof(xmpp_stanza_t));
+    stanza = malloc(sizeof(xmpp_stanza_t));
     if (stanza != NULL) {
 	stanza->ref = 1;
-	stanza->ctx = ctx;
 	stanza->type = XMPP_STANZA_UNKNOWN;
 	stanza->prev = NULL;
 	stanza->next = NULL;
@@ -98,24 +98,23 @@ xmpp_stanza_t *xmpp_stanza_copy(const xmpp_stanza_t * const stanza)
     const char *key;
     void *val;
 
-    copy = xmpp_stanza_new(stanza->ctx);
+    copy = xmpp_stanza_new();
     if (!copy) goto copy_error;
 
     copy->type = stanza->type;
 
     if (stanza->data) {
-	copy->data = xmpp_strdup(stanza->ctx, stanza->data);
+	copy->data = xmpp_strdup(stanza->data);
 	if (!copy->data) goto copy_error;
     }
 
     if (stanza->attributes) {
-	copy->attributes = hash_new(stanza->ctx, 8, xmpp_free);
+	copy->attributes = hash_new(8, xmpp_free);
 	if (!copy->attributes) goto copy_error;
 	iter = hash_iter_new(stanza->attributes);
 	if (!iter) { printf("DEBUG HERE\n"); goto copy_error; }
 	while ((key = hash_iter_next(iter))) {
-	    val = xmpp_strdup(stanza->ctx,
-			      (char *)hash_get(stanza->attributes, key));
+	    val = xmpp_strdup((char *)hash_get(stanza->attributes, key));
 	    if (!val) goto copy_error;
 	    
 	    if (hash_add(copy->attributes, key, val))
@@ -174,8 +173,8 @@ int xmpp_stanza_release(xmpp_stanza_t * const stanza)
 	}
 
 	if (stanza->attributes) hash_release(stanza->attributes);
-	if (stanza->data) xmpp_free(stanza->ctx, stanza->data);
-	xmpp_free(stanza->ctx, stanza);
+	if (stanza->data) xmpp_free(stanza->data);
+	xmpp_free(stanza);
 	released = 1;
     }
 
@@ -328,7 +327,7 @@ int  xmpp_stanza_to_text(xmpp_stanza_t *stanza,
 
     /* allocate a default sized buffer and attempt to render */
     length = 1024;
-    buffer = xmpp_alloc(stanza->ctx, length);
+    buffer = xmpp_alloc(length);
     if (!buffer) {
 	*buf = NULL;
 	*buflen = 0;
@@ -339,9 +338,9 @@ int  xmpp_stanza_to_text(xmpp_stanza_t *stanza,
     if (ret < 0) return ret;
 
     if (ret > length - 1) {
-	tmp = xmpp_realloc(stanza->ctx, buffer, ret + 1);
+	tmp = xmpp_realloc(buffer, ret + 1);
 	if (!tmp) {
-	    xmpp_free(stanza->ctx, buffer);
+	    xmpp_free(buffer);
 	    *buf = NULL;
 	    *buflen = 0;
 	    return XMPP_EMEM;
@@ -376,10 +375,10 @@ int xmpp_stanza_set_name(xmpp_stanza_t *stanza,
 {
     if (stanza->type == XMPP_STANZA_TEXT) return XMPP_EINVOP;
 
-    if (stanza->data) xmpp_free(stanza->ctx, stanza->data);
+    if (stanza->data) xmpp_free(stanza->data);
 
     stanza->type = XMPP_STANZA_TAG;
-    stanza->data = xmpp_strdup(stanza->ctx, name);
+    stanza->data = xmpp_strdup(name);
 
     return XMPP_EOK;
 }
@@ -481,11 +480,11 @@ int xmpp_stanza_set_attribute(xmpp_stanza_t * const stanza,
     if (stanza->type != XMPP_STANZA_TAG) return XMPP_EINVOP;
 
     if (!stanza->attributes) {
-	stanza->attributes = hash_new(stanza->ctx, 8, xmpp_free);
+	stanza->attributes = hash_new(8, xmpp_free);
 	if (!stanza->attributes) return XMPP_EMEM;
     }
 
-    val = xmpp_strdup(stanza->ctx, value);
+    val = xmpp_strdup(value);
     if (!val) return XMPP_EMEM;
 
     hash_add(stanza->attributes, key, val);
@@ -562,8 +561,8 @@ int xmpp_stanza_set_text(xmpp_stanza_t *stanza,
     
     stanza->type = XMPP_STANZA_TEXT;
 
-    if (stanza->data) xmpp_free(stanza->ctx, stanza->data);
-    stanza->data = xmpp_strdup(stanza->ctx, text);
+    if (stanza->data) xmpp_free(stanza->data);
+    stanza->data = xmpp_strdup(text);
 
     return XMPP_EOK;
 }
@@ -590,8 +589,8 @@ int xmpp_stanza_set_text_with_size(xmpp_stanza_t *stanza,
 
     stanza->type = XMPP_STANZA_TEXT;
 
-    if (stanza->data) xmpp_free(stanza->ctx, stanza->data);
-    stanza->data = xmpp_alloc(stanza->ctx, size + 1);
+    if (stanza->data) xmpp_free(stanza->data);
+    stanza->data = xmpp_alloc(size + 1);
     if (!stanza->data) return XMPP_EMEM;
 
     memcpy(stanza->data, text, size);
@@ -762,7 +761,7 @@ char *xmpp_stanza_get_text(xmpp_stanza_t * const stanza)
 
     if (stanza->type == XMPP_STANZA_TEXT) {
 	if (stanza->data)
-	    return xmpp_strdup(stanza->ctx, stanza->data);
+	    return xmpp_strdup(stanza->data);
 	else
 	    return NULL;
     }
@@ -774,7 +773,7 @@ char *xmpp_stanza_get_text(xmpp_stanza_t * const stanza)
 
     if (len == 0) return NULL;
 
-    text = (char *)xmpp_alloc(stanza->ctx, len + 1);
+    text = (char *)xmpp_alloc(len + 1);
     if (!text) return NULL;
 
     len = 0;

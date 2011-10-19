@@ -32,7 +32,6 @@
 #include "sock.h"
 
 struct _tls {
-    xmpp_ctx_t *ctx;
     sock_t sock;
     SSL_CTX *ssl_ctx;
     SSL *ssl;
@@ -55,15 +54,14 @@ int tls_error(tls_t *tls)
     return tls->lasterror;
 }
 
-tls_t *tls_new(xmpp_ctx_t *ctx, sock_t sock)
+tls_t *tls_new(sock_t sock)
 {
-    tls_t *tls = xmpp_alloc(ctx, sizeof(*tls));
+    tls_t *tls = xmpp_alloc(sizeof(*tls));
 
     if (tls) {
         int ret;
 	memset(tls, 0, sizeof(*tls));
 
-	tls->ctx = ctx;
 	tls->sock = sock;
 	tls->ssl_ctx = SSL_CTX_new(SSLv23_client_method());
 
@@ -88,7 +86,7 @@ tls_t *tls_new(xmpp_ctx_t *ctx, sock_t sock)
 void tls_free(tls_t *tls)
 {
     SSL_CTX_free(tls->ssl_ctx);
-    xmpp_free(tls->ctx, tls);
+    xmpp_free(tls);
     return;
 }
 

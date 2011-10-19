@@ -197,9 +197,9 @@ static xmpp_log_t xmpp_default_log = { NULL, NULL };
  *
  *  @return a pointer to the allocated memory or NULL on an error
  */
-void *xmpp_alloc(const xmpp_ctx_t * const ctx, const size_t size)
+void *xmpp_alloc(const size_t size)
 {
-    return ctx->mem->alloc(size, ctx->mem->userdata);
+    return malloc(size);
 }
 
 /** Free memory in a Strophe context.
@@ -208,9 +208,9 @@ void *xmpp_alloc(const xmpp_ctx_t * const ctx, const size_t size)
  *  @param ctx a Strophe context object
  *  @param p a pointer referencing memory to be freed
  */
-void xmpp_free(const xmpp_ctx_t * const ctx, void *p)
+void xmpp_free(void *p)
 {
-    ctx->mem->free(p, ctx->mem->userdata);
+    free(p);
 }
 
 /** Reallocate memory in a Strophe context.
@@ -222,142 +222,9 @@ void xmpp_free(const xmpp_ctx_t * const ctx, void *p)
  *
  *  @return a pointer to the reallocated memory or NULL on an error
  */
-void *xmpp_realloc(const xmpp_ctx_t * const ctx, void *p,
-		   const size_t size)
+void *xmpp_realloc(void *p, const size_t size)
 {
-    return ctx->mem->realloc(p, size, ctx->mem->userdata);
-}
-
-/** Write a log message to the logger.
- *  Write a log message to the logger for the context for the specified
- *  level and area.  This function takes a printf-style format string and a
- *  variable argument list (in va_list) format.  This function is not meant
- *  to be called directly, but is used via xmpp_error, xmpp_warn, xmpp_info, 
- *  and xmpp_debug.
- *
- *  @param ctx a Strophe context object
- *  @param level the level at which to log
- *  @param area the area to log for
- *  @param fmt a printf-style format string for the message
- *  @param ap variable argument list supplied for the format string
- */
-void xmpp_log(const xmpp_ctx_t * const ctx,
-	      const xmpp_log_level_t level,
-	      const char * const area,
-	      const char * const fmt,
-	      va_list ap)
-{
-    int oldret, ret;
-    char smbuf[1024];
-    char *buf;
-
-    buf = smbuf;
-    ret = xmpp_vsnprintf(buf, 1023, fmt, ap);
-    if (ret > 1023) {
-	buf = (char *)xmpp_alloc(ctx, ret + 1);
-	if (!buf) {
-	    buf = NULL;
-	    xmpp_error(ctx, "log", "Failed allocating memory for log message.");
-	    return;
-	}
-	oldret = ret;
-	ret = xmpp_vsnprintf(buf, ret + 1, fmt, ap);
-	if (ret > oldret) {
-	    xmpp_error(ctx, "log", "Unexpected error");
-	    return;
-	}
-    }
-
-    if (ctx->log->handler)
-        ctx->log->handler(ctx->log->userdata, level, area, buf);
-}
-
-/** Write to the log at the ERROR level.
- *  This is a convenience function for writing to the log at the
- *  ERROR level.  It takes a printf-style format string followed by a 
- *  variable list of arguments for formatting.
- *
- *  @param ctx a Strophe context object
- *  @param area the area to log for
- *  @param fmt a printf-style format string followed by a variable list of
- *      arguments to format
- */
-void xmpp_error(const xmpp_ctx_t * const ctx,
-                const char * const area,
-                const char * const fmt,
-                ...)
-{
-    va_list ap;
-
-    va_start(ap, fmt);
-    xmpp_log(ctx, XMPP_LEVEL_ERROR, area, fmt, ap);
-    va_end(ap);
-}
-
-/** Write to the log at the WARN level.
- *  This is a convenience function for writing to the log at the WARN level.
- *  It takes a printf-style format string followed by a variable list of
- *  arguments for formatting.
- *
- *  @param ctx a Strophe context object
- *  @param area the area to log for
- *  @param fmt a printf-style format string followed by a variable list of
- *      arguments to format
- */
-void xmpp_warn(const xmpp_ctx_t * const ctx,
-                const char * const area,
-                const char * const fmt,
-                ...)
-{
-    va_list ap;
-
-    va_start(ap, fmt);
-    xmpp_log(ctx, XMPP_LEVEL_WARN, area, fmt, ap);
-    va_end(ap);
-}
-
-/** Write to the log at the INFO level.
- *  This is a convenience function for writing to the log at the INFO level.
- *  It takes a printf-style format string followed by a variable list of
- *  arguments for formatting.
- *
- *  @param ctx a Strophe context object
- *  @param area the area to log for
- *  @param fmt a printf-style format string followed by a variable list of
- *      arguments to format
- */
-void xmpp_info(const xmpp_ctx_t * const ctx,
-                const char * const area,
-                const char * const fmt,
-                ...)
-{
-    va_list ap;
-
-    va_start(ap, fmt);
-    xmpp_log(ctx, XMPP_LEVEL_INFO, area, fmt, ap);
-    va_end(ap);
-}
-
-/** Write to the log at the DEBUG level.
- *  This is a convenience function for writing to the log at the DEBUG level.
- *  It takes a printf-style format string followed by a variable list of
- *  arguments for formatting.
- *
- *  @param ctx a Strophe context object
- *  @param area the area to log for
- *  @param fmt a printf-style format string followed by a variable list of
- *      arguments to format
- */
-void xmpp_debug(const xmpp_ctx_t * const ctx,
-                const char * const area,
-                const char * const fmt,
-                ...)
-{
-    va_list ap;
-
-    va_start(ap, fmt);
-    xmpp_log(ctx, XMPP_LEVEL_DEBUG, area, fmt, ap);
-    va_end(ap);
+    return realloc(p, size);
 }
 
 /** Create and initialize a Strophe context object.
@@ -390,11 +257,6 @@ xmpp_ctx_t *xmpp_ctx_new(const xmpp_mem_t * const mem,
 	else 
 	    ctx->mem = &xmpp_default_mem;
 
-	if (log == NULL)
-	    ctx->log = &xmpp_default_log;
-	else
-	    ctx->log = log;
-
 	ctx->connlist = NULL;
 	ctx->loop_status = XMPP_LOOP_NOTSTARTED;
     }
@@ -408,9 +270,8 @@ xmpp_ctx_t *xmpp_ctx_new(const xmpp_mem_t * const mem,
  *
  *  @ingroup Context
  */
-void xmpp_ctx_free(xmpp_ctx_t * const ctx)
-{
+void xmpp_ctx_free(xmpp_ctx_t * const ctx) {
     /* mem and log are owned by their suppliers */
-    xmpp_free(ctx, ctx); /* pull the hole in after us */
+    xmpp_free(ctx); /* pull the hole in after us */
 }
 

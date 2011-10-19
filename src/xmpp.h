@@ -99,14 +99,6 @@ extern "C" {
  */
 #define XMPP_EINT -3
 
-#define MAX_LOGMSG_LEN    1024 /* Default maximum length of syslog messages */
-#define LOG_DEBUG 0
-#define LOG_INFO 1
-#define LOG_WARN 2
-#define LOG_ERROR 3
-
-void xmpp_log(int level, const char *fmt, ...);
-
 /* initialization and shutdown */
 void xmpp_initialize(void);
 void xmpp_shutdown(void);

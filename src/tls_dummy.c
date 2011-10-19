@@ -36,7 +36,7 @@ void tls_shutdown(void)
     return;
 }
 
-tls_t *tls_new(xmpp_ctx_t *ctx, sock_t sock)
+tls_t *tls_new(sock_t sock)
 {
     /* always fail */
     return NULL;

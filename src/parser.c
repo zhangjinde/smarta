@@ -65,10 +65,10 @@ static void _start_element(void *userdata,
 	if (!parser->stanza && parser->depth != 1) {
 	    /* something terrible happened */
 	    /* FIXME: shutdown disconnect */
-	    xmpp_error(parser->ctx, "parser", "oops, where did our stanza go?");
+	    xmpp_log(LOG_ERROR, "parser: oops, where did our stanza go?");
 	} else if (!parser->stanza) {
 	    /* starting a new toplevel stanza */
-	    parser->stanza = xmpp_stanza_new(parser->ctx);
+	    parser->stanza = xmpp_stanza_new();
 	    if (!parser->stanza) {
 		/* FIXME: can't allocate, disconnect */
 	    }
@@ -76,7 +76,7 @@ static void _start_element(void *userdata,
 	    _set_attributes(parser->stanza, attrs);
 	} else {
 	    /* starting a child of parser->stanza */
-	    child = xmpp_stanza_new(parser->ctx);
+	    child = xmpp_stanza_new();
 	    if (!child) {
 		/* FIXME: can't allocate, disconnect */
 	    }
@@ -129,7 +129,7 @@ static void _characters(void *userdata, const XML_Char *s, int len)
     if (parser->depth < 2) return;
 
     /* create and populate stanza */
-    stanza = xmpp_stanza_new(parser->ctx);
+    stanza = xmpp_stanza_new();
     if (!stanza) {
 	/* FIXME: allocation error, disconnect */
 	return;
@@ -148,7 +148,7 @@ parser_t *parser_new(xmpp_ctx_t *ctx,
 {
     parser_t *parser;
 
-    parser = xmpp_alloc(ctx, sizeof(parser_t));
+    parser = xmpp_alloc(sizeof(parser_t));
     if (parser != NULL) {
         parser->ctx = ctx;
         parser->expat = NULL;
@@ -171,7 +171,7 @@ void parser_free(parser_t *parser)
     if (parser->expat)
         XML_ParserFree(parser->expat);
 
-    xmpp_free(parser->ctx, parser);
+    xmpp_free(parser);
 }
 
 /* shuts down and restarts XML parser.  true on success */

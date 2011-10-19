@@ -123,7 +123,7 @@ tls_t *tls_new(xmpp_ctx_t *ctx, sock_t sock)
 	return NULL;
     }
 
-    xmpp_debug(ctx, "TLSS", "QuerySecurityPackageInfo() success");
+    xmpp_log(LOG_DEBUG, "TLSS: QuerySecurityPackageInfo() success");
 
     memset(&scred, 0, sizeof(scred));
     scred.dwVersion = SCHANNEL_CRED_VERSION;
@@ -142,7 +142,7 @@ tls_t *tls_new(xmpp_ctx_t *ctx, sock_t sock)
 	return NULL;
     }
 
-    xmpp_debug(ctx, "TLSS", "AcquireCredentialsHandle() success");
+    xmpp_log(LOG_DEBUG, "TLSS: AcquireCredentialsHandle() success");
 
     tls->init = 1;
 
