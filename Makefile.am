@@ -23,7 +23,7 @@ libstrophe_a_SOURCES = src/auth.c src/conn.c src/ctx.c \
 	src/event.c src/handler.c src/hash.c \
 	src/jid.c src/md5.c src/sasl.c src/sha1.c \
 	src/snprintf.c src/sock.c src/stanza.c \
-	src/tls_openssl.c src/util.c src/parser.c
+	src/tls_openssl.c src/util.c src/parser.c src/sched.c
 
 libexpat_a_CFLAGS=-DXML_DTD -DXML_NS -DXML_CONTEXT_BYTES=1024 -DXML_STATIC \
 	-I$(top_srcdir)/expat/lib
