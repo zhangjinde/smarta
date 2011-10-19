@@ -9,17 +9,9 @@ PARSER_CFLAGS=@PARSER_CFLAGS@
 PARSER_LIBS=@PARSER_LIBS@
 
 SMARTA_FLAGS = -I$(top_srcdir)
-SMARTA_LIBS = libsmarta.a $(PARSER_LIBS) -lssl
+SMARTA_LIBS = $(PARSER_LIBS) -lssl
 
-lib_LIBRARIES = libsmarta.a libexpat.a
-
-libsmarta_a_CFLAGS=$(SMARTA_FLAGS) $(PARSER_CFLAGS)
-libsmarta_a_SOURCES = src/auth.c src/conn.c src/ctx.c \
-	src/event.c src/handler.c src/hash.c src/xmpp.c \
-	src/jid.c src/md5.c src/sasl.c src/sha1.c \
-	src/snprintf.c src/sock.c src/stanza.c \
-	src/tls_openssl.c src/util.c src/parser.c \
-    src/sched.c src/sds.c src/dict.c src/adlist.c
+lib_LIBRARIES = libexpat.a
 
 libexpat_a_CFLAGS=-DXML_DTD -DXML_NS -DXML_CONTEXT_BYTES=1024 -DXML_STATIC \
 	-I$(top_srcdir)/expat/lib
@@ -27,7 +19,12 @@ libexpat_a_SOURCES=expat/lib/xmlparse.c expat/lib/xmltok.c expat/lib/xmlrole.c
 
 ## Examples
 noinst_PROGRAMS = smarta
-smarta_SOURCES = src/smarta.c
+smarta_SOURCES = src/smarta.c src/auth.c src/conn.c src/ctx.c \
+	src/event.c src/handler.c src/hash.c src/xmpp.c \
+	src/jid.c src/md5.c src/sasl.c src/sha1.c \
+	src/snprintf.c src/sock.c src/stanza.c \
+	src/tls_openssl.c src/util.c src/parser.c \
+    src/sched.c src/sds.c src/adlist.c
 smarta_CFLAGS = $(SMARTA_FLAGS)
 smarta_LDADD = $(SMARTA_LIBS) 
 
