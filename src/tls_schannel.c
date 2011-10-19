@@ -25,7 +25,6 @@
 #include <schnlsp.h>
 
 struct _tls {
-    xmpp_ctx_t *ctx;
     sock_t sock;
 
     HANDLE hsec32;
@@ -87,14 +86,13 @@ tls_t *tls_new(xmpp_ctx_t *ctx, sock_t sock)
 	return NULL;
     }
 
-    tls = malloc(ctx, sizeof(*tls));
+    tls = malloc(sizeof(*tls));
 
     if (!tls) {
 	return NULL;
     }
 
     memset(tls, 0, sizeof(*tls));
-    tls->ctx = ctx;
     tls->sock = sock;
 
     if (!(tls->hsec32 = LoadLibrary ("secur32.dll"))) {
@@ -175,15 +173,15 @@ tls_t *tls_new(xmpp_ctx_t *ctx, sock_t sock)
 void tls_free(tls_t *tls)
 {
     if (tls->recvbuffer) {
-	free(tls->ctx, tls->recvbuffer);
+	free(tls->recvbuffer);
     }
 
     if (tls->readybuffer) {
-	free(tls->ctx, tls->readybuffer);
+	free(tls->readybuffer);
     }
 
     if (tls->sendbuffer) {
-	free(tls->ctx, tls->sendbuffer);
+	free(tls->sendbuffer);
     }
 
     if (tls->init) {
@@ -197,7 +195,7 @@ void tls_free(tls_t *tls)
 	tls->hsec32 = NULL;
     }
     
-    free(tls->ctx, tls);
+    free(tls);
     return;
 }
 

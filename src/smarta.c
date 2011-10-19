@@ -281,7 +281,7 @@ int main(int argc, char **argv) {
     xmpp_connect_client(conn, NULL, 0, conn_handler, ctx);
 
     /* sched checks */
-    sched_services(ctx, conn);
+    sched_services(conn);
 
     /* enter the event loop - 
        our connect handler will trigger an exit */

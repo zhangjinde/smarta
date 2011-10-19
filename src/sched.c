@@ -16,7 +16,7 @@ extern smarta_t smarta;
 static int check_service(xmpp_conn_t * const conn, void * const userdata);
 static void send_message(xmpp_conn_t * conn, sds result);
 
-void sched_services(xmpp_ctx_t *ctx, xmpp_conn_t *conn) {
+void sched_services(xmpp_conn_t *conn) {
     service_t *service;
     listNode *node;
     listIter *iter = listGetIterator(smarta.services, AL_START_HEAD);
