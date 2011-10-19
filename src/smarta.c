@@ -8,6 +8,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sched.h>
 
 #include <strophe.h>
 
@@ -147,6 +148,9 @@ int main(int argc, char **argv)
 
     /* initiate connection */
     xmpp_connect_client(conn, NULL, 0, conn_handler, ctx);
+
+    /* sched checks */
+    sched_services(ctx, conn);
 
     /* enter the event loop - 
        our connect handler will trigger an exit */
