@@ -13,7 +13,7 @@ expat/lib/libexpat_a-xmlrole.o
 expat/lib/libexpat_a-xmltok.o
 src/.deps/*
 config.log
-autom4te.cache/*
+autom4te.cache
 Makefile
 Makefile.in
 config.status
