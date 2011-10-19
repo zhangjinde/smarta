@@ -16,7 +16,7 @@
 
 #include <check.h>
 
-#include <strophe.h>
+#include "xmpp.h"
 #include "parser.h"
 
 #include "test.h"

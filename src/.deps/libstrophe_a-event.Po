@@ -14,7 +14,7 @@ src/libstrophe_a-event.o src/libstrophe_a-event.o: src/event.c \
   /usr/include/machine/types.h /usr/include/i386/types.h \
   /usr/include/string.h /usr/include/sys/select.h \
   /usr/include/sys/_select.h /usr/include/errno.h \
-  /usr/include/sys/errno.h strophe.h src/common.h \
+  /usr/include/sys/errno.h xmpp.h src/common.h \
   /usr/lib/gcc/i686-apple-darwin9/4.0.1/include/stdarg.h \
   /usr/lib/gcc/i686-apple-darwin9/4.0.1/include/stdint.h src/sock.h \
   src/tls.h src/hash.h src/util.h src/parser.h
@@ -81,7 +81,7 @@ src/libstrophe_a-event.o src/libstrophe_a-event.o: src/event.c \
 
 /usr/include/sys/errno.h:
 
-strophe.h:
+xmpp.h:
 
 src/common.h:
 

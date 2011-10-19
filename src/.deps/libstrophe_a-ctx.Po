@@ -13,7 +13,7 @@ src/libstrophe_a-ctx.o src/libstrophe_a-ctx.o: src/ctx.c \
   /usr/include/machine/types.h /usr/include/i386/types.h \
   /usr/include/stdio.h \
   /usr/lib/gcc/i686-apple-darwin9/4.0.1/include/stdarg.h \
-  /usr/include/string.h strophe.h src/common.h \
+  /usr/include/string.h xmpp.h src/common.h \
   /usr/lib/gcc/i686-apple-darwin9/4.0.1/include/stdint.h src/sock.h \
   src/tls.h src/hash.h src/util.h src/parser.h
 
@@ -73,7 +73,7 @@ src/libstrophe_a-ctx.o src/libstrophe_a-ctx.o: src/ctx.c \
 
 /usr/include/string.h:
 
-strophe.h:
+xmpp.h:
 
 src/common.h:
 

@@ -41,7 +41,7 @@ src/libstrophe_a-tls_openssl.o src/libstrophe_a-tls_openssl.o:  \
   /usr/include/openssl/pem2.h /usr/include/openssl/ssl2.h \
   /usr/include/openssl/ssl3.h /usr/include/openssl/tls1.h \
   /usr/include/openssl/ssl23.h /usr/include/openssl/rand.h src/common.h \
-  /usr/lib/gcc/i686-apple-darwin9/4.0.1/include/stdint.h strophe.h \
+  /usr/lib/gcc/i686-apple-darwin9/4.0.1/include/stdint.h xmpp.h \
   src/sock.h src/tls.h src/hash.h src/util.h src/parser.h
 
 /usr/include/string.h:
@@ -212,7 +212,7 @@ src/common.h:
 
 /usr/lib/gcc/i686-apple-darwin9/4.0.1/include/stdint.h:
 
-strophe.h:
+xmpp.h:
 
 src/sock.h:
 

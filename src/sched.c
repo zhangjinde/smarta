@@ -1,7 +1,8 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <strophe.h>
+
+#include "xmpp.h"
 #include "common.h"
 #include "sched.h"
 

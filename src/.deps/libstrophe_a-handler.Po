@@ -13,7 +13,7 @@ src/libstrophe_a-handler.o src/libstrophe_a-handler.o: src/handler.c \
   /usr/include/libkern/i386/_OSByteOrder.h /usr/include/alloca.h \
   /usr/include/machine/types.h /usr/include/i386/types.h \
   /usr/include/string.h \
-  /usr/lib/gcc/i686-apple-darwin9/4.0.1/include/stdint.h strophe.h \
+  /usr/lib/gcc/i686-apple-darwin9/4.0.1/include/stdint.h xmpp.h \
   src/common.h /usr/lib/gcc/i686-apple-darwin9/4.0.1/include/stdarg.h \
   src/sock.h src/tls.h src/hash.h src/util.h src/parser.h
 
@@ -73,7 +73,7 @@ src/libstrophe_a-handler.o src/libstrophe_a-handler.o: src/handler.c \
 
 /usr/lib/gcc/i686-apple-darwin9/4.0.1/include/stdint.h:
 
-strophe.h:
+xmpp.h:
 
 src/common.h:
 

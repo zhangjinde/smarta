@@ -19,7 +19,7 @@
 #ifndef __LIBSTROPHE_PARSER_H__
 #define __LIBSTROPHE_PARSER_H__
 
-#include "strophe.h"
+#include "xmpp.h"
 
 typedef struct _parser_t parser_t;
 

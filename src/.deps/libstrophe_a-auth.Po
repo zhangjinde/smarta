@@ -12,7 +12,7 @@ src/libstrophe_a-auth.o src/libstrophe_a-auth.o: src/auth.c \
   /usr/include/libkern/_OSByteOrder.h \
   /usr/include/libkern/i386/_OSByteOrder.h /usr/include/alloca.h \
   /usr/include/machine/types.h /usr/include/i386/types.h \
-  /usr/include/string.h strophe.h src/common.h \
+  /usr/include/string.h xmpp.h src/common.h \
   /usr/lib/gcc/i686-apple-darwin9/4.0.1/include/stdarg.h \
   /usr/lib/gcc/i686-apple-darwin9/4.0.1/include/stdint.h src/sock.h \
   src/tls.h src/hash.h src/util.h src/parser.h src/sasl.h
@@ -71,7 +71,7 @@ src/libstrophe_a-auth.o src/libstrophe_a-auth.o: src/auth.c \
 
 /usr/include/string.h:
 
-strophe.h:
+xmpp.h:
 
 src/common.h:
 
