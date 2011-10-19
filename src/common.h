@@ -20,6 +20,7 @@
 #define __LIBSTROPHE_COMMON_H__
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <stdarg.h>
 #ifndef _WIN32
 #include <stdint.h>
@@ -47,19 +48,14 @@ typedef struct _xmpp_connlist_t {
 } xmpp_connlist_t;
 
 struct _xmpp_ctx_t {
-    const xmpp_mem_t *mem;
-
     xmpp_loop_status_t loop_status;
     xmpp_connlist_t *connlist;
 };
 
 /* convenience functions for accessing the context */
-void *xmpp_alloc(const size_t size);
-void *xmpp_realloc(void *p, const size_t size);
 char *xmpp_strdup(const char * const s);
 
 /** jid */
-/* these return new strings that must be xmpp_free()'d */
 char *xmpp_jid_new(const char *node,
                                     const char *domain,
                                     const char *resource);

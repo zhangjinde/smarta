@@ -52,11 +52,11 @@ hash_t *hash_new(const int size, hash_free_func free)
 {
     hash_t *result = NULL;
 
-    result = xmpp_alloc(sizeof(hash_t));
+    result = malloc(sizeof(hash_t));
     if (result != NULL) {
-	result->entries = xmpp_alloc(size * sizeof(hashentry_t *));
+	result->entries = malloc(size * sizeof(hashentry_t *));
 	if (result->entries == NULL) {
-	    xmpp_free(result);
+	    free(result);
 	    return NULL;
 	}
 	memset(result->entries, 0, size * sizeof(hashentry_t *));
@@ -91,14 +91,14 @@ void hash_release(hash_t * const table)
 	    entry = table->entries[i];
 	    while (entry != NULL) {
 		next = entry->next;
-		xmpp_free(entry->key);
+		free(entry->key);
 		if (table->free) table->free(entry->value);
-		xmpp_free(entry);
+		free(entry);
 		entry = next;
 	    }
 	}
-	xmpp_free(table->entries);
-	xmpp_free(table);
+	free(table->entries);
+	free(table);
     }
 }
 
@@ -132,11 +132,11 @@ int hash_add(hash_t *table, const char * const key, void *data)
    hash_drop(table, key);
 
    /* allocate and fill a new entry */
-   entry = xmpp_alloc(sizeof(hashentry_t));
+   entry = malloc(sizeof(hashentry_t));
    if (!entry) return -1;
    entry->key = xmpp_strdup(key);
    if (!entry->key) {
-       xmpp_free(entry);
+       free(entry);
        return -1;
    }
    entry->value = data;
@@ -184,14 +184,14 @@ int hash_drop(hash_t *table, const char *key)
 	/* traverse the linked list looking for the key */
 	if (!strcmp(key, entry->key)) {
 	  /* match, remove the entry */
-	  xmpp_free(entry->key);
+	  free(entry->key);
 	  if (table->free) table->free(entry->value);
 	  if (prev == NULL) {
 	    table->entries[index] = entry->next;
 	  } else {
 	    prev->next = entry->next;
 	  }
-	  xmpp_free(entry);
+	  free(entry);
 	  table->num_keys--;
 	  return 0;
 	}
@@ -212,7 +212,7 @@ hash_iterator_t *hash_iter_new(hash_t *table)
 {
     hash_iterator_t *iter;
 
-    iter = xmpp_alloc(sizeof(*iter));
+    iter = malloc(sizeof(*iter));
     if (iter != NULL) {
 	iter->ref = 1;
 	iter->table = hash_clone(table);
@@ -230,7 +230,7 @@ void hash_iter_release(hash_iterator_t *iter)
 
     if (iter->ref <= 0) {
 	hash_release(iter->table);
-	xmpp_free(iter);
+	free(iter);
     }
 }
 

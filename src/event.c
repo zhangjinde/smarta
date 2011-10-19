@@ -144,10 +144,10 @@ void xmpp_run_once(xmpp_ctx_t *ctx, const unsigned long timeout)
 	    }
 
 	    /* all data for this queue item written, delete and move on */
-	    xmpp_free(sq->data);
+	    free(sq->data);
 	    tsq = sq;
 	    sq = sq->next;
-	    xmpp_free(tsq);
+	    free(tsq);
 
 	    /* pop the top item */
 	    conn->send_queue_head = sq;

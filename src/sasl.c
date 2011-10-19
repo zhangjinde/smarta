@@ -50,14 +50,14 @@ char *sasl_plain(const char *authid, const char *password) {
 
     idlen = strlen(authid);
     passlen = strlen(password);
-    msg = xmpp_alloc(2 + idlen + passlen);
+    msg = malloc(2 + idlen + passlen);
     if (msg != NULL) {
 	msg[0] = '\0';
 	memcpy(msg+1, authid, idlen);
 	msg[1+idlen] = '\0';
 	memcpy(msg+1+idlen+1, password, passlen);
 	result = base64_encode((unsigned char *)msg, 2 + idlen + passlen);
-	xmpp_free(msg);
+	free(msg);
     }
 
     return result;
@@ -70,7 +70,7 @@ static char *_make_string(const char *s, const unsigned len)
 {
     char *result;
 
-    result = xmpp_alloc(len + 1);
+    result = malloc(len + 1);
     if (result != NULL) {
 	memcpy(result, s, len);
 	result[len] = '\0';
@@ -84,7 +84,7 @@ static char *_make_quoted(const char *s)
     char *result;
     int len = strlen(s);
 
-    result = xmpp_alloc(len + 3);
+    result = malloc(len + 3);
     if (result != NULL) {
 	result[0] = '"';
 	memcpy(result+1, s, len);
@@ -108,7 +108,7 @@ static hash_t *_parse_digest_challenge(const char *msg)
 	return NULL;
     }
 
-    result = hash_new(10, xmpp_free);
+    result = hash_new(10, free);
     if (result != NULL) {
 	s = text;
 	while (*s != '\0') {
@@ -141,16 +141,16 @@ static hash_t *_parse_digest_challenge(const char *msg)
 		s = t;
 	    }
 	    if (value == NULL) {
-		xmpp_free(key);
+		free(key);
 		break;
 	    }
 	    /* TODO: check for collisions per spec */
 	    hash_add(result, key, value);
 	    /* hash table now owns the value, free the key */
-	    xmpp_free(key);
+	    free(key);
 	}
     }
-    xmpp_free(text);
+    free(text);
 
     return result;
 }
@@ -178,7 +178,7 @@ static char *_add_key(hash_t *table, const char *key,
 
     /* allocate a zero-length string if necessary */
     if (buf == NULL) {
-	buf = xmpp_alloc(1);
+	buf = malloc(1);
 	buf[0] = '\0';
     }
     if (buf == NULL) return NULL;
@@ -200,7 +200,7 @@ static char *_add_key(hash_t *table, const char *key,
     keylen = strlen(key);
     valuelen = strlen(qvalue);
     nlen = (olen ? 1 : 0) + keylen + 1 + valuelen + 1;
-    buf = xmpp_realloc(buf, olen+nlen);
+    buf = realloc(buf, olen+nlen);
 
     if (buf != NULL) {
 	c = buf + olen;
@@ -211,7 +211,7 @@ static char *_add_key(hash_t *table, const char *key,
 	*c++ = '\0';
     }
 
-    if (quote) xmpp_free((char *)qvalue);
+    if (quote) free((char *)qvalue);
 
     return buf;
 }
@@ -264,7 +264,7 @@ char *sasl_digest_md5(const char *challenge,
     hash_add(table, "cnonce", xmpp_strdup("00DEADBEEF00"));
     hash_add(table, "nc", xmpp_strdup("00000001"));
     hash_add(table, "qop", xmpp_strdup("auth"));
-    value = xmpp_alloc(5 + strlen(domain) + 1);
+    value = malloc(5 + strlen(domain) + 1);
     memcpy(value, "xmpp/", 5);
     memcpy(value+5, domain, strlen(domain));
     value[5+strlen(domain)] = '\0';
@@ -330,7 +330,7 @@ char *sasl_digest_md5(const char *challenge,
     MD5Update(&MD5, (unsigned char *)hex, 32);
     MD5Final(digest, &MD5);
 
-    response = xmpp_alloc(32+1);
+    response = malloc(32+1);
     _digest_to_hex((char *)digest, hex);
     memcpy(response, hex, 32);
     response[32] = '\0';
@@ -349,13 +349,13 @@ char *sasl_digest_md5(const char *challenge,
     result = _add_key(table, "response", result, &rlen, 0); 
     result = _add_key(table, "charset", result, &rlen, 0);
  
-    xmpp_free(node);
-    xmpp_free(domain);
+    free(node);
+    free(domain);
     hash_release(table); /* also frees value strings */
 
     /* reuse response for the base64 encode of our result */
     response = base64_encode((unsigned char *)result, strlen(result));
-    xmpp_free(result);
+    free(result);
 
     return response;
 }
@@ -412,7 +412,7 @@ char *base64_encode(const unsigned char * const buffer, const unsigned len)
     int i;
 
     clen = base64_encoded_len(len);
-    cbuf = xmpp_alloc(clen + 1);
+    cbuf = malloc(clen + 1);
     if (cbuf != NULL) {
 	c = cbuf;
 	/* loop over data, turning every 3 bytes into 4 characters */
@@ -490,7 +490,7 @@ unsigned char *base64_decode(const char * const buffer, const unsigned len)
     if (len & 0x03) return NULL;
 
     dlen = base64_decoded_len(buffer, len);
-    dbuf = xmpp_alloc(dlen + 1);
+    dbuf = malloc(dlen + 1);
     if (dbuf != NULL) {
 	d = dbuf;
 	/* loop over each set of 4 characters, decoding 3 bytes */
@@ -554,7 +554,7 @@ unsigned char *base64_decode(const char * const buffer, const unsigned len)
 
 _base64_decode_error:	
     /* invalid character; abort decoding! */
-    xmpp_free(dbuf);
+    free(dbuf);
     return NULL;
 }
 

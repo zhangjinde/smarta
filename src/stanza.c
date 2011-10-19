@@ -109,7 +109,7 @@ xmpp_stanza_t *xmpp_stanza_copy(const xmpp_stanza_t * const stanza)
     }
 
     if (stanza->attributes) {
-	copy->attributes = hash_new(8, xmpp_free);
+	copy->attributes = hash_new(8, free);
 	if (!copy->attributes) goto copy_error;
 	iter = hash_iter_new(stanza->attributes);
 	if (!iter) { printf("DEBUG HERE\n"); goto copy_error; }
@@ -173,8 +173,8 @@ int xmpp_stanza_release(xmpp_stanza_t * const stanza)
 	}
 
 	if (stanza->attributes) hash_release(stanza->attributes);
-	if (stanza->data) xmpp_free(stanza->data);
-	xmpp_free(stanza);
+	if (stanza->data) free(stanza->data);
+	free(stanza);
 	released = 1;
     }
 
@@ -327,7 +327,7 @@ int  xmpp_stanza_to_text(xmpp_stanza_t *stanza,
 
     /* allocate a default sized buffer and attempt to render */
     length = 1024;
-    buffer = xmpp_alloc(length);
+    buffer = malloc(length);
     if (!buffer) {
 	*buf = NULL;
 	*buflen = 0;
@@ -338,9 +338,9 @@ int  xmpp_stanza_to_text(xmpp_stanza_t *stanza,
     if (ret < 0) return ret;
 
     if (ret > length - 1) {
-	tmp = xmpp_realloc(buffer, ret + 1);
+	tmp = realloc(buffer, ret + 1);
 	if (!tmp) {
-	    xmpp_free(buffer);
+	    free(buffer);
 	    *buf = NULL;
 	    *buflen = 0;
 	    return XMPP_EMEM;
@@ -375,7 +375,7 @@ int xmpp_stanza_set_name(xmpp_stanza_t *stanza,
 {
     if (stanza->type == XMPP_STANZA_TEXT) return XMPP_EINVOP;
 
-    if (stanza->data) xmpp_free(stanza->data);
+    if (stanza->data) free(stanza->data);
 
     stanza->type = XMPP_STANZA_TAG;
     stanza->data = xmpp_strdup(name);
@@ -480,7 +480,7 @@ int xmpp_stanza_set_attribute(xmpp_stanza_t * const stanza,
     if (stanza->type != XMPP_STANZA_TAG) return XMPP_EINVOP;
 
     if (!stanza->attributes) {
-	stanza->attributes = hash_new(8, xmpp_free);
+	stanza->attributes = hash_new(8, free);
 	if (!stanza->attributes) return XMPP_EMEM;
     }
 
@@ -561,7 +561,7 @@ int xmpp_stanza_set_text(xmpp_stanza_t *stanza,
     
     stanza->type = XMPP_STANZA_TEXT;
 
-    if (stanza->data) xmpp_free(stanza->data);
+    if (stanza->data) free(stanza->data);
     stanza->data = xmpp_strdup(text);
 
     return XMPP_EOK;
@@ -589,8 +589,8 @@ int xmpp_stanza_set_text_with_size(xmpp_stanza_t *stanza,
 
     stanza->type = XMPP_STANZA_TEXT;
 
-    if (stanza->data) xmpp_free(stanza->data);
-    stanza->data = xmpp_alloc(size + 1);
+    if (stanza->data) free(stanza->data);
+    stanza->data = malloc(size + 1);
     if (!stanza->data) return XMPP_EMEM;
 
     memcpy(stanza->data, text, size);
@@ -745,7 +745,7 @@ xmpp_stanza_t *xmpp_stanza_get_next(xmpp_stanza_t * const stanza)
 /** Get the text data for a text stanza.
  *  This function copies the text data from a stanza and returns the new
  *  allocated string.  The caller is responsible for freeing this string
- *  with xmpp_free().
+ *  with free().
  *
  *  @param stanza a Strophe stanza object
  *
@@ -773,7 +773,7 @@ char *xmpp_stanza_get_text(xmpp_stanza_t * const stanza)
 
     if (len == 0) return NULL;
 
-    text = (char *)xmpp_alloc(len + 1);
+    text = (char *)malloc(len + 1);
     if (!text) return NULL;
 
     len = 0;

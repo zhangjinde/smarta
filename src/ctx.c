@@ -187,46 +187,6 @@ xmpp_log_t *xmpp_get_default_logger(xmpp_log_level_t level)
 
 static xmpp_log_t xmpp_default_log = { NULL, NULL };
 
-/* convenience functions for accessing the context */
-
-/** Allocate memory in a Strophe context.
- *  All Strophe functions will use this to allocate memory. 
- *
- *  @param ctx a Strophe context object
- *  @param size the number of bytes to allocate
- *
- *  @return a pointer to the allocated memory or NULL on an error
- */
-void *xmpp_alloc(const size_t size)
-{
-    return malloc(size);
-}
-
-/** Free memory in a Strophe context.
- *  All Strophe functions will use this to free allocated memory.
- *
- *  @param ctx a Strophe context object
- *  @param p a pointer referencing memory to be freed
- */
-void xmpp_free(void *p)
-{
-    free(p);
-}
-
-/** Reallocate memory in a Strophe context.
- *  All Strophe functions will use this to reallocate memory.
- *
- *  @param ctx a Strophe context object
- *  @param p a pointer to previously allocated memory
- *  @param size the new size in bytes to allocate
- *
- *  @return a pointer to the reallocated memory or NULL on an error
- */
-void *xmpp_realloc(void *p, const size_t size)
-{
-    return realloc(p, size);
-}
-
 /** Create and initialize a Strophe context object.
  *  If mem is NULL, a default allocation setup will be used which
  *  wraps malloc(), free(), and realloc() from the standard library.
@@ -252,11 +212,6 @@ xmpp_ctx_t *xmpp_ctx_new(const xmpp_mem_t * const mem,
 	ctx = mem->alloc(sizeof(xmpp_ctx_t), mem->userdata);
 
     if (ctx != NULL) {
-	if (mem != NULL) 
-	    ctx->mem = mem;
-	else 
-	    ctx->mem = &xmpp_default_mem;
-
 	ctx->connlist = NULL;
 	ctx->loop_status = XMPP_LOOP_NOTSTARTED;
     }
@@ -272,6 +227,6 @@ xmpp_ctx_t *xmpp_ctx_new(const xmpp_mem_t * const mem,
  */
 void xmpp_ctx_free(xmpp_ctx_t * const ctx) {
     /* mem and log are owned by their suppliers */
-    xmpp_free(ctx); /* pull the hole in after us */
+    free(ctx); /* pull the hole in after us */
 }
 

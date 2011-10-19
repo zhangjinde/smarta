@@ -73,7 +73,7 @@ void tls_free(tls_t *tls)
 {
     gnutls_deinit(tls->session);
     gnutls_certificate_free_credentials(tls->cred);
-    xmpp_free(tls->ctx, tls);
+    free(tls->ctx, tls);
 }
 
 int tls_set_credentials(tls_t *tls, const char *cafilename)

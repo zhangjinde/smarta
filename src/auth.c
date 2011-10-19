@@ -102,12 +102,12 @@ static int _handle_error(xmpp_conn_t * const conn,
     if (conn->stream_error) {
 	xmpp_stanza_release(conn->stream_error->stanza);
 	if (conn->stream_error->text) 
-	    xmpp_free(conn->stream_error->text);
-	xmpp_free(conn->stream_error);
+	    free(conn->stream_error->text);
+	free(conn->stream_error);
     }
 
     /* create stream error structure */
-    conn->stream_error = (xmpp_stream_error_t *)xmpp_alloc(sizeof(xmpp_stream_error_t));
+    conn->stream_error = (xmpp_stream_error_t *)malloc(sizeof(xmpp_stream_error_t));
 
 	conn->stream_error->text = NULL;
 	conn->stream_error->type = XMPP_SE_UNDEFINED_CONDITION;
@@ -125,7 +125,7 @@ static int _handle_error(xmpp_conn_t * const conn,
 		name = xmpp_stanza_get_name(child);
 		if (strcmp(name, "text") == 0) {
 		    if (conn->stream_error->text)
-			xmpp_free(conn->stream_error->text);
+			free(conn->stream_error->text);
 		    conn->stream_error->text = xmpp_stanza_get_text(child);
 		} else if (strcmp(name, "bad-format") == 0)
 		    conn->stream_error->type = XMPP_SE_BAD_FORMAT;
@@ -229,7 +229,7 @@ static int _handle_features(xmpp_conn_t * const conn,
 		else if (strcasecmp(text, "ANONYMOUS") == 0)
 		    conn->sasl_support |= SASL_MASK_ANONYMOUS;
 
-		xmpp_free(text);
+		free(text);
 	    }
 	}
     }
@@ -341,7 +341,7 @@ static int _handle_digestmd5_challenge(xmpp_conn_t * const conn,
 	    disconnect_mem_error(conn);
 	    return 0;
 	}
-	xmpp_free(text);
+	free(text);
 
 	auth = xmpp_stanza_new();
 	if (!auth) {
@@ -358,7 +358,7 @@ static int _handle_digestmd5_challenge(xmpp_conn_t * const conn,
 	}
 
 	xmpp_stanza_set_text(authdata, response);
-	xmpp_free(response);
+	free(response);
 
 	xmpp_stanza_add_child(auth, authdata);
 	xmpp_stanza_release(authdata);
@@ -452,7 +452,7 @@ static void _auth(xmpp_conn_t * const conn)
     if (str == NULL) {
 	anonjid = 1;
     } else {
-	xmpp_free(str);
+	free(str);
 	anonjid = 0;
     }
 
@@ -544,7 +544,7 @@ static void _auth(xmpp_conn_t * const conn)
 	    return;
 	}
 	xmpp_stanza_set_text(authdata, str);
-	xmpp_free(str);
+	free(str);
 
 	xmpp_stanza_add_child(auth, authdata);
 	xmpp_stanza_release(authdata);
@@ -598,7 +598,7 @@ static void _auth(xmpp_conn_t * const conn)
 	}
 	str = xmpp_jid_node(conn->jid);
 	xmpp_stanza_set_text(authdata, str);
-	xmpp_free(str);
+	free(str);
 	xmpp_stanza_add_child(child, authdata);
 	xmpp_stanza_release(authdata);
 
@@ -641,7 +641,7 @@ static void _auth(xmpp_conn_t * const conn)
 	str = xmpp_jid_resource(conn->jid);
 	if (str) {
 	    xmpp_stanza_set_text(authdata, str);
-	    xmpp_free(str);
+	    free(str);
 	} else {
 	    xmpp_stanza_release(authdata);
 	    xmpp_stanza_release(iq);
@@ -755,7 +755,7 @@ static int _handle_features_sasl(xmpp_conn_t * const conn,
         resource = xmpp_jid_resource(conn->jid);
 	if ((resource != NULL) && (strlen(resource) == 0)) {
 	    /* jabberd2 doesn't handle an empty resource */
-	    xmpp_free(resource);
+	    free(resource);
 	    resource = NULL;
 	}
 
@@ -781,7 +781,7 @@ static int _handle_features_sasl(xmpp_conn_t * const conn,
 	    xmpp_stanza_set_text(text, resource);
 	    xmpp_stanza_add_child(res, text);
 	    xmpp_stanza_add_child(bind, res);
-	    xmpp_free(resource);
+	    free(resource);
 	}
 
 	xmpp_stanza_add_child(iq, bind);

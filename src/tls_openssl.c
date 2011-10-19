@@ -56,7 +56,7 @@ int tls_error(tls_t *tls)
 
 tls_t *tls_new(sock_t sock)
 {
-    tls_t *tls = xmpp_alloc(sizeof(*tls));
+    tls_t *tls = malloc(sizeof(*tls));
 
     if (tls) {
         int ret;
@@ -86,7 +86,7 @@ tls_t *tls_new(sock_t sock)
 void tls_free(tls_t *tls)
 {
     SSL_CTX_free(tls->ssl_ctx);
-    xmpp_free(tls);
+    free(tls);
     return;
 }
 

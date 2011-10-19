@@ -66,8 +66,8 @@ void handler_fire_stanza(xmpp_conn_t * const conn,
 		    hash_drop(conn->id_handlers, id);
 		    hash_add(conn->id_handlers, id, next);
 		}
-                xmpp_free(item->id);
-		xmpp_free(item);
+                free(item->id);
+		free(item);
 		item = NULL;
 	    }
 	    if (item)
@@ -112,10 +112,10 @@ void handler_fire_stanza(xmpp_conn_t * const conn,
 		    prev->next = item->next;
 		else
 		    conn->handlers = item->next;
-                if (item->ns) xmpp_free(item->ns);
-                if (item->name) xmpp_free(item->name);
-                if (item->type) xmpp_free(item->type);
-		xmpp_free(item);
+                if (item->ns) free(item->ns);
+                if (item->name) free(item->name);
+                if (item->type) free(item->type);
+		free(item);
 		item = NULL;
 	    }
 	
@@ -230,7 +230,7 @@ static void _timed_handler_add(xmpp_conn_t * const conn,
     if (item) return;
 
     /* build new item */
-    item = xmpp_alloc(sizeof(xmpp_handlist_t));
+    item = malloc(sizeof(xmpp_handlist_t));
     if (!item) return;
 
     item->user_handler = user_handler;
@@ -282,7 +282,7 @@ void xmpp_timed_handler_delete(xmpp_conn_t * const conn,
 	else
 	    conn->timed_handlers = item->next;
 	
-	xmpp_free(item);
+	free(item);
     }
 }
 
@@ -303,7 +303,7 @@ static void _id_handler_add(xmpp_conn_t * const conn,
     if (item) return;
 
     /* build new item */
-    item = xmpp_alloc(sizeof(xmpp_handlist_t));
+    item = malloc(sizeof(xmpp_handlist_t));
     if (!item) return;
 
     item->user_handler = user_handler;
@@ -314,7 +314,7 @@ static void _id_handler_add(xmpp_conn_t * const conn,
 
     item->id = xmpp_strdup(id);
     if (!item->id) {
-	xmpp_free(item);
+	free(item);
 	return;
     }
 
@@ -362,8 +362,8 @@ void xmpp_id_handler_delete(xmpp_conn_t * const conn,
 	    hash_drop(conn->id_handlers, id);
 	    hash_add(conn->id_handlers, id, item->next);
 	}
-	xmpp_free(item->id);
-	xmpp_free(item);
+	free(item->id);
+	free(item);
     }
 }
 
@@ -385,7 +385,7 @@ static void _handler_add(xmpp_conn_t * const conn,
     if (item) return;
 
     /* build new item */
-    item = (xmpp_handlist_t *)xmpp_alloc(sizeof(xmpp_handlist_t));
+    item = (xmpp_handlist_t *)malloc(sizeof(xmpp_handlist_t));
     if (!item) return;
 
     item->user_handler = user_handler;
@@ -397,7 +397,7 @@ static void _handler_add(xmpp_conn_t * const conn,
     if (ns) {
 	item->ns = xmpp_strdup(ns);
 	if (!item->ns) {
-	    xmpp_free(item);
+	    free(item);
 	    return;
 	}
     } else
@@ -405,8 +405,8 @@ static void _handler_add(xmpp_conn_t * const conn,
     if (name) {
 	item->name = xmpp_strdup(name);
 	if (!item->name) {
-	    if (item->ns) xmpp_free(item->ns);
-	    xmpp_free(item);
+	    if (item->ns) free(item->ns);
+	    free(item);
 	    return;
 	}
     } else
@@ -414,9 +414,9 @@ static void _handler_add(xmpp_conn_t * const conn,
     if (type) {
 	item->type = xmpp_strdup(type);
 	if (!item->type) {
-	    if (item->ns) xmpp_free(item->ns);
-	    if (item->name) xmpp_free(item->name);
-	    xmpp_free(item);
+	    if (item->ns) free(item->ns);
+	    if (item->name) free(item->name);
+	    free(item);
 	}
     } else
 	item->type = NULL;
@@ -462,10 +462,10 @@ void xmpp_handler_delete(xmpp_conn_t * const conn,
 	else
 	    conn->handlers = item->next;
 
-	if (item->ns) xmpp_free(item->ns);
-	if (item->name) xmpp_free(item->name);
-	if (item->type) xmpp_free(item->type);
-	xmpp_free(item);
+	if (item->ns) free(item->ns);
+	if (item->name) free(item->name);
+	if (item->type) free(item->type);
+	free(item);
     }
 }
 

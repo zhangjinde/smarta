@@ -148,7 +148,7 @@ parser_t *parser_new(xmpp_ctx_t *ctx,
 {
     parser_t *parser;
 
-    parser = xmpp_alloc(sizeof(parser_t));
+    parser = malloc(sizeof(parser_t));
     if (parser != NULL) {
         parser->ctx = ctx;
         parser->expat = NULL;
@@ -171,7 +171,7 @@ void parser_free(parser_t *parser)
     if (parser->expat)
         XML_ParserFree(parser->expat);
 
-    xmpp_free(parser);
+    free(parser);
 }
 
 /* shuts down and restarts XML parser.  true on success */

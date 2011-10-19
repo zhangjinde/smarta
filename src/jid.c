@@ -47,7 +47,7 @@ char *xmpp_jid_new(const char *node,
     len = nlen + dlen + rlen;
 
     /* concat components */
-    result = xmpp_alloc(len + 1);
+    result = malloc(len + 1);
     if (result != NULL) {
 	if (node != NULL) {
 	    memcpy(result, node, nlen - 1);
@@ -78,7 +78,7 @@ char *xmpp_jid_bare(const char *jid)
     c = strchr(jid, '/');
     if (c == NULL) return xmpp_strdup(jid);
 
-    result = xmpp_alloc(c-jid+1);
+    result = malloc(c-jid+1);
     if (result != NULL) {
 	memcpy(result, jid, c-jid);
 	result[c-jid] = '\0';
@@ -101,7 +101,7 @@ char *xmpp_jid_node(const char *jid)
 
     c = strchr(jid, '@');
     if (c != NULL) {
-	result = xmpp_alloc((c-jid) + 1);
+	result = malloc((c-jid) + 1);
 	if (result != NULL) {
 	    memcpy(result, jid, (c-jid));
 	    result[c-jid] = '\0';
@@ -135,7 +135,7 @@ char *xmpp_jid_domain(const char *jid)
 	/* no resource */
 	s = c + strlen(c);
     }
-    result = xmpp_alloc((s-c) + 1);
+    result = malloc((s-c) + 1);
     if (result != NULL) {
 	memcpy(result, c, (s-c));
 	result[s-c] = '\0';
@@ -161,7 +161,7 @@ char *xmpp_jid_resource(const char *jid)
     if (c != NULL)  {
 	c++;
 	len = strlen(c);
-	result = xmpp_alloc(len + 1);
+	result = malloc(len + 1);
 	if (result != NULL) {
 	    memcpy(result, c, len);
 	    result[len] = '\0';
