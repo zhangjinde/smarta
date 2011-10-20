@@ -21,3 +21,4 @@ plugins
 smarta
 configure
 smarta.log
+src/.deps/*
