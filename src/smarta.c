@@ -141,7 +141,7 @@ void init_config() {
     smarta.isslave = 0;
     smarta.verbosity = 0;
     smarta.logfile = "smarta.log";
-    smarta.daemonize = 1;
+    smarta.daemonize = 0;
     smarta.services = listCreate();
 }
 
