@@ -21,7 +21,6 @@
 #include <string.h>
 
 #include "xmpp.h"
-#include "common.h"
 #include "sasl.h"
 #include "sds.h"
 

@@ -29,7 +29,6 @@
 #endif
 
 #include "xmpp.h"
-#include "common.h"
 #include "util.h"
 
 /** implement our own strdup that uses the ctx allocator */

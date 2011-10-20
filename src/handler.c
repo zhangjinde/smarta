@@ -30,7 +30,6 @@
 #endif
 
 #include "xmpp.h"
-#include "common.h"
 
 /** Fire off all stanza handlers that match.
  *  This function is called internally by the event loop whenever stanzas

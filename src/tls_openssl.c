@@ -27,7 +27,6 @@
 #include <openssl/ssl.h>
 #include <openssl/rand.h>
 
-#include "common.h"
 #include "tls.h"
 #include "sock.h"
 

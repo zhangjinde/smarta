@@ -24,7 +24,6 @@
 #include <string.h>
 
 #include "xmpp.h"
-#include "common.h"
 #include "hash.h"
 
 #ifdef _WIN32

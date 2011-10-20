@@ -20,7 +20,6 @@
 #include <string.h>
 
 #include "xmpp.h"
-#include "common.h"
 #include "hash.h"
 
 /* private types */

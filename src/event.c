@@ -47,8 +47,8 @@
 #define ECONNABORTED WSAECONNABORTED
 #endif
 
+#include "util.h"
 #include "xmpp.h"
-#include "common.h"
 #include "parser.h"
 
 #ifndef DEFAULT_TIMEOUT

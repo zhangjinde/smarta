@@ -19,7 +19,7 @@
 #ifndef __LIBSTROPHE_PARSER_H__
 #define __LIBSTROPHE_PARSER_H__
 
-#include "xmpp.h"
+#include "stanza.h"
 
 typedef struct _parser_t parser_t;
 
@@ -31,8 +31,7 @@ typedef void (*parser_stanza_callback)(xmpp_stanza_t *stanza,
                                        void * const userdata);
 
 
-parser_t *parser_new(xmpp_ctx_t *ctx, 
-                     parser_start_callback startcb,
+parser_t *parser_new(parser_start_callback startcb,
                      parser_end_callback endcb,
                      parser_stanza_callback stanzacb,
                      void *userdata);

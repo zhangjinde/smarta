@@ -24,7 +24,6 @@
 #include <string.h>
 
 #include "xmpp.h"
-#include "common.h"
 #include "util.h"
 #include "parser.h"
 
@@ -114,11 +113,10 @@ xmpp_conn_t *xmpp_conn_new(xmpp_ctx_t * const ctx)
 	conn->bind_required = 0;
 	conn->session_required = 0;
 
-	conn->parser = parser_new(conn->ctx, 
-                                  _handle_stream_start,
-                                  _handle_stream_end,
-                                  _handle_stream_stanza,
-                                  conn);
+	conn->parser = parser_new(_handle_stream_start,
+                              _handle_stream_end,
+                              _handle_stream_stanza,
+                              conn);
         conn->reset_parser = 0;
         conn_prepare_reset(conn, auth_handle_open);
 

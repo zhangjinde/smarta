@@ -19,7 +19,6 @@
 #ifndef __LIBSTROPHE_TLS_H__
 #define __LIBSTROPHE_TLS_H__
 
-#include "common.h"
 #include "sock.h"
 
 typedef struct _tls tls_t;

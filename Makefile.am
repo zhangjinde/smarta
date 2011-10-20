@@ -19,7 +19,7 @@ libexpat_a_SOURCES=expat/lib/xmlparse.c expat/lib/xmltok.c expat/lib/xmlrole.c
 
 ## Examples
 noinst_PROGRAMS = smarta
-smarta_SOURCES = src/smarta.c src/auth.c src/conn.c src/ctx.c \
+smarta_SOURCES = src/smarta.c src/auth.c src/conn.c \
 	src/event.c src/handler.c src/hash.c src/xmpp.c \
 	src/jid.c src/md5.c src/sasl.c src/sha1.c \
 	src/snprintf.c src/sock.c src/stanza.c \

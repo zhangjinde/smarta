@@ -3,11 +3,9 @@
 #include <stdlib.h>
 
 #include "xmpp.h"
-#include "common.h"
 #include "sched.h"
 #include "adlist.h"
 #include "smarta.h"
-#include "common.h"
 
 #define MAX_INPUT_BUFFER 4096
 

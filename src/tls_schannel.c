@@ -16,7 +16,6 @@
  *  TLS implementation with Win32 SChannel.
  */
 
-#include "common.h"
 #include "tls.h"
 #include "sock.h"
 

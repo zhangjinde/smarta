@@ -23,11 +23,9 @@
 #include <expat.h>
 
 #include "xmpp.h"
-#include "common.h"
 #include "parser.h"
 
 struct _parser_t {
-    xmpp_ctx_t *ctx;
     XML_Parser expat;
     parser_start_callback startcb;
     parser_end_callback endcb;
@@ -140,8 +138,7 @@ static void _characters(void *userdata, const XML_Char *s, int len)
     xmpp_stanza_release(stanza);
 }
 
-parser_t *parser_new(xmpp_ctx_t *ctx,
-                     parser_start_callback startcb,
+parser_t *parser_new(parser_start_callback startcb,
                      parser_end_callback endcb,
                      parser_stanza_callback stanzacb,
                      void *userdata)
@@ -150,7 +147,6 @@ parser_t *parser_new(xmpp_ctx_t *ctx,
 
     parser = malloc(sizeof(parser_t));
     if (parser != NULL) {
-        parser->ctx = ctx;
         parser->expat = NULL;
         parser->startcb = startcb;
         parser->endcb = endcb;
