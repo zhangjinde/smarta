@@ -12,6 +12,22 @@ xmpp connection process:
 
 4. send initial presence
 
+== XMPP Client FSM
+
+connecting:
+wait_for_stream
+stream_opened
+wait_for_starttls_result
+wait_for_sasl_response
+wait_for_stream_features
+wait_for_bind_response
+wait_for_session_response
+stream_error
+stream_closed
+wait_for_legacy_auth_method/2,
+wait_for_auth_result/2,
+logged_in/2, logged_in/3
+
 == Build Instructions ==
 
 $ ./bootstrap.sh
