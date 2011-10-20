@@ -48,8 +48,8 @@ IN_SERVICE_BLOCK	src/smarta.c	/^#define IN_SERVICE_BLOCK /;"	d	file:
 IN_SMARTA_BLOCK	src/smarta.c	/^#define IN_SMARTA_BLOCK /;"	d	file:
 LDOUBLE	src/snprintf.c	/^#define LDOUBLE /;"	d	file:
 LEGACY_TIMEOUT	src/auth.c	/^#define LEGACY_TIMEOUT /;"	d	file:
-LIBXMPP_VERSION_MAJOR	src/ctx.c	/^#define LIBXMPP_VERSION_MAJOR /;"	d	file:
-LIBXMPP_VERSION_MINOR	src/ctx.c	/^#define LIBXMPP_VERSION_MINOR /;"	d	file:
+LIBXMPP_VERSION_MAJOR	src/xmpp.c	/^#define LIBXMPP_VERSION_MAJOR /;"	d	file:
+LIBXMPP_VERSION_MINOR	src/xmpp.c	/^#define LIBXMPP_VERSION_MINOR /;"	d	file:
 LOG_DEBUG	src/xmpp.h	/^#define LOG_DEBUG /;"	d
 LOG_ERROR	src/xmpp.h	/^#define LOG_ERROR /;"	d
 LOG_INFO	src/xmpp.h	/^#define LOG_INFO /;"	d
@@ -73,12 +73,12 @@ R1	src/sha1.c	/^#define R1(/;"	d	file:
 R2	src/sha1.c	/^#define R2(/;"	d	file:
 R3	src/sha1.c	/^#define R3(/;"	d	file:
 R4	src/sha1.c	/^#define R4(/;"	d	file:
-SASL_MASK_ANONYMOUS	src/common.h	/^#define SASL_MASK_ANONYMOUS /;"	d
-SASL_MASK_DIGESTMD5	src/common.h	/^#define SASL_MASK_DIGESTMD5 /;"	d
-SASL_MASK_PLAIN	src/common.h	/^#define SASL_MASK_PLAIN /;"	d
+SASL_MASK_ANONYMOUS	src/xmpp.h	/^#define SASL_MASK_ANONYMOUS /;"	d
+SASL_MASK_DIGESTMD5	src/xmpp.h	/^#define SASL_MASK_DIGESTMD5 /;"	d
+SASL_MASK_PLAIN	src/xmpp.h	/^#define SASL_MASK_PLAIN /;"	d
 SECURITY_WIN32	src/tls_schannel.c	/^#define SECURITY_WIN32$/;"	d	file:
 SESSION_TIMEOUT	src/auth.c	/^#define SESSION_TIMEOUT /;"	d	file:
-SHA1_CTX	src/sha1.h	/^} SHA1_CTX;$/;"	t	typeref:struct:__anon8
+SHA1_CTX	src/sha1.h	/^} SHA1_CTX;$/;"	t	typeref:struct:__anon1
 SHA1_DIGEST_SIZE	src/sha1.h	/^#define SHA1_DIGEST_SIZE /;"	d
 SHA1_Final	src/sha1.c	/^void SHA1_Final(SHA1_CTX* context, uint8_t digest[SHA1_DIGEST_SIZE])$/;"	f
 SHA1_Init	src/sha1.c	/^void SHA1_Init(SHA1_CTX* context)$/;"	f
@@ -93,22 +93,22 @@ VA_SHIFT	src/snprintf.c	/^#  define VA_SHIFT(/;"	d	file:
 VA_SHIFT	src/snprintf.c	/^# define VA_SHIFT(/;"	d	file:
 VA_START	src/snprintf.c	/^#  define VA_START(/;"	d	file:
 VA_START	src/snprintf.c	/^# define VA_START(/;"	d	file:
-XMPP_CLIENT	src/xmpp.h	/^    XMPP_CLIENT,$/;"	e	enum:__anon10
-XMPP_COMPONENT	src/xmpp.h	/^    XMPP_COMPONENT$/;"	e	enum:__anon10
-XMPP_CONN_CONNECT	src/xmpp.h	/^    XMPP_CONN_CONNECT,$/;"	e	enum:__anon11
-XMPP_CONN_DISCONNECT	src/xmpp.h	/^    XMPP_CONN_DISCONNECT,$/;"	e	enum:__anon11
-XMPP_CONN_FAIL	src/xmpp.h	/^    XMPP_CONN_FAIL$/;"	e	enum:__anon11
+XMPP_CLIENT	src/xmpp.h	/^    XMPP_CLIENT,$/;"	e	enum:__anon5
+XMPP_COMPONENT	src/xmpp.h	/^    XMPP_COMPONENT$/;"	e	enum:__anon5
+XMPP_CONN_CONNECT	src/xmpp.h	/^    XMPP_CONN_CONNECT,$/;"	e	enum:__anon6
+XMPP_CONN_DISCONNECT	src/xmpp.h	/^    XMPP_CONN_DISCONNECT,$/;"	e	enum:__anon6
+XMPP_CONN_FAIL	src/xmpp.h	/^    XMPP_CONN_FAIL$/;"	e	enum:__anon6
 XMPP_EINT	src/xmpp.h	/^#define XMPP_EINT /;"	d
 XMPP_EINVOP	src/xmpp.h	/^#define XMPP_EINVOP /;"	d
 XMPP_EMEM	src/xmpp.h	/^#define XMPP_EMEM /;"	d
 XMPP_EOK	src/xmpp.h	/^#define XMPP_EOK /;"	d
-XMPP_LEVEL_DEBUG	src/xmpp.h	/^    XMPP_LEVEL_DEBUG,$/;"	e	enum:__anon9
-XMPP_LEVEL_ERROR	src/xmpp.h	/^    XMPP_LEVEL_ERROR$/;"	e	enum:__anon9
-XMPP_LEVEL_INFO	src/xmpp.h	/^    XMPP_LEVEL_INFO,$/;"	e	enum:__anon9
-XMPP_LEVEL_WARN	src/xmpp.h	/^    XMPP_LEVEL_WARN,$/;"	e	enum:__anon9
-XMPP_LOOP_NOTSTARTED	src/common.h	/^    XMPP_LOOP_NOTSTARTED,$/;"	e	enum:__anon1
-XMPP_LOOP_QUIT	src/common.h	/^    XMPP_LOOP_QUIT$/;"	e	enum:__anon1
-XMPP_LOOP_RUNNING	src/common.h	/^    XMPP_LOOP_RUNNING,$/;"	e	enum:__anon1
+XMPP_LEVEL_DEBUG	src/xmpp.h	/^    XMPP_LEVEL_DEBUG,$/;"	e	enum:__anon4
+XMPP_LEVEL_ERROR	src/xmpp.h	/^    XMPP_LEVEL_ERROR$/;"	e	enum:__anon4
+XMPP_LEVEL_INFO	src/xmpp.h	/^    XMPP_LEVEL_INFO,$/;"	e	enum:__anon4
+XMPP_LEVEL_WARN	src/xmpp.h	/^    XMPP_LEVEL_WARN,$/;"	e	enum:__anon4
+XMPP_LOOP_NOTSTARTED	src/xmpp.h	/^    XMPP_LOOP_NOTSTARTED,$/;"	e	enum:__anon3
+XMPP_LOOP_QUIT	src/xmpp.h	/^    XMPP_LOOP_QUIT$/;"	e	enum:__anon3
+XMPP_LOOP_RUNNING	src/xmpp.h	/^    XMPP_LOOP_RUNNING,$/;"	e	enum:__anon3
 XMPP_NS_AUTH	src/xmpp.h	/^#define XMPP_NS_AUTH /;"	d
 XMPP_NS_BIND	src/xmpp.h	/^#define XMPP_NS_BIND /;"	d
 XMPP_NS_CLIENT	src/xmpp.h	/^#define XMPP_NS_CLIENT /;"	d
@@ -121,46 +121,46 @@ XMPP_NS_SESSION	src/xmpp.h	/^#define XMPP_NS_SESSION /;"	d
 XMPP_NS_STREAMS	src/xmpp.h	/^#define XMPP_NS_STREAMS /;"	d
 XMPP_NS_STREAMS_IETF	src/xmpp.h	/^#define XMPP_NS_STREAMS_IETF /;"	d
 XMPP_NS_TLS	src/xmpp.h	/^#define XMPP_NS_TLS /;"	d
-XMPP_SE_BAD_FORMAT	src/xmpp.h	/^    XMPP_SE_BAD_FORMAT,$/;"	e	enum:__anon12
-XMPP_SE_BAD_NS_PREFIX	src/xmpp.h	/^    XMPP_SE_BAD_NS_PREFIX,$/;"	e	enum:__anon12
-XMPP_SE_CONFLICT	src/xmpp.h	/^    XMPP_SE_CONFLICT,$/;"	e	enum:__anon12
-XMPP_SE_CONN_TIMEOUT	src/xmpp.h	/^    XMPP_SE_CONN_TIMEOUT,$/;"	e	enum:__anon12
-XMPP_SE_HOST_GONE	src/xmpp.h	/^    XMPP_SE_HOST_GONE,$/;"	e	enum:__anon12
-XMPP_SE_HOST_UNKNOWN	src/xmpp.h	/^    XMPP_SE_HOST_UNKNOWN,$/;"	e	enum:__anon12
-XMPP_SE_IMPROPER_ADDR	src/xmpp.h	/^    XMPP_SE_IMPROPER_ADDR,$/;"	e	enum:__anon12
-XMPP_SE_INTERNAL_SERVER_ERROR	src/xmpp.h	/^    XMPP_SE_INTERNAL_SERVER_ERROR,$/;"	e	enum:__anon12
-XMPP_SE_INVALID_FROM	src/xmpp.h	/^    XMPP_SE_INVALID_FROM,$/;"	e	enum:__anon12
-XMPP_SE_INVALID_ID	src/xmpp.h	/^    XMPP_SE_INVALID_ID,$/;"	e	enum:__anon12
-XMPP_SE_INVALID_NS	src/xmpp.h	/^    XMPP_SE_INVALID_NS,$/;"	e	enum:__anon12
-XMPP_SE_INVALID_XML	src/xmpp.h	/^    XMPP_SE_INVALID_XML,$/;"	e	enum:__anon12
-XMPP_SE_NOT_AUTHORIZED	src/xmpp.h	/^    XMPP_SE_NOT_AUTHORIZED,$/;"	e	enum:__anon12
-XMPP_SE_POLICY_VIOLATION	src/xmpp.h	/^    XMPP_SE_POLICY_VIOLATION,$/;"	e	enum:__anon12
-XMPP_SE_REMOTE_CONN_FAILED	src/xmpp.h	/^    XMPP_SE_REMOTE_CONN_FAILED,$/;"	e	enum:__anon12
-XMPP_SE_RESOURCE_CONSTRAINT	src/xmpp.h	/^    XMPP_SE_RESOURCE_CONSTRAINT,$/;"	e	enum:__anon12
-XMPP_SE_RESTRICTED_XML	src/xmpp.h	/^    XMPP_SE_RESTRICTED_XML,$/;"	e	enum:__anon12
-XMPP_SE_SEE_OTHER_HOST	src/xmpp.h	/^    XMPP_SE_SEE_OTHER_HOST,$/;"	e	enum:__anon12
-XMPP_SE_SYSTEM_SHUTDOWN	src/xmpp.h	/^    XMPP_SE_SYSTEM_SHUTDOWN,$/;"	e	enum:__anon12
-XMPP_SE_UNDEFINED_CONDITION	src/xmpp.h	/^    XMPP_SE_UNDEFINED_CONDITION,$/;"	e	enum:__anon12
-XMPP_SE_UNSUPPORTED_ENCODING	src/xmpp.h	/^    XMPP_SE_UNSUPPORTED_ENCODING,$/;"	e	enum:__anon12
-XMPP_SE_UNSUPPORTED_STANZA_TYPE	src/xmpp.h	/^    XMPP_SE_UNSUPPORTED_STANZA_TYPE,$/;"	e	enum:__anon12
-XMPP_SE_UNSUPPORTED_VERSION	src/xmpp.h	/^    XMPP_SE_UNSUPPORTED_VERSION,$/;"	e	enum:__anon12
-XMPP_SE_XML_NOT_WELL_FORMED	src/xmpp.h	/^    XMPP_SE_XML_NOT_WELL_FORMED$/;"	e	enum:__anon12
-XMPP_STANZA_TAG	src/common.h	/^    XMPP_STANZA_TAG$/;"	e	enum:__anon7
-XMPP_STANZA_TEXT	src/common.h	/^    XMPP_STANZA_TEXT,$/;"	e	enum:__anon7
-XMPP_STANZA_UNKNOWN	src/common.h	/^    XMPP_STANZA_UNKNOWN,$/;"	e	enum:__anon7
-XMPP_STATE_CONNECTED	src/common.h	/^    XMPP_STATE_CONNECTED$/;"	e	enum:__anon2
-XMPP_STATE_CONNECTING	src/common.h	/^    XMPP_STATE_CONNECTING,$/;"	e	enum:__anon2
-XMPP_STATE_DISCONNECTED	src/common.h	/^    XMPP_STATE_DISCONNECTED,$/;"	e	enum:__anon2
-XMPP_UNKNOWN	src/xmpp.h	/^    XMPP_UNKNOWN,$/;"	e	enum:__anon10
+XMPP_SE_BAD_FORMAT	src/xmpp.h	/^    XMPP_SE_BAD_FORMAT,$/;"	e	enum:__anon7
+XMPP_SE_BAD_NS_PREFIX	src/xmpp.h	/^    XMPP_SE_BAD_NS_PREFIX,$/;"	e	enum:__anon7
+XMPP_SE_CONFLICT	src/xmpp.h	/^    XMPP_SE_CONFLICT,$/;"	e	enum:__anon7
+XMPP_SE_CONN_TIMEOUT	src/xmpp.h	/^    XMPP_SE_CONN_TIMEOUT,$/;"	e	enum:__anon7
+XMPP_SE_HOST_GONE	src/xmpp.h	/^    XMPP_SE_HOST_GONE,$/;"	e	enum:__anon7
+XMPP_SE_HOST_UNKNOWN	src/xmpp.h	/^    XMPP_SE_HOST_UNKNOWN,$/;"	e	enum:__anon7
+XMPP_SE_IMPROPER_ADDR	src/xmpp.h	/^    XMPP_SE_IMPROPER_ADDR,$/;"	e	enum:__anon7
+XMPP_SE_INTERNAL_SERVER_ERROR	src/xmpp.h	/^    XMPP_SE_INTERNAL_SERVER_ERROR,$/;"	e	enum:__anon7
+XMPP_SE_INVALID_FROM	src/xmpp.h	/^    XMPP_SE_INVALID_FROM,$/;"	e	enum:__anon7
+XMPP_SE_INVALID_ID	src/xmpp.h	/^    XMPP_SE_INVALID_ID,$/;"	e	enum:__anon7
+XMPP_SE_INVALID_NS	src/xmpp.h	/^    XMPP_SE_INVALID_NS,$/;"	e	enum:__anon7
+XMPP_SE_INVALID_XML	src/xmpp.h	/^    XMPP_SE_INVALID_XML,$/;"	e	enum:__anon7
+XMPP_SE_NOT_AUTHORIZED	src/xmpp.h	/^    XMPP_SE_NOT_AUTHORIZED,$/;"	e	enum:__anon7
+XMPP_SE_POLICY_VIOLATION	src/xmpp.h	/^    XMPP_SE_POLICY_VIOLATION,$/;"	e	enum:__anon7
+XMPP_SE_REMOTE_CONN_FAILED	src/xmpp.h	/^    XMPP_SE_REMOTE_CONN_FAILED,$/;"	e	enum:__anon7
+XMPP_SE_RESOURCE_CONSTRAINT	src/xmpp.h	/^    XMPP_SE_RESOURCE_CONSTRAINT,$/;"	e	enum:__anon7
+XMPP_SE_RESTRICTED_XML	src/xmpp.h	/^    XMPP_SE_RESTRICTED_XML,$/;"	e	enum:__anon7
+XMPP_SE_SEE_OTHER_HOST	src/xmpp.h	/^    XMPP_SE_SEE_OTHER_HOST,$/;"	e	enum:__anon7
+XMPP_SE_SYSTEM_SHUTDOWN	src/xmpp.h	/^    XMPP_SE_SYSTEM_SHUTDOWN,$/;"	e	enum:__anon7
+XMPP_SE_UNDEFINED_CONDITION	src/xmpp.h	/^    XMPP_SE_UNDEFINED_CONDITION,$/;"	e	enum:__anon7
+XMPP_SE_UNSUPPORTED_ENCODING	src/xmpp.h	/^    XMPP_SE_UNSUPPORTED_ENCODING,$/;"	e	enum:__anon7
+XMPP_SE_UNSUPPORTED_STANZA_TYPE	src/xmpp.h	/^    XMPP_SE_UNSUPPORTED_STANZA_TYPE,$/;"	e	enum:__anon7
+XMPP_SE_UNSUPPORTED_VERSION	src/xmpp.h	/^    XMPP_SE_UNSUPPORTED_VERSION,$/;"	e	enum:__anon7
+XMPP_SE_XML_NOT_WELL_FORMED	src/xmpp.h	/^    XMPP_SE_XML_NOT_WELL_FORMED$/;"	e	enum:__anon7
+XMPP_STANZA_TAG	src/stanza.h	/^    XMPP_STANZA_TAG$/;"	e	enum:__anon2
+XMPP_STANZA_TEXT	src/stanza.h	/^    XMPP_STANZA_TEXT,$/;"	e	enum:__anon2
+XMPP_STANZA_UNKNOWN	src/stanza.h	/^    XMPP_STANZA_UNKNOWN,$/;"	e	enum:__anon2
+XMPP_STATE_CONNECTED	src/xmpp.h	/^    XMPP_STATE_CONNECTED$/;"	e	enum:__anon8
+XMPP_STATE_CONNECTING	src/xmpp.h	/^    XMPP_STATE_CONNECTING,$/;"	e	enum:__anon8
+XMPP_STATE_DISCONNECTED	src/xmpp.h	/^    XMPP_STATE_DISCONNECTED,$/;"	e	enum:__anon8
+XMPP_UNKNOWN	src/xmpp.h	/^    XMPP_UNKNOWN,$/;"	e	enum:__anon5
 _BSD_SOURCE	src/fmacros.h	/^#define _BSD_SOURCE$/;"	d
 _POSIX_C_SOURCE	src/fmacros.h	/^#define _POSIX_C_SOURCE /;"	d
 _SMARTA_H_	src/smarta.h	/^#define _SMARTA_H_$/;"	d
+_SMARTA_STANZA_H_	src/stanza.h	/^#define _SMARTA_STANZA_H_$/;"	d
 _SMARTA_XMPP_H__	src/xmpp.h	/^#define _SMARTA_XMPP_H__$/;"	d
 _XOPEN_SOURCE	src/fmacros.h	/^#define _XOPEN_SOURCE /;"	d
 _XOPEN_SOURCE	src/fmacros.h	/^#define _XOPEN_SOURCE$/;"	d
 __ADLIST_H__	src/adlist.h	/^#define __ADLIST_H__$/;"	d
 __HIREDIS_FMACRO_H	src/fmacros.h	/^#define __HIREDIS_FMACRO_H$/;"	d
-__LIBSTROPHE_COMMON_H__	src/common.h	/^#define __LIBSTROPHE_COMMON_H__$/;"	d
 __LIBSTROPHE_HASH_H__	src/hash.h	/^#define __LIBSTROPHE_HASH_H__$/;"	d
 __LIBSTROPHE_PARSER_H__	src/parser.h	/^#define __LIBSTROPHE_PARSER_H__$/;"	d
 __LIBSTROPHE_SASL_H__	src/sasl.h	/^#define __LIBSTROPHE_SASL_H__$/;"	d
@@ -182,7 +182,7 @@ _command_t	src/smarta.h	/^typedef struct _command_t {$/;"	s
 _digest_to_hex	src/sasl.c	/^static void _digest_to_hex(const char *digest, char *hex)$/;"	f	file:
 _disconnect_cleanup	src/conn.c	/^static int _disconnect_cleanup(xmpp_conn_t * const conn, $/;"	f	file:
 _end_element	src/parser.c	/^static void _end_element(void *userdata, const XML_Char *name)$/;"	f	file:
-_free	src/ctx.c	/^static void _free(void *p, void * const userdata)$/;"	f	file:
+_free	src/xmpp.c	/^static void _free(void *p, void * const userdata)$/;"	f	file:
 _get_authid	src/auth.c	/^static char *_get_authid(xmpp_conn_t * const conn)$/;"	f	file:
 _get_stream_attribute	src/conn.c	/^static char *_get_stream_attribute(char **attrs, char *name)$/;"	f	file:
 _handle_bind	src/auth.c	/^static int _handle_bind(xmpp_conn_t * const conn,$/;"	f	file:
@@ -216,10 +216,10 @@ _make_quoted	src/sasl.c	/^static char *_make_quoted(const char *s)$/;"	f	file:
 _make_sasl_auth	src/auth.c	/^static xmpp_stanza_t *_make_sasl_auth(xmpp_conn_t * const conn,$/;"	f	file:
 _make_starttls	src/auth.c	/^static xmpp_stanza_t *_make_starttls(xmpp_conn_t * const conn)$/;"	f	file:
 _make_string	src/sasl.c	/^static char *_make_string(const char *s, const unsigned len)$/;"	f	file:
-_malloc	src/ctx.c	/^static void *_malloc(const size_t size, void * const userdata)$/;"	f	file:
+_malloc	src/xmpp.c	/^static void *_malloc(const size_t size, void * const userdata)$/;"	f	file:
 _parse_digest_challenge	src/sasl.c	/^static hash_t *_parse_digest_challenge(const char *msg)$/;"	f	file:
 _parser_t	src/parser.c	/^struct _parser_t {$/;"	s	file:
-_realloc	src/ctx.c	/^static void *_realloc(void *p, const size_t size, void * const userdata)$/;"	f	file:
+_realloc	src/xmpp.c	/^static void *_realloc(void *p, const size_t size, void * const userdata)$/;"	f	file:
 _render_stanza_recursive	src/stanza.c	/^static int _render_stanza_recursive(xmpp_stanza_t *stanza,$/;"	f	file:
 _render_update	src/stanza.c	/^static inline void _render_update(int *written, const int length,$/;"	f	file:
 _service_t	src/smarta.h	/^typedef struct _service_t {$/;"	s
@@ -233,66 +233,66 @@ _tls	src/tls_dummy.c	/^struct _tls {$/;"	s	file:
 _tls	src/tls_gnutls.c	/^struct _tls {$/;"	s	file:
 _tls	src/tls_openssl.c	/^struct _tls {$/;"	s	file:
 _tls	src/tls_schannel.c	/^struct _tls {$/;"	s	file:
-_xmpp_conn_t	src/common.h	/^struct _xmpp_conn_t {$/;"	s
-_xmpp_connlist_t	src/common.h	/^typedef struct _xmpp_connlist_t {$/;"	s
-_xmpp_ctx_t	src/common.h	/^struct _xmpp_ctx_t {$/;"	s
-_xmpp_default_logger_levels	src/ctx.c	/^static const xmpp_log_level_t _xmpp_default_logger_levels[] = {XMPP_LEVEL_DEBUG,$/;"	v	file:
-_xmpp_default_loggers	src/ctx.c	/^static const xmpp_log_t _xmpp_default_loggers[] = {$/;"	v	file:
-_xmpp_handlist_t	src/common.h	/^struct _xmpp_handlist_t {$/;"	s
-_xmpp_log_level_name	src/ctx.c	/^static const char * const _xmpp_log_level_name[4] = {"DEBUG", "INFO", "WARN", "ERROR"};$/;"	v	file:
+_xmpp_conn_t	src/xmpp.h	/^struct _xmpp_conn_t {$/;"	s
+_xmpp_connlist_t	src/xmpp.h	/^typedef struct _xmpp_connlist_t {$/;"	s
+_xmpp_ctx_t	src/xmpp.h	/^struct _xmpp_ctx_t {$/;"	s
+_xmpp_default_logger_levels	src/xmpp.c	/^static const xmpp_log_level_t _xmpp_default_logger_levels[] = {XMPP_LEVEL_DEBUG,$/;"	v	file:
+_xmpp_default_loggers	src/xmpp.c	/^static const xmpp_log_t _xmpp_default_loggers[] = {$/;"	v	file:
+_xmpp_handlist_t	src/xmpp.h	/^struct _xmpp_handlist_t {$/;"	s
+_xmpp_log_level_name	src/xmpp.c	/^static const char * const _xmpp_log_level_name[4] = {"DEBUG", "INFO", "WARN", "ERROR"};$/;"	v	file:
 _xmpp_log_t	src/xmpp.h	/^struct _xmpp_log_t {$/;"	s
 _xmpp_mem_t	src/xmpp.h	/^struct _xmpp_mem_t {$/;"	s
-_xmpp_send_queue_t	src/common.h	/^struct _xmpp_send_queue_t {$/;"	s
-_xmpp_stanza_t	src/common.h	/^struct _xmpp_stanza_t {$/;"	s
+_xmpp_send_queue_t	src/xmpp.h	/^struct _xmpp_send_queue_t {$/;"	s
+_xmpp_stanza_t	src/stanza.h	/^struct _xmpp_stanza_t {$/;"	s
+_xmpp_stream_error_t	src/xmpp.h	/^struct _xmpp_stream_error_t {$/;"	s
 aa	src/sock.c	/^	unsigned char aa;$/;"	m	struct:dnsquery_header	file:
 abs_val	src/snprintf.c	/^static LDOUBLE abs_val (LDOUBLE value)$/;"	f	file:
 alloc	src/xmpp.h	/^    void *(*alloc)(const size_t size, void * const userdata);$/;"	m	struct:_xmpp_mem_t
 ancount	src/sock.c	/^	unsigned short ancount;$/;"	m	struct:dnsquery_header	file:
 apikey	src/smarta.h	/^    char *apikey;$/;"	m	struct:_smarta_t
 arcount	src/sock.c	/^	unsigned short arcount;$/;"	m	struct:dnsquery_header	file:
-attributes	src/common.h	/^    hash_t *attributes;$/;"	m	struct:_xmpp_stanza_t
+attributes	src/stanza.h	/^    hash_t *attributes;$/;"	m	struct:_xmpp_stanza_t
 auth_handle_open	src/auth.c	/^void auth_handle_open(xmpp_conn_t * const conn)$/;"	f
-authenticated	src/common.h	/^    int authenticated;$/;"	m	struct:_xmpp_conn_t
+authenticated	src/xmpp.h	/^    int authenticated;$/;"	m	struct:_xmpp_conn_t
 base64_decode	src/sasl.c	/^unsigned char *base64_decode(const char * const buffer, const unsigned len)$/;"	f
 base64_decoded_len	src/sasl.c	/^int base64_decoded_len(const char * const buffer, const unsigned len) {$/;"	f
 base64_encode	src/sasl.c	/^char *base64_encode(const unsigned char * const buffer, const unsigned len)$/;"	f
 base64_encoded_len	src/sasl.c	/^int base64_encoded_len(const unsigned len)$/;"	f
-bind_required	src/common.h	/^    int bind_required;$/;"	m	struct:_xmpp_conn_t
+bind_required	src/xmpp.h	/^    int bind_required;$/;"	m	struct:_xmpp_conn_t
 bits	src/md5.h	/^	uint32_t bits[2];$/;"	m	struct:MD5Context
 blk	src/sha1.c	/^#define blk(/;"	d	file:
 blk0	src/sha1.c	/^#define blk0(/;"	d	file:
-blocking_send	src/common.h	/^    int blocking_send;$/;"	m	struct:_xmpp_conn_t
-bound_jid	src/common.h	/^    char *bound_jid;$/;"	m	struct:_xmpp_conn_t
+blocking_send	src/xmpp.h	/^    int blocking_send;$/;"	m	struct:_xmpp_conn_t
+bound_jid	src/xmpp.h	/^    char *bound_jid;$/;"	m	struct:_xmpp_conn_t
 buf	src/md5.h	/^	uint32_t buf[4];$/;"	m	struct:MD5Context
 buf	src/sds.h	/^    char buf[];$/;"	m	struct:sdshdr
-buffer	src/sha1.h	/^    uint8_t  buffer[64];$/;"	m	struct:__anon8
+buffer	src/sha1.h	/^    uint8_t  buffer[64];$/;"	m	struct:__anon1
 calc_domain_name_size	src/sock.c	/^int calc_domain_name_size(unsigned char *buf, int buflen, int offset)$/;"	f
 char_to_int	src/snprintf.c	/^#define char_to_int(/;"	d	file:
 check_service	src/sched.c	/^int check_service(xmpp_conn_t *conn, void *userdata) {$/;"	f
-children	src/common.h	/^    xmpp_stanza_t *children;$/;"	m	struct:_xmpp_stanza_t
+children	src/stanza.h	/^    xmpp_stanza_t *children;$/;"	m	struct:_xmpp_stanza_t
 command	src/smarta.h	/^    char *command;$/;"	m	struct:_service_t
 command_t	src/smarta.h	/^} command_t;$/;"	t	typeref:struct:_command_t
-conn	src/common.h	/^    xmpp_conn_t *conn;$/;"	m	struct:_xmpp_connlist_t
+conn	src/xmpp.h	/^    xmpp_conn_t *conn;$/;"	m	struct:_xmpp_connlist_t
 conn_disconnect	src/conn.c	/^void conn_disconnect(xmpp_conn_t * const conn) $/;"	f
 conn_disconnect_clean	src/conn.c	/^void conn_disconnect_clean(xmpp_conn_t * const conn)$/;"	f
-conn_handler	src/common.h	/^    xmpp_conn_handler conn_handler;$/;"	m	struct:_xmpp_conn_t
 conn_handler	src/smarta.c	/^void conn_handler(xmpp_conn_t * const conn, const xmpp_conn_event_t status, $/;"	f
+conn_handler	src/xmpp.h	/^    xmpp_conn_handler conn_handler;$/;"	m	struct:_xmpp_conn_t
 conn_open_stream	src/conn.c	/^void conn_open_stream(xmpp_conn_t * const conn)$/;"	f
 conn_parser_reset	src/conn.c	/^void conn_parser_reset(xmpp_conn_t * const conn)$/;"	f
 conn_prepare_reset	src/conn.c	/^void conn_prepare_reset(xmpp_conn_t * const conn, xmpp_open_handler handler)$/;"	f
-connect_timeout	src/common.h	/^    unsigned int connect_timeout;$/;"	m	struct:_xmpp_conn_t
-connectdomain	src/common.h	/^    char *connectdomain;$/;"	m	struct:_xmpp_conn_t
-connectport	src/common.h	/^    char *connectport;$/;"	m	struct:_xmpp_conn_t
-connlist	src/common.h	/^    xmpp_connlist_t *connlist;$/;"	m	struct:_xmpp_ctx_t
-count	src/sha1.h	/^    uint32_t count[2];$/;"	m	struct:__anon8
+connect_timeout	src/xmpp.h	/^    unsigned int connect_timeout;$/;"	m	struct:_xmpp_conn_t
+connectdomain	src/xmpp.h	/^    char *connectdomain;$/;"	m	struct:_xmpp_conn_t
+connectport	src/xmpp.h	/^    char *connectport;$/;"	m	struct:_xmpp_conn_t
+connlist	src/xmpp.h	/^    xmpp_connlist_t *connlist;$/;"	m	struct:_xmpp_ctx_t
+count	src/sha1.h	/^    uint32_t count[2];$/;"	m	struct:__anon1
 cred	src/tls_gnutls.c	/^    gnutls_certificate_credentials_t cred;$/;"	m	struct:_tls	file:
-ctx	src/common.h	/^    xmpp_ctx_t *ctx;$/;"	m	struct:_xmpp_conn_t
-ctx	src/parser.c	/^    xmpp_ctx_t *ctx;$/;"	m	struct:_parser_t	file:
 ctx	src/tls_dummy.c	/^    xmpp_ctx_t *ctx; \/* do we need this? *\/$/;"	m	struct:_tls	file:
 ctx	src/tls_gnutls.c	/^    xmpp_ctx_t *ctx; \/* do we need this? *\/$/;"	m	struct:_tls	file:
+ctx	src/xmpp.h	/^    xmpp_ctx_t *ctx;$/;"	m	struct:_xmpp_conn_t
 daemonize	src/smarta.h	/^    int daemonize;$/;"	m	struct:_smarta_t
-data	src/common.h	/^    char *data;$/;"	m	struct:_xmpp_send_queue_t
-data	src/common.h	/^    char *data;$/;"	m	struct:_xmpp_stanza_t
+data	src/stanza.h	/^    char *data;$/;"	m	struct:_xmpp_stanza_t
+data	src/xmpp.h	/^    char *data;$/;"	m	struct:_xmpp_send_queue_t
 depth	src/parser.c	/^    int depth;$/;"	m	struct:_parser_t	file:
 digest_to_hex	src/sha1.c	/^void digest_to_hex(const uint8_t digest[SHA1_DIGEST_SIZE], char *output)$/;"	f
 direction	src/adlist.h	/^    int direction;$/;"	m	struct:listIter
@@ -301,15 +301,15 @@ dnsquery_header	src/sock.c	/^struct dnsquery_header$/;"	s	file:
 dnsquery_question	src/sock.c	/^struct dnsquery_question$/;"	s	file:
 dnsquery_resourcerecord	src/sock.c	/^struct dnsquery_resourcerecord$/;"	s	file:
 dnsquery_srvrdata	src/sock.c	/^struct dnsquery_srvrdata$/;"	s	file:
-domain	src/common.h	/^    char *domain;$/;"	m	struct:_xmpp_conn_t
+domain	src/xmpp.h	/^    char *domain;$/;"	m	struct:_xmpp_conn_t
 dopr	src/snprintf.c	/^static int dopr (char *buffer, size_t maxlen, const char *format, va_list args)$/;"	f	file:
 dopr_outch	src/snprintf.c	/^static int dopr_outch (char *buffer, size_t *currlen, size_t maxlen, char c)$/;"	f	file:
 dup	src/adlist.h	/^    void *(*dup)(void *ptr);$/;"	m	struct:list
-enabled	src/common.h	/^    int enabled; \/* handlers are added disabled and enabled after the$/;"	m	struct:_xmpp_handlist_t
+enabled	src/xmpp.h	/^    int enabled; \/* handlers are added disabled and enabled after the$/;"	m	struct:_xmpp_handlist_t
 endcb	src/parser.c	/^    parser_end_callback endcb;$/;"	m	struct:_parser_t	file:
 entries	src/hash.c	/^    hashentry_t **entries;$/;"	m	struct:_hash_t	file:
 entry	src/hash.c	/^    hashentry_t *entry;$/;"	m	struct:_hash_iterator_t	file:
-error	src/common.h	/^    int error;$/;"	m	struct:_xmpp_conn_t
+error	src/xmpp.h	/^    int error;$/;"	m	struct:_xmpp_conn_t
 expat	src/parser.c	/^    XML_Parser expat;$/;"	m	struct:_parser_t	file:
 fmtfp	src/snprintf.c	/^static int fmtfp (char *buffer, size_t *currlen, size_t maxlen,$/;"	f	file:
 fmtint	src/snprintf.c	/^static int fmtint (char *buffer, size_t *currlen, size_t maxlen,$/;"	f	file:
@@ -318,7 +318,7 @@ free	src/adlist.h	/^    void (*free)(void *ptr);$/;"	m	struct:list
 free	src/hash.c	/^    hash_free_func free;$/;"	m	struct:_hash_t	file:
 free	src/sds.h	/^    int free;$/;"	m	struct:sdshdr
 free	src/xmpp.h	/^    void (*free)(void *p, void * const userdata);$/;"	m	struct:_xmpp_mem_t
-handler	src/common.h	/^    void *handler;$/;"	m	struct:_xmpp_handlist_t
+handler	src/xmpp.h	/^    void *handler;$/;"	m	struct:_xmpp_handlist_t
 handler	src/xmpp.h	/^    xmpp_log_handler handler;$/;"	m	struct:_xmpp_log_t
 handler_add	src/handler.c	/^void handler_add(xmpp_conn_t * const conn,$/;"	f
 handler_add_id	src/handler.c	/^void handler_add_id(xmpp_conn_t * const conn,$/;"	f
@@ -326,7 +326,7 @@ handler_add_timed	src/handler.c	/^void handler_add_timed(xmpp_conn_t * const con
 handler_fire_stanza	src/handler.c	/^void handler_fire_stanza(xmpp_conn_t * const conn,$/;"	f
 handler_fire_timed	src/handler.c	/^uint64_t handler_fire_timed(xmpp_ctx_t * const ctx)$/;"	f
 handler_reset_timed	src/handler.c	/^void handler_reset_timed(xmpp_conn_t *conn, int user_only)$/;"	f
-handlers	src/common.h	/^    xmpp_handlist_t *handlers;$/;"	m	struct:_xmpp_conn_t
+handlers	src/xmpp.h	/^    xmpp_handlist_t *handlers;$/;"	m	struct:_xmpp_conn_t
 hash_add	src/hash.c	/^int hash_add(hash_t *table, const char * const key, void *data)$/;"	f
 hash_clone	src/hash.c	/^hash_t *hash_clone(hash_t * const table)$/;"	f
 hash_drop	src/hash.c	/^int hash_drop(hash_t *table, const char *key)$/;"	f
@@ -345,9 +345,9 @@ hcred	src/tls_schannel.c	/^    CredHandle hcred;$/;"	m	struct:_tls	file:
 hctxt	src/tls_schannel.c	/^    CtxtHandle hctxt;$/;"	m	struct:_tls	file:
 head	src/adlist.h	/^    listNode *head;$/;"	m	struct:list
 hsec32	src/tls_schannel.c	/^    HANDLE hsec32;$/;"	m	struct:_tls	file:
-id	src/common.h	/^	    char *id;$/;"	m	struct:_xmpp_handlist_t::__anon3::__anon5
 id	src/sock.c	/^	unsigned short id;$/;"	m	struct:dnsquery_header	file:
-id_handlers	src/common.h	/^    hash_t *id_handlers;$/;"	m	struct:_xmpp_conn_t
+id	src/xmpp.h	/^	    char *id;$/;"	m	struct:_xmpp_handlist_t::__anon9::__anon11
+id_handlers	src/xmpp.h	/^    hash_t *id_handlers;$/;"	m	struct:_xmpp_conn_t
 in	src/md5.h	/^	unsigned char in[64];$/;"	m	struct:MD5Context
 index	src/hash.c	/^    int index;$/;"	m	struct:_hash_iterator_t	file:
 init	src/tls_schannel.c	/^    int init;$/;"	m	struct:_tls	file:
@@ -362,15 +362,15 @@ int64_t	src/sha1.c	/^  typedef __int64                 int64_t;$/;"	t	file:
 int8_t	src/sasl.c	/^  typedef signed char             int8_t;$/;"	t	file:
 int8_t	src/sha1.c	/^  typedef signed char             int8_t;$/;"	t	file:
 isslave	src/smarta.h	/^    int isslave;$/;"	m	struct:_smarta_t
-jid	src/common.h	/^    char *jid;$/;"	m	struct:_xmpp_conn_t
+jid	src/xmpp.h	/^    char *jid;$/;"	m	struct:_xmpp_conn_t
 key	src/hash.c	/^    char *key;$/;"	m	struct:_hashentry_t	file:
-lang	src/common.h	/^    char *lang;$/;"	m	struct:_xmpp_conn_t
-last_stamp	src/common.h	/^	    uint64_t last_stamp;$/;"	m	struct:_xmpp_handlist_t::__anon3::__anon4
+lang	src/xmpp.h	/^    char *lang;$/;"	m	struct:_xmpp_conn_t
+last_stamp	src/xmpp.h	/^	    uint64_t last_stamp;$/;"	m	struct:_xmpp_handlist_t::__anon9::__anon10
 lasterror	src/tls_openssl.c	/^    int lasterror;$/;"	m	struct:_tls	file:
 lasterror	src/tls_schannel.c	/^    SECURITY_STATUS lasterror;$/;"	m	struct:_tls	file:
 len	src/adlist.h	/^    unsigned int len;$/;"	m	struct:list
-len	src/common.h	/^    size_t len;$/;"	m	struct:_xmpp_send_queue_t
 len	src/sds.h	/^    int len;$/;"	m	struct:sdshdr
+len	src/xmpp.h	/^    size_t len;$/;"	m	struct:_xmpp_send_queue_t
 length	src/hash.c	/^    int length;$/;"	m	struct:_hash_t	file:
 list	src/adlist.h	/^typedef struct list {$/;"	s
 list	src/adlist.h	/^} list;$/;"	t	typeref:struct:list
@@ -406,7 +406,7 @@ listSetFreeMethod	src/adlist.h	/^#define listSetFreeMethod(/;"	d
 listSetMatchMethod	src/adlist.h	/^#define listSetMatchMethod(/;"	d
 load_config	src/smarta.c	/^void load_config(char *filename) {$/;"	f
 logfile	src/smarta.h	/^    char *logfile;$/;"	m	struct:_smarta_t
-loop_status	src/common.h	/^    xmpp_loop_status_t loop_status;$/;"	m	struct:_xmpp_ctx_t
+loop_status	src/xmpp.h	/^    xmpp_loop_status_t loop_status;$/;"	m	struct:_xmpp_ctx_t
 main	src/sasl.c	/^int main(int argc, char *argv[])$/;"	f
 main	src/sds.c	/^int main(void) {$/;"	f
 main	src/sha1.c	/^int main(int argc, char** argv)$/;"	f
@@ -417,11 +417,11 @@ masterhost	src/smarta.h	/^    char *masterhost;$/;"	m	struct:_smarta_t
 masterport	src/smarta.h	/^    int masterport;$/;"	m	struct:_smarta_t
 match	src/adlist.h	/^    int (*match)(void *ptr, void *key);$/;"	m	struct:list
 message_handler	src/smarta.c	/^int message_handler(xmpp_conn_t * const conn, xmpp_stanza_t * const stanza, void * const userdata)$/;"	f
-name	src/common.h	/^	    char *name;$/;"	m	struct:_xmpp_handlist_t::__anon3::__anon6
 name	src/smarta.h	/^    char *name;$/;"	m	struct:_command_t
 name	src/smarta.h	/^    char *name;$/;"	m	struct:_service_t
 name	src/smarta.h	/^    char *name;$/;"	m	struct:_smarta_t
 name	src/sock.c	/^	char name[1024];$/;"	m	struct:dnsquery_resourcerecord	file:
+name	src/xmpp.h	/^	    char *name;$/;"	m	struct:_xmpp_handlist_t::__anon9::__anon12
 netbuf_add_16bitnum	src/sock.c	/^void netbuf_add_16bitnum(unsigned char *buf, int buflen, int *offset, unsigned short num)$/;"	f
 netbuf_add_32bitnum	src/sock.c	/^void netbuf_add_32bitnum(unsigned char *buf, int buflen, int *offset, unsigned int num)$/;"	f
 netbuf_add_dnsquery_header	src/sock.c	/^void netbuf_add_dnsquery_header(unsigned char *buf, int buflen, int *offset, struct dnsquery_header *header)$/;"	f
@@ -436,33 +436,33 @@ netbuf_get_dnsquery_srvrdata	src/sock.c	/^void netbuf_get_dnsquery_srvrdata(unsi
 netbuf_get_domain_name	src/sock.c	/^int netbuf_get_domain_name(unsigned char *buf, int buflen, int *offset, char *namebuf, int namebuflen)$/;"	f
 next	src/adlist.h	/^    listNode *next;$/;"	m	struct:listIter
 next	src/adlist.h	/^    struct listNode *next;$/;"	m	struct:listNode	typeref:struct:listNode::listNode
-next	src/common.h	/^    struct _xmpp_connlist_t *next;$/;"	m	struct:_xmpp_connlist_t	typeref:struct:_xmpp_connlist_t::_xmpp_connlist_t
-next	src/common.h	/^    xmpp_handlist_t *next;$/;"	m	struct:_xmpp_handlist_t
-next	src/common.h	/^    xmpp_send_queue_t *next;$/;"	m	struct:_xmpp_send_queue_t
-next	src/common.h	/^    xmpp_stanza_t *next;$/;"	m	struct:_xmpp_stanza_t
 next	src/hash.c	/^    hashentry_t *next;$/;"	m	struct:_hashentry_t	file:
-ns	src/common.h	/^	    char *ns;$/;"	m	struct:_xmpp_handlist_t::__anon3::__anon6
+next	src/stanza.h	/^    xmpp_stanza_t *next;$/;"	m	struct:_xmpp_stanza_t
+next	src/xmpp.h	/^    struct _xmpp_connlist_t *next;$/;"	m	struct:_xmpp_connlist_t	typeref:struct:_xmpp_connlist_t::_xmpp_connlist_t
+next	src/xmpp.h	/^    xmpp_handlist_t *next;$/;"	m	struct:_xmpp_handlist_t
+next	src/xmpp.h	/^    xmpp_send_queue_t *next;$/;"	m	struct:_xmpp_send_queue_t
+ns	src/xmpp.h	/^	    char *ns;$/;"	m	struct:_xmpp_handlist_t::__anon9::__anon12
 nscount	src/sock.c	/^	unsigned short nscount;$/;"	m	struct:dnsquery_header	file:
 num_keys	src/hash.c	/^    int num_keys;$/;"	m	struct:_hash_t	file:
 opcode	src/sock.c	/^	unsigned char opcode;$/;"	m	struct:dnsquery_header	file:
-open_handler	src/common.h	/^    xmpp_open_handler open_handler;$/;"	m	struct:_xmpp_conn_t
-parent	src/common.h	/^    xmpp_stanza_t *parent;$/;"	m	struct:_xmpp_stanza_t
-parser	src/common.h	/^    parser_t *parser;$/;"	m	struct:_xmpp_conn_t
+open_handler	src/xmpp.h	/^    xmpp_open_handler open_handler;$/;"	m	struct:_xmpp_conn_t
+parent	src/stanza.h	/^    xmpp_stanza_t *parent;$/;"	m	struct:_xmpp_stanza_t
+parser	src/xmpp.h	/^    parser_t *parser;$/;"	m	struct:_xmpp_conn_t
 parser_end_callback	src/parser.h	/^typedef void (*parser_end_callback)(char *name, void * const userdata);$/;"	t
 parser_feed	src/parser.c	/^int parser_feed(parser_t *parser, char *chunk, int len)$/;"	f
 parser_free	src/parser.c	/^void parser_free(parser_t *parser)$/;"	f
-parser_new	src/parser.c	/^parser_t *parser_new(xmpp_ctx_t *ctx,$/;"	f
+parser_new	src/parser.c	/^parser_t *parser_new(parser_start_callback startcb,$/;"	f
 parser_reset	src/parser.c	/^int parser_reset(parser_t *parser)$/;"	f
 parser_stanza_callback	src/parser.h	/^typedef void (*parser_stanza_callback)(xmpp_stanza_t *stanza,$/;"	t
 parser_start_callback	src/parser.h	/^typedef void (*parser_start_callback)(char *name,$/;"	t
 parser_t	src/parser.h	/^typedef struct _parser_t parser_t;$/;"	t	typeref:struct:_parser_t
-pass	src/common.h	/^    char *pass;$/;"	m	struct:_xmpp_conn_t
-period	src/common.h	/^	    unsigned long period;$/;"	m	struct:_xmpp_handlist_t::__anon3::__anon4
+pass	src/xmpp.h	/^    char *pass;$/;"	m	struct:_xmpp_conn_t
 period	src/smarta.h	/^    long period;$/;"	m	struct:_service_t
+period	src/xmpp.h	/^	    unsigned long period;$/;"	m	struct:_xmpp_handlist_t::__anon9::__anon10
 pidfile	src/smarta.h	/^    char *pidfile;$/;"	m	struct:_smarta_t
 port	src/sock.c	/^	unsigned short port;$/;"	m	struct:dnsquery_srvrdata	file:
 prev	src/adlist.h	/^    struct listNode *prev;$/;"	m	struct:listNode	typeref:struct:listNode::listNode
-prev	src/common.h	/^    xmpp_stanza_t *prev;$/;"	m	struct:_xmpp_stanza_t
+prev	src/stanza.h	/^    xmpp_stanza_t *prev;$/;"	m	struct:_xmpp_stanza_t
 priority	src/sock.c	/^	unsigned short priority;$/;"	m	struct:dnsquery_srvrdata	file:
 qclass	src/sock.c	/^	unsigned short qclass;$/;"	m	struct:dnsquery_question	file:
 qdcount	src/sock.c	/^	unsigned short qdcount;$/;"	m	struct:dnsquery_header	file:
@@ -481,15 +481,15 @@ realloc	src/xmpp.h	/^    void *(*realloc)(void *p, const size_t size, void * con
 recvbuffer	src/tls_schannel.c	/^    unsigned char *recvbuffer;$/;"	m	struct:_tls	file:
 recvbuffermaxlen	src/tls_schannel.c	/^    unsigned int recvbuffermaxlen;$/;"	m	struct:_tls	file:
 recvbufferpos	src/tls_schannel.c	/^    unsigned int recvbufferpos;$/;"	m	struct:_tls	file:
-ref	src/common.h	/^    int ref;$/;"	m	struct:_xmpp_stanza_t
-ref	src/common.h	/^    unsigned int ref;$/;"	m	struct:_xmpp_conn_t
 ref	src/hash.c	/^    unsigned int ref;$/;"	m	struct:_hash_iterator_t	file:
 ref	src/hash.c	/^    unsigned int ref;$/;"	m	struct:_hash_t	file:
-reset_parser	src/common.h	/^    int reset_parser;$/;"	m	struct:_xmpp_conn_t
+ref	src/stanza.h	/^    int ref;$/;"	m	struct:_xmpp_stanza_t
+ref	src/xmpp.h	/^    unsigned int ref;$/;"	m	struct:_xmpp_conn_t
+reset_parser	src/xmpp.h	/^    int reset_parser;$/;"	m	struct:_xmpp_conn_t
 rol	src/sha1.c	/^#define rol(/;"	d	file:
 sasl_digest_md5	src/sasl.c	/^char *sasl_digest_md5(const char *challenge,$/;"	f
 sasl_plain	src/sasl.c	/^char *sasl_plain(const char *authid, const char *password) {$/;"	f
-sasl_support	src/common.h	/^    int sasl_support; \/* if true, field is a bitfield of supported $/;"	m	struct:_xmpp_conn_t
+sasl_support	src/xmpp.h	/^    int sasl_support; \/* if true, field is a bitfield of supported $/;"	m	struct:_xmpp_conn_t
 sched_services	src/sched.c	/^void sched_services(xmpp_conn_t *conn) {$/;"	f
 sds	src/sds.h	/^typedef char *sds;$/;"	t
 sdsMakeRoomFor	src/sds.c	/^static sds sdsMakeRoomFor(sds s, size_t addlen) {$/;"	f	file:
@@ -520,12 +520,12 @@ sdstolower	src/sds.c	/^void sdstolower(sds s) {$/;"	f
 sdstoupper	src/sds.c	/^void sdstoupper(sds s) {$/;"	f
 sdstrim	src/sds.c	/^sds sdstrim(sds s, const char *cset) {$/;"	f
 sdsupdatelen	src/sds.c	/^void sdsupdatelen(sds s) {$/;"	f
-secured	src/common.h	/^    int secured; \/* set when stream is secured with TLS *\/$/;"	m	struct:_xmpp_conn_t
+secured	src/xmpp.h	/^    int secured; \/* set when stream is secured with TLS *\/$/;"	m	struct:_xmpp_conn_t
 send_message	src/sched.c	/^void send_message(xmpp_conn_t *conn, sds result) {$/;"	f
-send_queue_head	src/common.h	/^    xmpp_send_queue_t *send_queue_head;$/;"	m	struct:_xmpp_conn_t
-send_queue_len	src/common.h	/^    int send_queue_len;$/;"	m	struct:_xmpp_conn_t
-send_queue_max	src/common.h	/^    int send_queue_max;$/;"	m	struct:_xmpp_conn_t
-send_queue_tail	src/common.h	/^    xmpp_send_queue_t *send_queue_tail;$/;"	m	struct:_xmpp_conn_t
+send_queue_head	src/xmpp.h	/^    xmpp_send_queue_t *send_queue_head;$/;"	m	struct:_xmpp_conn_t
+send_queue_len	src/xmpp.h	/^    int send_queue_len;$/;"	m	struct:_xmpp_conn_t
+send_queue_max	src/xmpp.h	/^    int send_queue_max;$/;"	m	struct:_xmpp_conn_t
+send_queue_tail	src/xmpp.h	/^    xmpp_send_queue_t *send_queue_tail;$/;"	m	struct:_xmpp_conn_t
 sendbuffer	src/tls_schannel.c	/^    unsigned char *sendbuffer;$/;"	m	struct:_tls	file:
 sendbufferlen	src/tls_schannel.c	/^    unsigned int sendbufferlen;$/;"	m	struct:_tls	file:
 sendbuffermaxlen	src/tls_schannel.c	/^    unsigned int sendbuffermaxlen;$/;"	m	struct:_tls	file:
@@ -534,16 +534,16 @@ server	src/smarta.h	/^    char *server;$/;"	m	struct:_smarta_t
 service_t	src/smarta.h	/^} service_t;$/;"	t	typeref:struct:_service_t
 services	src/smarta.h	/^    list *services;$/;"	m	struct:_smarta_t
 session	src/tls_gnutls.c	/^    gnutls_session_t session;$/;"	m	struct:_tls	file:
-session_required	src/common.h	/^    int session_required;$/;"	m	struct:_xmpp_conn_t
+session_required	src/xmpp.h	/^    int session_required;$/;"	m	struct:_xmpp_conn_t
 sft	src/tls_schannel.c	/^    SecurityFunctionTable *sft;$/;"	m	struct:_tls	file:
 smarta	src/smarta.c	/^smarta_t smarta;$/;"	v
 smarta_t	src/smarta.h	/^} smarta_t;$/;"	t	typeref:struct:_smarta_t
 snprintf	src/sock.c	/^#define snprintf /;"	d	file:
-sock	src/common.h	/^    sock_t sock;$/;"	m	struct:_xmpp_conn_t
 sock	src/tls_dummy.c	/^    sock_t sock;$/;"	m	struct:_tls	file:
 sock	src/tls_gnutls.c	/^    sock_t sock;$/;"	m	struct:_tls	file:
 sock	src/tls_openssl.c	/^    sock_t sock;$/;"	m	struct:_tls	file:
 sock	src/tls_schannel.c	/^    sock_t sock;$/;"	m	struct:_tls	file:
+sock	src/xmpp.h	/^    sock_t sock;$/;"	m	struct:_xmpp_conn_t
 sock_close	src/sock.c	/^int sock_close(const sock_t sock)$/;"	f
 sock_connect	src/sock.c	/^sock_t sock_connect(const char * const host, const unsigned int port)$/;"	f
 sock_connect_error	src/sock.c	/^int sock_connect_error(const sock_t sock)$/;"	f
@@ -562,14 +562,14 @@ spi	src/tls_schannel.c	/^    SecPkgInfo *spi;$/;"	m	struct:_tls	file:
 ssl	src/tls_openssl.c	/^    SSL *ssl;$/;"	m	struct:_tls	file:
 ssl_ctx	src/tls_openssl.c	/^    SSL_CTX *ssl_ctx;$/;"	m	struct:_tls	file:
 stanza	src/parser.c	/^    xmpp_stanza_t *stanza;$/;"	m	struct:_parser_t	file:
-stanza	src/xmpp.h	/^    xmpp_stanza_t *stanza;$/;"	m	struct:__anon13
+stanza	src/xmpp.h	/^    xmpp_stanza_t *stanza;$/;"	m	struct:_xmpp_stream_error_t
 stanzacb	src/parser.c	/^    parser_stanza_callback stanzacb;$/;"	m	struct:_parser_t	file:
 startcb	src/parser.c	/^    parser_start_callback startcb;$/;"	m	struct:_parser_t	file:
-state	src/common.h	/^    xmpp_conn_state_t state;$/;"	m	struct:_xmpp_conn_t
-state	src/sha1.h	/^    uint32_t state[5];$/;"	m	struct:__anon8
+state	src/sha1.h	/^    uint32_t state[5];$/;"	m	struct:__anon1
+state	src/xmpp.h	/^    xmpp_conn_state_t state;$/;"	m	struct:_xmpp_conn_t
 strcasecmp	src/auth.c	/^#define strcasecmp /;"	d	file:
-stream_error	src/common.h	/^    xmpp_stream_error_t *stream_error;$/;"	m	struct:_xmpp_conn_t
-stream_id	src/common.h	/^    char *stream_id;$/;"	m	struct:_xmpp_conn_t
+stream_error	src/xmpp.h	/^    xmpp_stream_error_t *stream_error;$/;"	m	struct:_xmpp_conn_t
+stream_id	src/xmpp.h	/^    char *stream_id;$/;"	m	struct:_xmpp_conn_t
 table	src/hash.c	/^    hash_t *table;$/;"	m	struct:_hash_iterator_t	file:
 tail	src/adlist.h	/^    listNode *tail;$/;"	m	struct:list
 target	src/sock.c	/^	char target[1024];$/;"	m	struct:dnsquery_srvrdata	file:
@@ -580,12 +580,12 @@ test_cond	src/sds.c	/^#define test_cond(/;"	d	file:
 test_data	src/sha1.c	/^static char *test_data[] = {$/;"	v	file:
 test_report	src/sds.c	/^#define test_report(/;"	d	file:
 test_results	src/sha1.c	/^static char *test_results[] = {$/;"	v	file:
-text	src/xmpp.h	/^    char *text;$/;"	m	struct:__anon13
+text	src/xmpp.h	/^    char *text;$/;"	m	struct:_xmpp_stream_error_t
 time_elapsed	src/util.c	/^uint64_t time_elapsed(uint64_t t1, uint64_t t2)$/;"	f
 time_stamp	src/util.c	/^uint64_t time_stamp(void)$/;"	f
-timed_handlers	src/common.h	/^    xmpp_handlist_t *timed_handlers;$/;"	m	struct:_xmpp_conn_t
-timeout_stamp	src/common.h	/^    uint64_t timeout_stamp;$/;"	m	struct:_xmpp_conn_t
-tls	src/common.h	/^    tls_t *tls;$/;"	m	struct:_xmpp_conn_t
+timed_handlers	src/xmpp.h	/^    xmpp_handlist_t *timed_handlers;$/;"	m	struct:_xmpp_conn_t
+timeout_stamp	src/xmpp.h	/^    uint64_t timeout_stamp;$/;"	m	struct:_xmpp_conn_t
+tls	src/xmpp.h	/^    tls_t *tls;$/;"	m	struct:_xmpp_conn_t
 tls_clear_pending_write	src/tls_dummy.c	/^int tls_clear_pending_write(tls_t *tls)$/;"	f
 tls_clear_pending_write	src/tls_openssl.c	/^int tls_clear_pending_write(tls_t *tls)$/;"	f
 tls_clear_pending_write	src/tls_schannel.c	/^int tls_clear_pending_write(tls_t *tls)$/;"	f
@@ -593,7 +593,7 @@ tls_error	src/tls_dummy.c	/^int tls_error(tls_t *tls)$/;"	f
 tls_error	src/tls_gnutls.c	/^int tls_error(tls_t *tls)$/;"	f
 tls_error	src/tls_openssl.c	/^int tls_error(tls_t *tls)$/;"	f
 tls_error	src/tls_schannel.c	/^int tls_error(tls_t *tls)$/;"	f
-tls_failed	src/common.h	/^    int tls_failed; \/* set when tls fails, so we don't try again *\/$/;"	m	struct:_xmpp_conn_t
+tls_failed	src/xmpp.h	/^    int tls_failed; \/* set when tls fails, so we don't try again *\/$/;"	m	struct:_xmpp_conn_t
 tls_free	src/tls_dummy.c	/^void tls_free(tls_t *tls)$/;"	f
 tls_free	src/tls_gnutls.c	/^void tls_free(tls_t *tls)$/;"	f
 tls_free	src/tls_openssl.c	/^void tls_free(tls_t *tls)$/;"	f
@@ -629,18 +629,18 @@ tls_stop	src/tls_dummy.c	/^int tls_stop(tls_t *tls)$/;"	f
 tls_stop	src/tls_gnutls.c	/^int tls_stop(tls_t *tls)$/;"	f
 tls_stop	src/tls_openssl.c	/^int tls_stop(tls_t *tls)$/;"	f
 tls_stop	src/tls_schannel.c	/^int tls_stop(tls_t *tls)$/;"	f
-tls_support	src/common.h	/^    int tls_support;$/;"	m	struct:_xmpp_conn_t
+tls_support	src/xmpp.h	/^    int tls_support;$/;"	m	struct:_xmpp_conn_t
 tls_t	src/tls.h	/^typedef struct _tls tls_t;$/;"	t	typeref:struct:_tls
 tls_write	src/tls_dummy.c	/^int tls_write(tls_t *tls, const void * const buff, const size_t len)$/;"	f
 tls_write	src/tls_gnutls.c	/^int tls_write(tls_t *tls, const void * const buff, const size_t len)$/;"	f
 tls_write	src/tls_openssl.c	/^int tls_write(tls_t *tls, const void * const buff, const size_t len)$/;"	f
 tls_write	src/tls_schannel.c	/^int tls_write(tls_t *tls, const void * const buff, const size_t len)$/;"	f
 ttl	src/sock.c	/^	unsigned int ttl;$/;"	m	struct:dnsquery_resourcerecord	file:
-type	src/common.h	/^	    char *type;$/;"	m	struct:_xmpp_handlist_t::__anon3::__anon6
-type	src/common.h	/^    xmpp_conn_type_t type;$/;"	m	struct:_xmpp_conn_t
-type	src/common.h	/^    xmpp_stanza_type_t type;$/;"	m	struct:_xmpp_stanza_t
 type	src/sock.c	/^	unsigned short type;$/;"	m	struct:dnsquery_resourcerecord	file:
-type	src/xmpp.h	/^    xmpp_error_type_t type;$/;"	m	struct:__anon13
+type	src/stanza.h	/^    xmpp_stanza_type_t type;$/;"	m	struct:_xmpp_stanza_t
+type	src/xmpp.h	/^	    char *type;$/;"	m	struct:_xmpp_handlist_t::__anon9::__anon12
+type	src/xmpp.h	/^    xmpp_conn_type_t type;$/;"	m	struct:_xmpp_conn_t
+type	src/xmpp.h	/^    xmpp_error_type_t type;$/;"	m	struct:_xmpp_stream_error_t
 uint16_t	src/sasl.c	/^  typedef unsigned short int        uint16_t;$/;"	t	file:
 uint16_t	src/sha1.c	/^  typedef unsigned short int        uint16_t;$/;"	t	file:
 uint32_t	src/md5.h	/^  typedef unsigned int              uint32_t;$/;"	t
@@ -651,10 +651,10 @@ uint8_t	src/sasl.c	/^  typedef unsigned char             uint8_t;$/;"	t	file:
 uint8_t	src/sha1.c	/^  typedef unsigned char             uint8_t;$/;"	t	file:
 usage	src/smarta.c	/^void usage() {$/;"	f
 usage	src/smarta.h	/^    char *usage;$/;"	m	struct:_command_t
-user_handler	src/common.h	/^    int user_handler;$/;"	m	struct:_xmpp_handlist_t
-userdata	src/common.h	/^    void *userdata;$/;"	m	struct:_xmpp_conn_t
-userdata	src/common.h	/^    void *userdata;$/;"	m	struct:_xmpp_handlist_t
+user_handler	src/xmpp.h	/^    int user_handler;$/;"	m	struct:_xmpp_handlist_t
 userdata	src/parser.c	/^    void *userdata;$/;"	m	struct:_parser_t	file:
+userdata	src/xmpp.h	/^    void *userdata;$/;"	m	struct:_xmpp_conn_t
+userdata	src/xmpp.h	/^    void *userdata;$/;"	m	struct:_xmpp_handlist_t
 userdata	src/xmpp.h	/^    void *userdata;$/;"	m	struct:_xmpp_log_t
 userdata	src/xmpp.h	/^    void *userdata;$/;"	m	struct:_xmpp_mem_t
 value	src/adlist.h	/^    void *value;$/;"	m	struct:listNode
@@ -663,9 +663,9 @@ verbosity	src/smarta.h	/^    int verbosity;$/;"	m	struct:_smarta_t
 version	src/smarta.c	/^void version() {$/;"	f
 version_handler	src/smarta.c	/^int version_handler(xmpp_conn_t * const conn, xmpp_stanza_t * const stanza, void * const userdata)$/;"	f
 weight	src/sock.c	/^	unsigned short weight;$/;"	m	struct:dnsquery_srvrdata	file:
-written	src/common.h	/^    size_t written;$/;"	m	struct:_xmpp_send_queue_t
+written	src/xmpp.h	/^    size_t written;$/;"	m	struct:_xmpp_send_queue_t
 xmpp_conn_clone	src/conn.c	/^xmpp_conn_t *xmpp_conn_clone(xmpp_conn_t * const conn)$/;"	f
-xmpp_conn_event_t	src/xmpp.h	/^} xmpp_conn_event_t;$/;"	t	typeref:enum:__anon11
+xmpp_conn_event_t	src/xmpp.h	/^} xmpp_conn_event_t;$/;"	t	typeref:enum:__anon6
 xmpp_conn_get_bound_jid	src/conn.c	/^const char *xmpp_conn_get_bound_jid(const xmpp_conn_t * const conn)$/;"	f
 xmpp_conn_get_context	src/conn.c	/^xmpp_ctx_t* xmpp_conn_get_context(xmpp_conn_t * const conn)$/;"	f
 xmpp_conn_get_jid	src/conn.c	/^const char *xmpp_conn_get_jid(const xmpp_conn_t * const conn)$/;"	f
@@ -675,27 +675,27 @@ xmpp_conn_new	src/conn.c	/^xmpp_conn_t *xmpp_conn_new(xmpp_ctx_t * const ctx)$/;
 xmpp_conn_release	src/conn.c	/^int xmpp_conn_release(xmpp_conn_t * const conn)$/;"	f
 xmpp_conn_set_jid	src/conn.c	/^void xmpp_conn_set_jid(xmpp_conn_t * const conn, const char * const jid)$/;"	f
 xmpp_conn_set_pass	src/conn.c	/^void xmpp_conn_set_pass(xmpp_conn_t * const conn, const char * const pass)$/;"	f
-xmpp_conn_state_t	src/common.h	/^} xmpp_conn_state_t;$/;"	t	typeref:enum:__anon2
+xmpp_conn_state_t	src/xmpp.h	/^} xmpp_conn_state_t;$/;"	t	typeref:enum:__anon8
 xmpp_conn_t	src/xmpp.h	/^typedef struct _xmpp_conn_t xmpp_conn_t;$/;"	t	typeref:struct:_xmpp_conn_t
-xmpp_conn_type_t	src/xmpp.h	/^} xmpp_conn_type_t;$/;"	t	typeref:enum:__anon10
+xmpp_conn_type_t	src/xmpp.h	/^} xmpp_conn_type_t;$/;"	t	typeref:enum:__anon5
 xmpp_connect_client	src/conn.c	/^int xmpp_connect_client(xmpp_conn_t * const conn, $/;"	f
-xmpp_connlist_t	src/common.h	/^} xmpp_connlist_t;$/;"	t	typeref:struct:_xmpp_connlist_t
-xmpp_ctx_free	src/ctx.c	/^void xmpp_ctx_free(xmpp_ctx_t * const ctx) {$/;"	f
-xmpp_ctx_new	src/ctx.c	/^xmpp_ctx_t *xmpp_ctx_new(const xmpp_mem_t * const mem, $/;"	f
+xmpp_connlist_t	src/xmpp.h	/^} xmpp_connlist_t;$/;"	t	typeref:struct:_xmpp_connlist_t
+xmpp_ctx_free	src/xmpp.c	/^void xmpp_ctx_free(xmpp_ctx_t * const ctx) {$/;"	f
+xmpp_ctx_new	src/xmpp.c	/^xmpp_ctx_t *xmpp_ctx_new(const xmpp_mem_t * const mem, $/;"	f
 xmpp_ctx_t	src/xmpp.h	/^typedef struct _xmpp_ctx_t xmpp_ctx_t;$/;"	t	typeref:struct:_xmpp_ctx_t
-xmpp_default_log	src/ctx.c	/^static xmpp_log_t xmpp_default_log = { NULL, NULL };$/;"	v	file:
-xmpp_default_logger	src/ctx.c	/^void xmpp_default_logger(void * const userdata,$/;"	f
-xmpp_default_mem	src/ctx.c	/^static xmpp_mem_t xmpp_default_mem = {$/;"	v	file:
+xmpp_default_log	src/xmpp.c	/^static xmpp_log_t xmpp_default_log = { NULL, NULL };$/;"	v	file:
+xmpp_default_logger	src/xmpp.c	/^void xmpp_default_logger(void * const userdata,$/;"	f
+xmpp_default_mem	src/xmpp.c	/^static xmpp_mem_t xmpp_default_mem = {$/;"	v	file:
 xmpp_disconnect	src/conn.c	/^void xmpp_disconnect(xmpp_conn_t * const conn)$/;"	f
-xmpp_error_type_t	src/xmpp.h	/^} xmpp_error_type_t;$/;"	t	typeref:enum:__anon12
-xmpp_get_default_logger	src/ctx.c	/^xmpp_log_t *xmpp_get_default_logger(xmpp_log_level_t level)$/;"	f
+xmpp_error_type_t	src/xmpp.h	/^} xmpp_error_type_t;$/;"	t	typeref:enum:__anon7
+xmpp_get_default_logger	src/xmpp.c	/^xmpp_log_t *xmpp_get_default_logger(xmpp_log_level_t level)$/;"	f
 xmpp_handler	src/xmpp.h	/^typedef int (*xmpp_handler)(xmpp_conn_t * const conn,$/;"	t
 xmpp_handler_add	src/handler.c	/^void xmpp_handler_add(xmpp_conn_t * const conn,$/;"	f
 xmpp_handler_delete	src/handler.c	/^void xmpp_handler_delete(xmpp_conn_t * const conn,$/;"	f
-xmpp_handlist_t	src/common.h	/^typedef struct _xmpp_handlist_t xmpp_handlist_t;$/;"	t	typeref:struct:_xmpp_handlist_t
+xmpp_handlist_t	src/xmpp.h	/^typedef struct _xmpp_handlist_t xmpp_handlist_t;$/;"	t	typeref:struct:_xmpp_handlist_t
 xmpp_id_handler_add	src/handler.c	/^void xmpp_id_handler_add(xmpp_conn_t * const conn,$/;"	f
 xmpp_id_handler_delete	src/handler.c	/^void xmpp_id_handler_delete(xmpp_conn_t * const conn,$/;"	f
-xmpp_initialize	src/ctx.c	/^ void xmpp_initialize(void)$/;"	f
+xmpp_initialize	src/xmpp.c	/^ void xmpp_initialize(void)$/;"	f
 xmpp_jid_bare	src/jid.c	/^char *xmpp_jid_bare(const char *jid)$/;"	f
 xmpp_jid_domain	src/jid.c	/^char *xmpp_jid_domain(const char *jid)$/;"	f
 xmpp_jid_new	src/jid.c	/^char *xmpp_jid_new(const char *node,$/;"	f
@@ -703,18 +703,18 @@ xmpp_jid_node	src/jid.c	/^char *xmpp_jid_node(const char *jid)$/;"	f
 xmpp_jid_resource	src/jid.c	/^char *xmpp_jid_resource(const char *jid)$/;"	f
 xmpp_log	src/smarta.c	/^void xmpp_log(int level, const char *fmt, ...) {$/;"	f
 xmpp_log_handler	src/xmpp.h	/^typedef void (*xmpp_log_handler)(void * const userdata, $/;"	t
-xmpp_log_level_t	src/xmpp.h	/^} xmpp_log_level_t;$/;"	t	typeref:enum:__anon9
+xmpp_log_level_t	src/xmpp.h	/^} xmpp_log_level_t;$/;"	t	typeref:enum:__anon4
 xmpp_log_t	src/xmpp.h	/^typedef struct _xmpp_log_t xmpp_log_t;$/;"	t	typeref:struct:_xmpp_log_t
-xmpp_loop_status_t	src/common.h	/^} xmpp_loop_status_t;$/;"	t	typeref:enum:__anon1
+xmpp_loop_status_t	src/xmpp.h	/^} xmpp_loop_status_t;$/;"	t	typeref:enum:__anon3
 xmpp_mem_t	src/xmpp.h	/^typedef struct _xmpp_mem_t xmpp_mem_t;$/;"	t	typeref:struct:_xmpp_mem_t
-xmpp_open_handler	src/common.h	/^typedef void (*xmpp_open_handler)(xmpp_conn_t * const conn);$/;"	t
+xmpp_open_handler	src/xmpp.h	/^typedef void (*xmpp_open_handler)(xmpp_conn_t * const conn);$/;"	t
 xmpp_run	src/event.c	/^void xmpp_run(xmpp_ctx_t *ctx)$/;"	f
 xmpp_run_once	src/event.c	/^void xmpp_run_once(xmpp_ctx_t *ctx, const unsigned long timeout)$/;"	f
 xmpp_send	src/conn.c	/^void xmpp_send(xmpp_conn_t * const conn,$/;"	f
-xmpp_send_queue_t	src/common.h	/^typedef struct _xmpp_send_queue_t xmpp_send_queue_t;$/;"	t	typeref:struct:_xmpp_send_queue_t
+xmpp_send_queue_t	src/xmpp.h	/^typedef struct _xmpp_send_queue_t xmpp_send_queue_t;$/;"	t	typeref:struct:_xmpp_send_queue_t
 xmpp_send_raw	src/conn.c	/^void xmpp_send_raw(xmpp_conn_t * const conn,$/;"	f
 xmpp_send_raw_string	src/conn.c	/^void xmpp_send_raw_string(xmpp_conn_t * const conn, $/;"	f
-xmpp_shutdown	src/ctx.c	/^void xmpp_shutdown(void)$/;"	f
+xmpp_shutdown	src/xmpp.c	/^void xmpp_shutdown(void)$/;"	f
 xmpp_snprintf	src/snprintf.c	/^int xmpp_snprintf (char *str,size_t count,const char *fmt,...)$/;"	f
 xmpp_stanza_add_child	src/stanza.c	/^int xmpp_stanza_add_child(xmpp_stanza_t *stanza, xmpp_stanza_t *child)$/;"	f
 xmpp_stanza_clone	src/stanza.c	/^xmpp_stanza_t *xmpp_stanza_clone(xmpp_stanza_t * const stanza)$/;"	f
@@ -743,16 +743,16 @@ xmpp_stanza_set_ns	src/stanza.c	/^int xmpp_stanza_set_ns(xmpp_stanza_t * const s
 xmpp_stanza_set_text	src/stanza.c	/^int xmpp_stanza_set_text(xmpp_stanza_t *stanza,$/;"	f
 xmpp_stanza_set_text_with_size	src/stanza.c	/^int xmpp_stanza_set_text_with_size(xmpp_stanza_t *stanza,$/;"	f
 xmpp_stanza_set_type	src/stanza.c	/^int xmpp_stanza_set_type(xmpp_stanza_t * const stanza,$/;"	f
-xmpp_stanza_t	src/xmpp.h	/^typedef struct _xmpp_stanza_t xmpp_stanza_t;$/;"	t	typeref:struct:_xmpp_stanza_t
+xmpp_stanza_t	src/stanza.h	/^typedef struct _xmpp_stanza_t xmpp_stanza_t;$/;"	t	typeref:struct:_xmpp_stanza_t
 xmpp_stanza_to_text	src/stanza.c	/^int  xmpp_stanza_to_text(xmpp_stanza_t *stanza,$/;"	f
-xmpp_stanza_type_t	src/common.h	/^} xmpp_stanza_type_t;$/;"	t	typeref:enum:__anon7
+xmpp_stanza_type_t	src/stanza.h	/^} xmpp_stanza_type_t;$/;"	t	typeref:enum:__anon2
 xmpp_stop	src/event.c	/^void xmpp_stop(xmpp_ctx_t *ctx)$/;"	f
 xmpp_strdup	src/util.c	/^char *xmpp_strdup(const char * const s)$/;"	f
-xmpp_stream_error_t	src/xmpp.h	/^} xmpp_stream_error_t;$/;"	t	typeref:struct:__anon13
+xmpp_stream_error_t	src/xmpp.h	/^typedef struct _xmpp_stream_error_t xmpp_stream_error_t;$/;"	t	typeref:struct:_xmpp_stream_error_t
 xmpp_timed_handler	src/xmpp.h	/^typedef int (*xmpp_timed_handler)(xmpp_conn_t * const conn, $/;"	t
 xmpp_timed_handler_add	src/handler.c	/^void xmpp_timed_handler_add(xmpp_conn_t * const conn,$/;"	f
 xmpp_timed_handler_delete	src/handler.c	/^void xmpp_timed_handler_delete(xmpp_conn_t * const conn,$/;"	f
-xmpp_version_check	src/ctx.c	/^int xmpp_version_check(int major, int minor)$/;"	f
+xmpp_version_check	src/xmpp.c	/^int xmpp_version_check(int major, int minor)$/;"	f
 xmpp_vsnprintf	src/snprintf.c	/^int xmpp_vsnprintf (char *str, size_t count, const char *fmt, va_list args)$/;"	f
 yesnotoi	src/smarta.c	/^int yesnotoi(char *s) {$/;"	f
 z	src/sock.c	/^	unsigned char z;$/;"	m	struct:dnsquery_header	file:

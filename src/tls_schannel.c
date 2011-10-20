@@ -218,7 +218,7 @@ int tls_start(tls_t *tls)
 	xmpp_connlist_t *listentry = tls->ctx->connlist;
 
 	while (listentry) {
-	    xmpp_conn_t *conn = listentry->conn;
+	    XmppConn *conn = listentry->conn;
 
 	    if (conn->sock == tls->sock) {
 		name = strdup(conn->domain);

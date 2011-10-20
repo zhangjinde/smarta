@@ -75,7 +75,7 @@
 void xmpp_run_once(xmpp_ctx_t *ctx, const unsigned long timeout)
 {
     xmpp_connlist_t *connitem;
-    xmpp_conn_t *conn;
+    XmppConn *conn;
     fd_set rfds, wfds;
     sock_t max = 0;
     int ret;

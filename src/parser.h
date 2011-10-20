@@ -27,7 +27,7 @@ typedef void (*parser_start_callback)(char *name,
                                       char **attrs,
                                       void * const userdata);
 typedef void (*parser_end_callback)(char *name, void * const userdata);
-typedef void (*parser_stanza_callback)(xmpp_stanza_t *stanza,
+typedef void (*parser_stanza_callback)(XmppStanza *stanza,
                                        void * const userdata);
 
 

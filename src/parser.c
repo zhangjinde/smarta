@@ -32,10 +32,10 @@ struct _parser_t {
     parser_stanza_callback stanzacb;
     void *userdata;
     int depth;
-    xmpp_stanza_t *stanza;
+    XmppStanza *stanza;
 };
 
-static void _set_attributes(xmpp_stanza_t *stanza, const XML_Char **attrs)
+static void _set_attributes(XmppStanza *stanza, const XML_Char **attrs)
 {
     int i;
 
@@ -51,7 +51,7 @@ static void _start_element(void *userdata,
                            const XML_Char **attrs)
 {
     parser_t *parser = (parser_t *)userdata;
-    xmpp_stanza_t *child;
+    XmppStanza *child;
 
     if (parser->depth == 0) {
         /* notify the owner */
@@ -122,7 +122,7 @@ static void _end_element(void *userdata, const XML_Char *name)
 static void _characters(void *userdata, const XML_Char *s, int len)
 {
     parser_t *parser = (parser_t *)userdata;
-    xmpp_stanza_t *stanza;
+    XmppStanza *stanza;
 
     if (parser->depth < 2) return;
 

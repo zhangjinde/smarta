@@ -197,25 +197,25 @@ struct _xmpp_send_queue_t {
     xmpp_send_queue_t *next;
 };
 
-typedef struct _xmpp_conn_t xmpp_conn_t;
+typedef struct _XmppConn XmppConn;
 
-typedef void (*xmpp_open_handler)(xmpp_conn_t * const conn);
+typedef void (*xmpp_open_handler)(XmppConn * const conn);
 
 typedef struct _xmpp_handlist_t xmpp_handlist_t;
 
-typedef void (*xmpp_conn_handler)(xmpp_conn_t * const conn, 
+typedef void (*xmpp_conn_handler)(XmppConn * const conn, 
 				  const xmpp_conn_event_t event,
 				  const int error,
 				  xmpp_stream_error_t * const stream_error,
 				  void * const userdata);
 
 /* if the handle returns false it is removed */
-typedef int (*xmpp_timed_handler)(xmpp_conn_t * const conn, 
+typedef int (*xmpp_timed_handler)(XmppConn * const conn, 
 				  void * const userdata);
 
 /* if the handler returns false it is removed */
-typedef int (*xmpp_handler)(xmpp_conn_t * const conn,
-			     xmpp_stanza_t * const stanza,
+typedef int (*xmpp_handler)(XmppConn * const conn,
+			     XmppStanza * const stanza,
 			     void * const userdata);
 
 struct _xmpp_handlist_t {
@@ -254,7 +254,7 @@ struct _xmpp_handlist_t {
 /* opaque run time context containing the above hooks */
 typedef struct _xmpp_ctx_t xmpp_ctx_t;
 
-struct _xmpp_conn_t {
+struct _XmppConn {
     unsigned int ref;
     xmpp_ctx_t *ctx;
     xmpp_conn_type_t type;
@@ -320,26 +320,26 @@ struct _xmpp_conn_t {
 
 
 
-void conn_disconnect(xmpp_conn_t * const conn);
-void conn_disconnect_clean(xmpp_conn_t * const conn);
-void conn_open_stream(xmpp_conn_t * const conn);
-void conn_prepare_reset(xmpp_conn_t * const conn, xmpp_open_handler handler);
-void conn_parser_reset(xmpp_conn_t * const conn);
+void conn_disconnect(XmppConn * const conn);
+void conn_disconnect_clean(XmppConn * const conn);
+void conn_open_stream(XmppConn * const conn);
+void conn_prepare_reset(XmppConn * const conn, xmpp_open_handler handler);
+void conn_parser_reset(XmppConn * const conn);
 
 /* handler management */
-void handler_fire_stanza(xmpp_conn_t * const conn,
-			 xmpp_stanza_t * const stanza);
+void handler_fire_stanza(XmppConn * const conn,
+			 XmppStanza * const stanza);
 uint64_t handler_fire_timed(xmpp_ctx_t * const ctx);
-void handler_reset_timed(xmpp_conn_t *conn, int user_only);
-void handler_add_timed(xmpp_conn_t * const conn,
+void handler_reset_timed(XmppConn *conn, int user_only);
+void handler_add_timed(XmppConn * const conn,
 		       xmpp_timed_handler handler,
 		       const unsigned long period,
 		       void * const userdata);
-void handler_add_id(xmpp_conn_t * const conn,
+void handler_add_id(XmppConn * const conn,
 		    xmpp_handler handler,
 		    const char * const id,
 		    void * const userdata);
-void handler_add(xmpp_conn_t * const conn,
+void handler_add(XmppConn * const conn,
 		 xmpp_handler handler,
 		 const char * const ns,
 		 const char * const name,
@@ -347,10 +347,10 @@ void handler_add(xmpp_conn_t * const conn,
 		 void * const userdata);
 
 /* utility functions */
-void disconnect_mem_error(xmpp_conn_t * const conn);
+void disconnect_mem_error(XmppConn * const conn);
 
 /* auth functions */
-void auth_handle_open(xmpp_conn_t * const conn);
+void auth_handle_open(XmppConn * const conn);
 
 /* replacement snprintf and vsnprintf */
 int xmpp_snprintf (char *str, size_t count, const char *fmt, ...);
@@ -403,7 +403,7 @@ xmpp_log_t *xmpp_get_default_logger(xmpp_log_level_t level);
 /* connection */
 
 typedef struct _xmpp_connlist_t {
-    xmpp_conn_t *conn;
+    XmppConn *conn;
     struct _xmpp_connlist_t *next;
 } xmpp_connlist_t;
 
@@ -415,23 +415,23 @@ struct _xmpp_ctx_t {
 struct _xmpp_stream_error_t {
     xmpp_error_type_t type;
     char *text;
-    xmpp_stanza_t *stanza;
+    XmppStanza *stanza;
 }; 
 
-xmpp_conn_t *xmpp_conn_new(xmpp_ctx_t * const ctx);
+XmppConn *xmpp_conn_new(xmpp_ctx_t * const ctx);
 
-xmpp_conn_t * xmpp_conn_clone(xmpp_conn_t * const conn);
+XmppConn * xmpp_conn_clone(XmppConn * const conn);
 
-int xmpp_conn_release(xmpp_conn_t * const conn);
+int xmpp_conn_release(XmppConn * const conn);
 
-const char *xmpp_conn_get_jid(const xmpp_conn_t * const conn);
-const char *xmpp_conn_get_bound_jid(const xmpp_conn_t * const conn);
-void xmpp_conn_set_jid(xmpp_conn_t * const conn, const char * const jid);
-const char *xmpp_conn_get_pass(const xmpp_conn_t * const conn);
-void xmpp_conn_set_pass(xmpp_conn_t * const conn, const char * const pass);
-xmpp_ctx_t* xmpp_conn_get_context(xmpp_conn_t * const conn);
+const char *xmpp_conn_get_jid(const XmppConn * const conn);
+const char *xmpp_conn_get_bound_jid(const XmppConn * const conn);
+void xmpp_conn_set_jid(XmppConn * const conn, const char * const jid);
+const char *xmpp_conn_get_pass(const XmppConn * const conn);
+void xmpp_conn_set_pass(XmppConn * const conn, const char * const pass);
+xmpp_ctx_t* xmpp_conn_get_context(XmppConn * const conn);
 
-int xmpp_connect_client(xmpp_conn_t * const conn, 
+int xmpp_connect_client(XmppConn * const conn, 
 			  const char * const altdomain,
 			  unsigned short altport,
 			  xmpp_conn_handler callback,
@@ -440,43 +440,43 @@ int xmpp_connect_client(xmpp_conn_t * const conn,
 /*
 int xmpp_connect_component(conn, name)
 */
-void xmpp_disconnect(xmpp_conn_t * const conn);
+void xmpp_disconnect(XmppConn * const conn);
 
-void xmpp_send(xmpp_conn_t * const conn,
-	       xmpp_stanza_t * const stanza);
+void xmpp_send(XmppConn * const conn,
+	       XmppStanza * const stanza);
 
-void xmpp_send_raw_string(xmpp_conn_t * const conn, 
+void xmpp_send_raw_string(XmppConn * const conn, 
 			  const char * const fmt, ...);
-void xmpp_send_raw(xmpp_conn_t * const conn, 
+void xmpp_send_raw(XmppConn * const conn, 
 		   const char * const data, const size_t len);
 
 
 /* handlers */
 
 
-void xmpp_timed_handler_add(xmpp_conn_t * const conn,
+void xmpp_timed_handler_add(XmppConn * const conn,
 			    xmpp_timed_handler handler,
 			    const unsigned long period,
 			    void * const userdata);
-void xmpp_timed_handler_delete(xmpp_conn_t * const conn,
+void xmpp_timed_handler_delete(XmppConn * const conn,
 			       xmpp_timed_handler handler);
 
 
 
-void xmpp_handler_add(xmpp_conn_t * const conn,
+void xmpp_handler_add(XmppConn * const conn,
 		      xmpp_handler handler,
 		      const char * const ns,
 		      const char * const name,
 		      const char * const type,
 		      void * const userdata);
-void xmpp_handler_delete(xmpp_conn_t * const conn,
+void xmpp_handler_delete(XmppConn * const conn,
 			 xmpp_handler handler);
 
-void xmpp_id_handler_add(xmpp_conn_t * const conn,
+void xmpp_id_handler_add(XmppConn * const conn,
 			 xmpp_handler handler,
 			 const char * const id,
 			 void * const userdata);
-void xmpp_id_handler_delete(xmpp_conn_t * const conn,
+void xmpp_id_handler_delete(XmppConn * const conn,
 			    xmpp_handler handler,
 			    const char * const id);
 

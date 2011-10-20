@@ -11,10 +11,10 @@
 
 extern smarta_t smarta;
 
-static int check_service(xmpp_conn_t * const conn, void * const userdata);
-static void send_message(xmpp_conn_t * conn, sds result);
+static int check_service(XmppConn * const conn, void * const userdata);
+static void send_message(XmppConn * conn, sds result);
 
-void sched_services(xmpp_conn_t *conn) {
+void sched_services(XmppConn *conn) {
     service_t *service;
     listNode *node;
     listIter *iter = listGetIterator(smarta.services, AL_START_HEAD);
@@ -26,7 +26,7 @@ void sched_services(xmpp_conn_t *conn) {
     }
 }
 
-int check_service(xmpp_conn_t *conn, void *userdata) {
+int check_service(XmppConn *conn, void *userdata) {
     FILE *fp = NULL;
 	char output_buffer[MAX_INPUT_BUFFER] = "";
 	sds raw_command = sdsnew("cd /opt/csmarta/plugins ; ./");
@@ -46,8 +46,8 @@ int check_service(xmpp_conn_t *conn, void *userdata) {
     return 1;
 }
 
-void send_message(xmpp_conn_t *conn, sds result) {
-    xmpp_stanza_t *reply, *body, *text;
+void send_message(XmppConn *conn, sds result) {
+    XmppStanza *reply, *body, *text;
     
 	reply = xmpp_stanza_new();
 	xmpp_stanza_set_name(reply, "message");

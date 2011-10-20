@@ -24,11 +24,10 @@
 
 smarta_t smarta;
 
-int version_handler(xmpp_conn_t * const conn, xmpp_stanza_t * const stanza, void * const userdata)
+int version_handler(XmppConn * const conn, XmppStanza * const stanza, void * const userdata)
 {
-	xmpp_stanza_t *reply, *query, *name, *version, *text;
+	XmppStanza *reply, *query, *name, *version, *text;
 	char *ns;
-	xmpp_ctx_t *ctx = (xmpp_ctx_t*)userdata;
 	printf("Received version request from %s\n", xmpp_stanza_get_attribute(stanza, "from"));
 	
 	reply = xmpp_stanza_new();
@@ -67,9 +66,9 @@ int version_handler(xmpp_conn_t * const conn, xmpp_stanza_t * const stanza, void
 	return 1;
 }
 
-int message_handler(xmpp_conn_t * const conn, xmpp_stanza_t * const stanza, void * const userdata)
+int message_handler(XmppConn * const conn, XmppStanza * const stanza, void * const userdata)
 {
-	xmpp_stanza_t *reply, *body, *text;
+	XmppStanza *reply, *body, *text;
 	char *intext, *replytext;
 	
 	if(!xmpp_stanza_get_child_by_name(stanza, "body")) return 1;
@@ -103,14 +102,14 @@ int message_handler(xmpp_conn_t * const conn, xmpp_stanza_t * const stanza, void
 }
 
 /* define a handler for connection events */
-void conn_handler(xmpp_conn_t * const conn, const xmpp_conn_event_t status, 
+void conn_handler(XmppConn * const conn, const xmpp_conn_event_t status, 
 		  const int error, xmpp_stream_error_t * const stream_error,
 		  void * const userdata)
 {
 	xmpp_ctx_t *ctx = (xmpp_ctx_t*)userdata;
 
     if (status == XMPP_CONN_CONNECT) {
-	xmpp_stanza_t* pres;
+	XmppStanza* pres;
 	fprintf(stdout, "DEBUG: smarta is connected\n");
 	xmpp_handler_add(conn,version_handler, "jabber:iq:version", "iq", NULL, NULL);
 	xmpp_handler_add(conn,message_handler, NULL, "message", NULL, NULL);
@@ -243,7 +242,7 @@ loaderr:
 int main(int argc, char **argv) {
     //time_t start;
     xmpp_ctx_t *ctx;
-    xmpp_conn_t *conn;
+    XmppConn *conn;
     xmpp_log_t *log;
     char *jid, *pass;
 

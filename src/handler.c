@@ -38,8 +38,8 @@
  *  @param conn a Strophe connection object
  *  @param stanza a Strophe stanza object
  */
-void handler_fire_stanza(xmpp_conn_t * const conn,
-			 xmpp_stanza_t * const stanza)
+void handler_fire_stanza(XmppConn * const conn,
+			 XmppStanza * const stanza)
 {
     xmpp_handlist_t *item, *prev;
     char *id, *ns, *name, *type;
@@ -200,7 +200,7 @@ uint64_t handler_fire_timed(xmpp_ctx_t * const ctx)
  *  @param conn a Strophe connection object
  *  @param user_only whether to reset all handlers or only user ones
  */
-void handler_reset_timed(xmpp_conn_t *conn, int user_only)
+void handler_reset_timed(XmppConn *conn, int user_only)
 {
     xmpp_handlist_t *handitem;
 
@@ -213,7 +213,7 @@ void handler_reset_timed(xmpp_conn_t *conn, int user_only)
     }
 }
 
-static void _timed_handler_add(xmpp_conn_t * const conn,
+static void _timed_handler_add(XmppConn * const conn,
 			       xmpp_timed_handler handler,
 			       const unsigned long period,
 			       void * const userdata, 
@@ -259,7 +259,7 @@ static void _timed_handler_add(xmpp_conn_t * const conn,
  *
  *  @ingroup Handlers
  */
-void xmpp_timed_handler_delete(xmpp_conn_t * const conn,
+void xmpp_timed_handler_delete(XmppConn * const conn,
 			       xmpp_timed_handler handler)
 {
     xmpp_handlist_t *item, *prev;
@@ -285,7 +285,7 @@ void xmpp_timed_handler_delete(xmpp_conn_t * const conn,
     }
 }
 
-static void _id_handler_add(xmpp_conn_t * const conn,
+static void _id_handler_add(XmppConn * const conn,
 			 xmpp_handler handler,
 			 const char * const id,
 			 void * const userdata, int user_handler)
@@ -336,7 +336,7 @@ static void _id_handler_add(xmpp_conn_t * const conn,
  *
  *  @ingroup Handlers
  */
-void xmpp_id_handler_delete(xmpp_conn_t * const conn,
+void xmpp_id_handler_delete(XmppConn * const conn,
 			    xmpp_handler handler,
 			    const char * const id)
 {
@@ -367,7 +367,7 @@ void xmpp_id_handler_delete(xmpp_conn_t * const conn,
 }
 
 /* add a stanza handler */
-static void _handler_add(xmpp_conn_t * const conn,
+static void _handler_add(XmppConn * const conn,
 			 xmpp_handler handler,
 			 const char * const ns,
 			 const char * const name,
@@ -438,7 +438,7 @@ static void _handler_add(xmpp_conn_t * const conn,
  *
  *  @ingroup Handlers
  */
-void xmpp_handler_delete(xmpp_conn_t * const conn,
+void xmpp_handler_delete(XmppConn * const conn,
 			 xmpp_handler handler)
 {
     xmpp_handlist_t *prev, *item;
@@ -481,7 +481,7 @@ void xmpp_handler_delete(xmpp_conn_t * const conn,
  *
  *  @ingroup Handlers
  */
-void xmpp_timed_handler_add(xmpp_conn_t * const conn,
+void xmpp_timed_handler_add(XmppConn * const conn,
 			    xmpp_timed_handler handler,
 			    const unsigned long period,
 			    void * const userdata)
@@ -498,7 +498,7 @@ void xmpp_timed_handler_add(xmpp_conn_t * const conn,
  *  @param period the time in milliseconds between firings
  *  @param userdata an opaque data pointer that will be passed to the handler
  */
-void handler_add_timed(xmpp_conn_t * const conn,
+void handler_add_timed(XmppConn * const conn,
 		       xmpp_timed_handler handler,
 		       const unsigned long period,
 		       void * const userdata)
@@ -519,7 +519,7 @@ void handler_add_timed(xmpp_conn_t * const conn,
  *
  *  @ingroup Handlers
  */
-void xmpp_id_handler_add(xmpp_conn_t * const conn,
+void xmpp_id_handler_add(XmppConn * const conn,
 			 xmpp_handler handler,
 			 const char * const id,
 			 void * const userdata)
@@ -536,7 +536,7 @@ void xmpp_id_handler_add(xmpp_conn_t * const conn,
  *  @param id a string with the id
  *  @param userdata an opaque data pointer that will be passed to the handler
  */
-void handler_add_id(xmpp_conn_t * const conn,
+void handler_add_id(XmppConn * const conn,
 		    xmpp_handler handler,
 		    const char * const id,
 		    void * const userdata)
@@ -563,7 +563,7 @@ void handler_add_id(xmpp_conn_t * const conn,
  *
  *  @ingroup Handlers
  */
-void xmpp_handler_add(xmpp_conn_t * const conn,
+void xmpp_handler_add(XmppConn * const conn,
 		      xmpp_handler handler,
 		      const char * const ns,
 		      const char * const name,
@@ -584,7 +584,7 @@ void xmpp_handler_add(xmpp_conn_t * const conn,
  *  @param type a string with the 'type' attribute value to match
  *  @param userdata an opaque data pointer that will be passed to the handler
  */
-void handler_add(xmpp_conn_t * const conn,
+void handler_add(XmppConn * const conn,
 		 xmpp_handler handler,
 		 const char * const ns,
 		 const char * const name,

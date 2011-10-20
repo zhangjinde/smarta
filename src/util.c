@@ -95,7 +95,7 @@ uint64_t time_elapsed(uint64_t t1, uint64_t t2)
  *
  *  @param conn a Strophe connection object
  */
-void disconnect_mem_error(xmpp_conn_t * const conn)
+void disconnect_mem_error(XmppConn * const conn)
 {
     xmpp_log(LOG_ERROR, "xmpp: Memory allocation error");
     xmpp_disconnect(conn);
