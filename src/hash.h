@@ -16,8 +16,8 @@
  *  Hash table API.
  */
 
-#ifndef __LIBSTROPHE_HASH_H__
-#define __LIBSTROPHE_HASH_H__
+#ifndef _SMARTA_HASH_H_
+#define _SMARTA_HASH_H_
 
 typedef struct _hash_t hash_t;
 

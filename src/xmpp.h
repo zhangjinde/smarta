@@ -168,9 +168,6 @@ typedef enum {
 } xmpp_error_type_t;
 
 
-/* convenience functions for accessing the context */
-char *xmpp_strdup(const char * const s);
-
 /** jid */
 char *xmpp_jid_new(const char *node, const char *domain, const char *resource);
 char *xmpp_jid_bare(const char *jid);
@@ -291,7 +288,7 @@ struct _XmppConn {
 
     /* xml parser */
     int reset_parser;
-    parser_t *parser;
+    Parser *parser;
 
     /* timeouts */
     unsigned int connect_timeout;
@@ -453,4 +450,4 @@ void xmpp_run_once(XmppConn *conn, const unsigned long  timeout);
 void xmpp_run(XmppConn *conn);
 void xmpp_stop(XmppConn *conn);
 
-#endif /* __LIBSTROPHE_STROPHE_H__ */
+#endif /* __SMARTA_STROPHE_H__ */

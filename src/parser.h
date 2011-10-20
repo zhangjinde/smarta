@@ -16,27 +16,37 @@
  *  Internally used functions and structures.
  */
 
-#ifndef __LIBSTROPHE_PARSER_H__
-#define __LIBSTROPHE_PARSER_H__
+#ifndef _SMARTA_PARSER_H_
+#define _SMARTA_PARSER_H_
 
+#include <expat.h>
 #include "stanza.h"
-
-typedef struct _parser_t parser_t;
 
 typedef void (*parser_start_callback)(char *name,
                                       char **attrs,
                                       void * const userdata);
 typedef void (*parser_end_callback)(char *name, void * const userdata);
+
 typedef void (*parser_stanza_callback)(XmppStanza *stanza,
                                        void * const userdata);
 
+typedef struct _Parser {
+    XML_Parser expat;
+    parser_start_callback startcb;
+    parser_end_callback endcb;
+    parser_stanza_callback stanzacb;
+    void *userdata;
+    int depth;
+    XmppStanza *stanza;
+} Parser;
 
-parser_t *parser_new(parser_start_callback startcb,
+
+Parser *parser_new(parser_start_callback startcb,
                      parser_end_callback endcb,
                      parser_stanza_callback stanzacb,
                      void *userdata);
-void parser_free(parser_t * const parser);
-int parser_reset(parser_t *parser);
-int parser_feed(parser_t *parser, char *chunk, int len);
+void parser_free(Parser *parser);
+int parser_reset(Parser *parser);
+int parser_feed(Parser *parser, char *chunk, int len);
 
-#endif /* __LIBSTROPHE_PARSER_H__ */
+#endif /* __SMARTA_PARSER_H__ */

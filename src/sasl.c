@@ -17,10 +17,12 @@
  */
 
 #include <string.h>
+#include <stdio.h>
+#include <stdlib.h>
 
-#include "xmpp.h"
-#include "sasl.h"
+#include "hash.h"
 #include "md5.h"
+#include "sasl.h"
 
 /* make sure the stdint.h types are available */
 #if defined(_MSC_VER) /* Microsoft Visual C++ */
@@ -65,8 +67,7 @@ char *sasl_plain(const char *authid, const char *password) {
 /** helpers for digest auth */
 
 /* create a new, null-terminated string from a substring */
-static char *_make_string(const char *s, const unsigned len)
-{
+static char *_make_string(const char *s, const unsigned len) {
     char *result;
 
     result = malloc(len + 1);
@@ -78,8 +79,7 @@ static char *_make_string(const char *s, const unsigned len)
 }
 
 /* create a new, null-terminated string quoting another string */
-static char *_make_quoted(const char *s)
-{
+static char *_make_quoted(const char *s) {
     char *result;
     int len = strlen(s);
 
@@ -103,7 +103,7 @@ static hash_t *_parse_digest_challenge(const char *msg)
 
     text = base64_decode(msg, strlen(msg));
     if (text == NULL) {
-	xmpp_log(LOG_ERROR, "SASL: couldn't Base64 decode challenge!");
+	fprintf(stderr, "SASL: couldn't Base64 decode challenge!");
 	return NULL;
     }
 
@@ -155,8 +155,7 @@ static hash_t *_parse_digest_challenge(const char *msg)
 }
 
 /** expand a 16 byte MD5 digest to a 32 byte hex representation */
-static void _digest_to_hex(const char *digest, char *hex)
-{
+static void _digest_to_hex(const char *digest, char *hex) {
     int i;
     const char hexdigit[] = "0123456789abcdef";
 
@@ -168,8 +167,7 @@ static void _digest_to_hex(const char *digest, char *hex)
 
 /** append 'key="value"' to a buffer, growing as necessary */
 static char *_add_key(hash_t *table, const char *key, 
-		      char *buf, int *len, int quote)
-{
+		      char *buf, int *len, int quote) {
     int olen,nlen;
     int keylen, valuelen;
     const char *value, *qvalue;
@@ -186,7 +184,7 @@ static char *_add_key(hash_t *table, const char *key,
     olen = strlen(buf);
     value = hash_get(table, key);
     if (value == NULL) {
-	xmpp_log(LOG_ERROR, "SASL: couldn't retrieve value for '%s'", key);
+	fprintf(stderr, "SASL: couldn't retrieve value for '%s'", key);
 	value = "";
     }
     if (quote) {
@@ -228,21 +226,10 @@ char *sasl_digest_md5(const char *challenge,
     unsigned char digest[16], HA1[16], HA2[16];
     char hex[32];
 
-    /* our digest response is 
-	Hex( KD( HEX(MD5(A1)),
-	  nonce ':' nc ':' cnonce ':' qop ':' HEX(MD5(A2))
-	))
-
-       where KD(k, s) = MD5(k ':' s),
-	A1 = MD5( node ':' realm ':' password ) ':' nonce ':' cnonce
-	A2 = "AUTHENTICATE" ':' "xmpp/" domain
-
-       If there is an authzid it is ':'-appended to A1 */
-
     /* parse the challenge */
     table = _parse_digest_challenge(challenge);
     if (table == NULL) {
-	xmpp_log(LOG_ERROR, "SASL: couldn't parse digest challenge");
+	fprintf(stderr, "SASL: couldn't parse digest challenge");
 	return NULL;
     }
 
@@ -253,16 +240,16 @@ char *sasl_digest_md5(const char *challenge,
        server */
     realm = hash_get(table, "realm");
     if (realm == NULL || strlen(realm) == 0) {
-	hash_add(table, "realm", xmpp_strdup(domain));
+	hash_add(table, "realm", strdup(domain));
 	realm = hash_get(table, "realm");
     }
 
     /* add our response fields */
-    hash_add(table, "username", xmpp_strdup(node));
+    hash_add(table, "username", strdup(node));
     /* TODO: generate a random cnonce */
-    hash_add(table, "cnonce", xmpp_strdup("00DEADBEEF00"));
-    hash_add(table, "nc", xmpp_strdup("00000001"));
-    hash_add(table, "qop", xmpp_strdup("auth"));
+    hash_add(table, "cnonce", strdup("00DEADBEEF00"));
+    hash_add(table, "nc", strdup("00000001"));
+    hash_add(table, "qop", strdup("auth"));
     value = malloc(5 + strlen(domain) + 1);
     memcpy(value, "xmpp/", 5);
     memcpy(value+5, domain, strlen(domain));
@@ -397,14 +384,12 @@ static const char _base64_charmap[65] = {
     '='
 };
 
-int base64_encoded_len(const unsigned len)
-{
+int base64_encoded_len(const unsigned len) {
     /* encoded steam is 4 bytes for every three, rounded up */
     return ((len + 2)/3) << 2;
 }
 
-char *base64_encode(const unsigned char * const buffer, const unsigned len)
-{
+char *base64_encode(const unsigned char * const buffer, const unsigned len) {
     int clen;
     char *cbuf, *c;
     uint32_t word, hextet;
@@ -478,8 +463,7 @@ int base64_decoded_len(const char * const buffer, const unsigned len) {
     return 3 * (len >> 2) - nudge;
 }
 
-unsigned char *base64_decode(const char * const buffer, const unsigned len)
-{
+unsigned char *base64_decode(const char * const buffer, const unsigned len) {
     int dlen;
     unsigned char *dbuf, *d;
     uint32_t word, hextet;
@@ -557,54 +541,3 @@ _base64_decode_error:
     return NULL;
 }
 
-/*** self tests ***/
-#ifdef TEST
-
-#include <stdio.h>
-
-int test_charmap_identity(void)
-{
-    int i, v, u;
-
-    for (i = 0; i < 65; i++) {
-	v = _base64_charmap[i];
-	if (v > 255) return 1;
-	u = _base64_invcharmap[v];
-/*	printf("map: %d -> %d -> %d\n", i, v, u); */
-	if (u != i) return 1;
-    }
-
-    return 0; 
-}
-
-int test_charmap_range(void)
-{
-    int i, v;
-
-    for (i = 64; i < 256; i++) {
-	v = _base64_invcharmap[i];
-	if (i < 64) return 1;
-    }
-
-    return 0;
-}
-
-int main(int argc, char *argv[])
-{
-    int ret = 0;
-
-    printf("testing charmap identity...");
-    ret = test_charmap_identity();
-    if (ret) return ret;
-    printf(" ok.\n");
-
-    printf("testing charmap range...");
-    ret = test_charmap_range();
-    if (ret) return ret;
-    printf(" ok.\n");
-
-    printf("no error\n");
-    return 0;
-}
-
-#endif /* TEST */

@@ -25,15 +25,6 @@
 #include "xmpp.h"
 #include "parser.h"
 
-struct _parser_t {
-    XML_Parser expat;
-    parser_start_callback startcb;
-    parser_end_callback endcb;
-    parser_stanza_callback stanzacb;
-    void *userdata;
-    int depth;
-    XmppStanza *stanza;
-};
 
 static void _set_attributes(XmppStanza *stanza, const XML_Char **attrs)
 {
@@ -50,7 +41,7 @@ static void _start_element(void *userdata,
                            const XML_Char *name,
                            const XML_Char **attrs)
 {
-    parser_t *parser = (parser_t *)userdata;
+    Parser *parser = (Parser *)userdata;
     XmppStanza *child;
 
     if (parser->depth == 0) {
@@ -97,7 +88,7 @@ static void _start_element(void *userdata,
 
 static void _end_element(void *userdata, const XML_Char *name)
 {
-    parser_t *parser = (parser_t *)userdata;
+    Parser *parser = (Parser *)userdata;
 
     parser->depth--;
 
@@ -121,7 +112,7 @@ static void _end_element(void *userdata, const XML_Char *name)
 
 static void _characters(void *userdata, const XML_Char *s, int len)
 {
-    parser_t *parser = (parser_t *)userdata;
+    Parser *parser = (Parser *)userdata;
     XmppStanza *stanza;
 
     if (parser->depth < 2) return;
@@ -138,14 +129,14 @@ static void _characters(void *userdata, const XML_Char *s, int len)
     xmpp_stanza_release(stanza);
 }
 
-parser_t *parser_new(parser_start_callback startcb,
+Parser *parser_new(parser_start_callback startcb,
                      parser_end_callback endcb,
                      parser_stanza_callback stanzacb,
                      void *userdata)
 {
-    parser_t *parser;
+    Parser *parser;
 
-    parser = malloc(sizeof(parser_t));
+    parser = malloc(sizeof(Parser));
     if (parser != NULL) {
         parser->expat = NULL;
         parser->startcb = startcb;
@@ -162,7 +153,7 @@ parser_t *parser_new(parser_start_callback startcb,
 }
 
 /* free a parser */
-void parser_free(parser_t *parser)
+void parser_free(Parser *parser)
 {
     if (parser->expat)
         XML_ParserFree(parser->expat);
@@ -171,7 +162,7 @@ void parser_free(parser_t *parser)
 }
 
 /* shuts down and restarts XML parser.  true on success */
-int parser_reset(parser_t *parser)
+int parser_reset(Parser *parser)
 {
     if (parser->expat)
 	XML_ParserFree(parser->expat);
@@ -192,7 +183,7 @@ int parser_reset(parser_t *parser)
     return 1;
 }
 
-int parser_feed(parser_t *parser, char *chunk, int len)
+int parser_feed(Parser *parser, char *chunk, int len)
 {
     return XML_Parse(parser->expat, chunk, len, 0);
 }

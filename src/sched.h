@@ -1,4 +1,4 @@
-#ifndef __LIBSTROPHE_SCHED_H__
-#define __LIBSTROPHE_SCHED_H__
+#ifndef __SMARTA_SCHED_H__
+#define __SMARTA_SCHED_H__
 void sched_services(XmppConn *conn);
-#endif /* __LIBSTROPHE_SCHED_H__ */
+#endif /* __SMARTA_SCHED_H__ */

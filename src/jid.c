@@ -75,7 +75,7 @@ char *xmpp_jid_bare(const char *jid)
     const char *c;
 
     c = strchr(jid, '/');
-    if (c == NULL) return xmpp_strdup(jid);
+    if (c == NULL) return strdup(jid);
 
     result = malloc(c-jid+1);
     if (result != NULL) {

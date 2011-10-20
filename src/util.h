@@ -16,8 +16,8 @@
  *  Internally used utility functions.
  */
 
-#ifndef __LIBSTROPHE_UTIL_H__
-#define __LIBSTROPHE_UTIL_H__
+#ifndef __SMARTA_UTIL_H__
+#define __SMARTA_UTIL_H__
 
 #ifndef _WIN32
 #include <stdint.h>
@@ -29,4 +29,4 @@ typedef unsigned __int64 uint64_t;
 uint64_t time_stamp(void);
 uint64_t time_elapsed(uint64_t t1, uint64_t t2);
 
-#endif /* __LIBSTROPHE_UTIL_H__ */
+#endif /* __SMARTA_UTIL_H__ */

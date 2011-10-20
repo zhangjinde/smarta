@@ -31,28 +31,6 @@
 #include "xmpp.h"
 #include "util.h"
 
-/** implement our own strdup that uses the ctx allocator */
-/** Duplicate a string.
- *  This function replaces the standard strdup library call with a version
- *  that uses the Strophe context object's allocator.
- *
- *  @param ctx a Strophe context object
- *  @param s a string
- *
- *  @return a new allocates string with the same data as s or NULL on error
- */
-char *xmpp_strdup(const char * const s)
-{
-    size_t len;
-    char *copy;
-
-    len = strlen(s);
-    copy = malloc(len + 1);
-    memcpy(copy, s, len + 1);
-
-    return copy;
-}
-
 /** Return an integer based time stamp.
  *  This function uses gettimeofday or timeGetTime (on Win32 platforms) to
  *  compute an integer based time stamp.  This is used internally by the
@@ -83,8 +61,7 @@ uint64_t time_stamp(void)
  *
  *  @return number of milliseconds between the stamps
  */
-uint64_t time_elapsed(uint64_t t1, uint64_t t2)
-{
+uint64_t time_elapsed(uint64_t t1, uint64_t t2) {
     return (uint64_t)(t2 - t1);
 }
 
@@ -95,8 +72,7 @@ uint64_t time_elapsed(uint64_t t1, uint64_t t2)
  *
  *  @param conn a Strophe connection object
  */
-void disconnect_mem_error(XmppConn * const conn)
-{
+void disconnect_mem_error(XmppConn * const conn) {
     xmpp_log(LOG_ERROR, "xmpp: Memory allocation error");
     xmpp_disconnect(conn);
 }

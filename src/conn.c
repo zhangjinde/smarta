@@ -86,7 +86,7 @@ XmppConn *xmpp_conn_new()
 	/* default timeouts */
 	conn->connect_timeout = CONNECT_TIMEOUT;
 
-	conn->lang = xmpp_strdup("en");
+	conn->lang = strdup("en");
 	if (!conn->lang) {
 	    free(conn);
 	    return NULL;
@@ -642,7 +642,7 @@ static void _handle_stream_start(char *name, char **attrs,
 
         id = _get_stream_attribute(attrs, "id");
         if (id)
-            conn->stream_id = xmpp_strdup(id);
+            conn->stream_id = strdup(id);
 
         if (!conn->stream_id) {
             xmpp_log(LOG_ERROR, "conn Memory allocation failed.");

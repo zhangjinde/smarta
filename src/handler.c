@@ -301,7 +301,7 @@ static void _id_handler_add(XmppConn * const conn,
     item->enabled = 0;
     item->next = NULL;
 
-    item->id = xmpp_strdup(id);
+    item->id = strdup(id);
     if (!item->id) {
 	free(item);
 	return;
@@ -384,7 +384,7 @@ static void _handler_add(XmppConn * const conn,
     item->next = NULL;
     
     if (ns) {
-	item->ns = xmpp_strdup(ns);
+	item->ns = strdup(ns);
 	if (!item->ns) {
 	    free(item);
 	    return;
@@ -392,7 +392,7 @@ static void _handler_add(XmppConn * const conn,
     } else
 	item->ns = NULL;
     if (name) {
-	item->name = xmpp_strdup(name);
+	item->name = strdup(name);
 	if (!item->name) {
 	    if (item->ns) free(item->ns);
 	    free(item);
@@ -401,7 +401,7 @@ static void _handler_add(XmppConn * const conn,
     } else
 	item->name = NULL;
     if (type) {
-	item->type = xmpp_strdup(type);
+	item->type = strdup(type);
 	if (!item->type) {
 	    if (item->ns) free(item->ns);
 	    if (item->name) free(item->name);

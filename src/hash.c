@@ -133,7 +133,7 @@ int hash_add(hash_t *table, const char * const key, void *data)
    /* allocate and fill a new entry */
    entry = malloc(sizeof(hashentry_t));
    if (!entry) return -1;
-   entry->key = xmpp_strdup(key);
+   entry->key = strdup(key);
    if (!entry->key) {
        free(entry);
        return -1;

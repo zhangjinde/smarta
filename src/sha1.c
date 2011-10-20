@@ -140,8 +140,7 @@ void SHAPrintContext(SHA1_CTX *context, char *msg){
 #endif /* VERBOSE */
 
 /* Hash a single 512-bit block. This is the core of the algorithm. */
-void SHA1_Transform(uint32_t state[5], const uint8_t buffer[64])
-{
+void SHA1_Transform(uint32_t state[5], const uint8_t buffer[64]) {
     uint32_t a, b, c, d, e;
     typedef union {
         uint8_t c[64];
@@ -199,8 +198,7 @@ void SHA1_Transform(uint32_t state[5], const uint8_t buffer[64])
 
 
 /* SHA1Init - Initialize new context */
-void SHA1_Init(SHA1_CTX* context)
-{
+void SHA1_Init(SHA1_CTX* context) {
     /* SHA1 initialization constants */
     context->state[0] = 0x67452301;
     context->state[1] = 0xEFCDAB89;
@@ -241,8 +239,7 @@ void SHA1_Update(SHA1_CTX* context, const uint8_t* data, const size_t len)
 
 
 /* Add padding and return the message digest. */
-void SHA1_Final(SHA1_CTX* context, uint8_t digest[SHA1_DIGEST_SIZE])
-{
+void SHA1_Final(SHA1_CTX* context, uint8_t digest[SHA1_DIGEST_SIZE]) {
     uint32_t i;
     uint8_t  finalcount[8];
 
@@ -329,8 +326,7 @@ static char *test_results[] = {
     "34AA973C D4C4DAA4 F61EEB2B DBAD2731 6534016F"};
     
 
-void digest_to_hex(const uint8_t digest[SHA1_DIGEST_SIZE], char *output)
-{
+void digest_to_hex(const uint8_t digest[SHA1_DIGEST_SIZE], char *output) {
     int i,j;
     char *c = output;
     
@@ -345,8 +341,7 @@ void digest_to_hex(const uint8_t digest[SHA1_DIGEST_SIZE], char *output)
     *(c - 1) = '\0';
 }
     
-int main(int argc, char** argv)
-{
+int main(int argc, char** argv) {
     int k;
     SHA1_CTX context;
     uint8_t digest[20];

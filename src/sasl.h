@@ -16,16 +16,14 @@
  * SASL authentication helpers.
  */
 
-#ifndef __LIBSTROPHE_SASL_H__
-#define __LIBSTROPHE_SASL_H__
-
-#include "xmpp.h"
+#ifndef _SMARTA_SASL_H__
+#define _SMARTA_SASL_H__
 
 /** low-level sasl routines */
 
 char *sasl_plain(const char *authid, const char *password);
-char *sasl_digest_md5(const char *challenge,
-		      const char *jid, const char *password);
+
+char *sasl_digest_md5(const char *challenge, const char *jid, const char *password);
 
 
 /** Base64 encoding routines. Implemented according to RFC 3548 */
