@@ -56,9 +56,9 @@
 #endif
 
 static void _auth(XmppConn * const conn);
-static void _handle_open_tls(XmppConn * const conn);
-static void _handle_open_sasl(XmppConn * const conn);
-static int _handle_missing_legacy(XmppConn * const conn,
+static void _handle_open_tls(XmppConn *conn);
+static void _handle_open_sasl(XmppConn *conn);
+static int _handle_missing_legacy(XmppConn *conn,
 				  void * const userdata);
 static int _handle_legacy(XmppConn * const conn,
 			  XmppStanza * const stanza,
@@ -350,7 +350,7 @@ static int _handle_digestmd5_challenge(XmppConn * const conn,
 	xmpp_stanza_set_name(auth, "response");
 	xmpp_stanza_set_ns(auth, XMPP_NS_SASL);
 	
-	authdata = xmpp_stanza_new(conn->ctx);
+	authdata = xmpp_stanza_new();
 	if (!authdata) {
 	    disconnect_mem_error(conn);
 	    return 0;
@@ -733,7 +733,7 @@ static int _handle_features_sasl(XmppConn * const conn,
 			  BIND_TIMEOUT, NULL);
 
 	/* send bind request */
-	iq = xmpp_stanza_new(conn->ctx);
+	iq = xmpp_stanza_new();
 	if (!iq) {
 	    disconnect_mem_error(conn);
 	    return 0;
@@ -761,7 +761,7 @@ static int _handle_features_sasl(XmppConn * const conn,
 	/* if we have a resource to request, do it. otherwise the 
 	   server will assign us one */
 	if (resource) {
-	    res = xmpp_stanza_new(conn->ctx);
+	    res = xmpp_stanza_new();
 	    if (!res) {
 		xmpp_stanza_release(bind);
 		xmpp_stanza_release(iq);
@@ -769,7 +769,7 @@ static int _handle_features_sasl(XmppConn * const conn,
 		return 0;
 	    }
 	    xmpp_stanza_set_name(res, "resource");
-	    text = xmpp_stanza_new(conn->ctx);
+	    text = xmpp_stanza_new();
 	    if (!text) {
 		xmpp_stanza_release(res);
 		xmpp_stanza_release(bind);
@@ -851,7 +851,7 @@ static int _handle_bind(XmppConn * const conn,
 	    xmpp_stanza_set_type(iq, "set");
 	    xmpp_stanza_set_id(iq, "_xmpp_session1");
 
-	    session = xmpp_stanza_new(conn->ctx);
+	    session = xmpp_stanza_new();
 	    if (!session) {
 		xmpp_stanza_release(iq);
 		disconnect_mem_error(conn);

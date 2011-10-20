@@ -35,3 +35,4 @@ tests_check_parser_SOURCES = tests/check_parser.c
 tests_check_parser_CFLAGS = @check_CFLAGS@ $(PARSER_CFLAGS) $(SMARTA_FLAGS) \
 	-I$(top_srcdir)/src
 tests_check_parser_LDADD = @check_LIBS@ $(SMARTA_LIBS)
+

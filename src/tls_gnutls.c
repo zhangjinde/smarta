@@ -22,7 +22,6 @@
 #include "sock.h"
 
 struct _tls {
-    xmpp_ctx_t *ctx; /* do we need this? */
     sock_t sock;
     gnutls_session_t session;
     gnutls_certificate_credentials_t cred;
@@ -33,9 +32,6 @@ void tls_initialize(void)
     /* initialize the GNU TLS global state */
     gnutls_global_init();
 
-    /* TODO: wire in xmpp_ctx_t allocator somehow?
-       unfortunately in gnutls it's global, so we can
-       only do so much. */
 }
 
 void tls_shutdown(void)
@@ -44,14 +40,13 @@ void tls_shutdown(void)
     gnutls_global_deinit();
 }
 
-tls_t *tls_new(xmpp_ctx_t *ctx, sock_t sock)
+tls_t *tls_new(sock_t sock)
 {
-    tls_t *tls = xmpp_alloc(ctx, sizeof(tls_t));
+    tls_t *tls = malloc(sizeof(tls_t));
     const int cert_type_priority[3] = { GNUTLS_CRT_X509,
         GNUTLS_CRT_OPENPGP, 0 };
 
     if (tls) {
-	tls->ctx = ctx;
 	tls->sock = sock;
 	gnutls_init(&tls->session, GNUTLS_CLIENT);
 
@@ -72,7 +67,7 @@ void tls_free(tls_t *tls)
 {
     gnutls_deinit(tls->session);
     gnutls_certificate_free_credentials(tls->cred);
-    free(tls->ctx, tls);
+    free(tls);
 }
 
 int tls_set_credentials(tls_t *tls, const char *cafilename)

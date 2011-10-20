@@ -12,27 +12,6 @@
 **  distribution.
 */
 
-/** @file
- *  Event loop and management.
- */
-
-/** @defgroup EventLoop Event loop
- *  These functions manage the Strophe event loop.  
- *  
- *  Simple tools can use xmpp_run() and xmpp_stop() to manage the life
- *  cycle of the program.  A common idiom is to set up a few initial
- *  event handers, call xmpp_run(), and then respond and react to
- *  events as they come in.  At some point, one of the handlers will
- *  call xmpp_stop() to quit the event loop which leads to the program
- *  terminating.
- * 
- *  More complex programs will have their own event loops, and should
- *  ensure that xmpp_run_once() is called regularly from there.  For
- *  example, a GUI program will already include an event loop to
- *  process UI events from users, and xmpp_run_once() would be called
- *  from an idle function.
- */
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -72,10 +51,8 @@
  *
  *  @ingroup EventLoop
  */
-void xmpp_run_once(xmpp_ctx_t *ctx, const unsigned long timeout)
+void xmpp_run_once(XmppConn *conn, const unsigned long timeout)
 {
-    xmpp_connlist_t *connitem;
-    XmppConn *conn;
     fd_set rfds, wfds;
     sock_t max = 0;
     int ret;
@@ -86,98 +63,87 @@ void xmpp_run_once(xmpp_ctx_t *ctx, const unsigned long timeout)
     uint64_t next;
     long usec;
 
-    if (ctx->loop_status == XMPP_LOOP_QUIT) return;
-    ctx->loop_status = XMPP_LOOP_RUNNING;
+    if (conn->loop_status == XMPP_LOOP_QUIT) return;
+        conn->loop_status = XMPP_LOOP_RUNNING;
 
-    /* send queued data */
-    connitem = ctx->connlist;
-    while (connitem) {
-	conn = connitem->conn;
-	if (conn->state != XMPP_STATE_CONNECTED) {
-	    connitem = connitem->next;
-	    continue;
-	}
+    //send queue packets
+    if (conn->state == XMPP_STATE_CONNECTED) {
+        /* if we're running tls, there may be some remaining data waiting to
+         * be sent, so push that out */
+        if (conn->tls) {
+            ret = tls_clear_pending_write(conn->tls);
 
-	/* if we're running tls, there may be some remaining data waiting to
-	 * be sent, so push that out */
-	if (conn->tls) {
-	    ret = tls_clear_pending_write(conn->tls);
+            if (ret < 0 && !tls_is_recoverable(tls_error(conn->tls))) {
+                /* an error occured */
+                xmpp_log(LOG_DEBUG, "xmpp: Send error occured, disconnecting.");
+                conn->error = ECONNABORTED;
+                conn_disconnect(conn);
+            }
+        }
 
-	    if (ret < 0 && !tls_is_recoverable(tls_error(conn->tls))) {
-		/* an error occured */
-		xmpp_log(LOG_DEBUG, "xmpp: Send error occured, disconnecting.");
-		conn->error = ECONNABORTED;
-		conn_disconnect(conn);
-	    }
-	}
+        /* write all data from the send queue to the socket */
+        sq = conn->send_queue_head;
+        while (sq) {
+            towrite = sq->len - sq->written;
 
-	/* write all data from the send queue to the socket */
-	sq = conn->send_queue_head;
-	while (sq) {
-	    towrite = sq->len - sq->written;
+            if (conn->tls) {
+            ret = tls_write(conn->tls, &sq->data[sq->written], towrite);
 
-	    if (conn->tls) {
-		ret = tls_write(conn->tls, &sq->data[sq->written], towrite);
+            if (ret < 0 && !tls_is_recoverable(tls_error(conn->tls))) {
+                /* an error occured */
+                conn->error = tls_error(conn->tls);
+                break;
+            } else if (ret < towrite) {
+                /* not all data could be sent now */
+                if (ret >= 0) sq->written += ret;
+                break;
+            }
 
-		if (ret < 0 && !tls_is_recoverable(tls_error(conn->tls))) {
-		    /* an error occured */
-		    conn->error = tls_error(conn->tls);
-		    break;
-		} else if (ret < towrite) {
-		    /* not all data could be sent now */
-		    if (ret >= 0) sq->written += ret;
-		    break;
-		}
+            } else {
+            ret = sock_write(conn->sock, &sq->data[sq->written], towrite);
 
-	    } else {
-		ret = sock_write(conn->sock, &sq->data[sq->written], towrite);
+            if (ret < 0 && !sock_is_recoverable(sock_error())) {
+                /* an error occured */
+                conn->error = sock_error();
+                break;
+            } else if (ret < towrite) {
+                /* not all data could be sent now */
+                if (ret >= 0) sq->written += ret;
+                break;
+            }
+            }
 
-		if (ret < 0 && !sock_is_recoverable(sock_error())) {
-		    /* an error occured */
-		    conn->error = sock_error();
-		    break;
-		} else if (ret < towrite) {
-		    /* not all data could be sent now */
-		    if (ret >= 0) sq->written += ret;
-		    break;
-		}
-	    }
+            /* all data for this queue item written, delete and move on */
+            free(sq->data);
+            tsq = sq;
+            sq = sq->next;
+            free(tsq);
 
-	    /* all data for this queue item written, delete and move on */
-	    free(sq->data);
-	    tsq = sq;
-	    sq = sq->next;
-	    free(tsq);
+            /* pop the top item */
+            conn->send_queue_head = sq;
+            /* if we've sent everything update the tail */
+            if (!sq) conn->send_queue_tail = NULL;
+        }
 
-	    /* pop the top item */
-	    conn->send_queue_head = sq;
-	    /* if we've sent everything update the tail */
-	    if (!sq) conn->send_queue_tail = NULL;
-	}
-
-	/* tear down connection on error */
-	if (conn->error) {
-	    /* FIXME: need to tear down send queues and random other things
-	     * maybe this should be abstracted */
-	    xmpp_log(LOG_DEBUG, "xmpp: Send error occured, disconnecting.");
-	    conn->error = ECONNABORTED;
-	    conn_disconnect(conn);
-	}
-	
-	connitem = connitem->next;
+        /* tear down connection on error */
+        if (conn->error) {
+            /* FIXME: need to tear down send queues and random other things
+             * maybe this should be abstracted */
+            xmpp_log(LOG_DEBUG, "xmpp: Send error occured, disconnecting.");
+            conn->error = ECONNABORTED;
+            conn_disconnect(conn);
+        }
     }
 
     /* reset parsers if needed */
-    for (connitem = ctx->connlist; connitem; connitem = connitem->next) {
-	if (connitem->conn->reset_parser)
-	    conn_parser_reset(connitem->conn);
+    if (conn->reset_parser) {
+        conn_parser_reset(conn);
     }
-
 
     /* fire any ready timed handlers, then
        make sure we don't wait past the time when timed handlers need 
        to be called */
-    next = handler_fire_timed(ctx);
+    next = handler_fire_timed(conn);
 
     usec = ((next < timeout) ? next : timeout) * 1000;
     tv.tv_sec = usec / 1000000;
@@ -187,37 +153,33 @@ void xmpp_run_once(xmpp_ctx_t *ctx, const unsigned long timeout)
     FD_ZERO(&wfds);
 
     /* find events to watch */
-    connitem = ctx->connlist;
-    while (connitem) {
-	conn = connitem->conn;
-	
-	switch (conn->state) {
-	case XMPP_STATE_CONNECTING:
-	    /* connect has been called and we're waiting for it to complete */
-	    /* connection will give us write or error events */
-	    
-	    /* make sure the timeout hasn't expired */
-	    if (time_elapsed(conn->timeout_stamp, time_stamp()) <= 
-		conn->connect_timeout)
-		FD_SET(conn->sock, &wfds);
-	    else {
-		conn->error = ETIMEDOUT;
-		xmpp_log(LOG_INFO, "xmpp: Connection attempt timed out.");
-		conn_disconnect(conn);
-	    }
-	    break;
-	case XMPP_STATE_CONNECTED:
-	    FD_SET(conn->sock, &rfds);
-	    break;
-	case XMPP_STATE_DISCONNECTED:
-	    /* do nothing */
-	default:
-	    break;
-	}
-	
-	if (conn->sock > max) max = conn->sock;
-
-	connitem = connitem->next;
+        
+    switch (conn->state) {
+    case XMPP_STATE_CONNECTING:
+        /* connect has been called and we're waiting for it to complete */
+        /* connection will give us write or error events */
+        
+        /* make sure the timeout hasn't expired */
+        if (time_elapsed(conn->timeout_stamp, time_stamp()) <= 
+        conn->connect_timeout)
+        FD_SET(conn->sock, &wfds);
+        else {
+        conn->error = ETIMEDOUT;
+        xmpp_log(LOG_INFO, "xmpp: Connection attempt timed out.");
+        conn_disconnect(conn);
+        }
+        break;
+    case XMPP_STATE_CONNECTED:
+        FD_SET(conn->sock, &rfds);
+        break;
+    case XMPP_STATE_DISCONNECTED:
+        /* do nothing */
+    default:
+        break;
+    }
+    
+    if (conn->sock > max) {
+        max = conn->sock;
     }
 
     /* check for events */
@@ -225,74 +187,65 @@ void xmpp_run_once(xmpp_ctx_t *ctx, const unsigned long timeout)
 
     /* select errored */
     if (ret < 0) {
-	if (!sock_is_recoverable(sock_error()))
-	    xmpp_log(LOG_ERROR, "xmpp: event watcher internal error %d", sock_error());
-	return;
+        if (!sock_is_recoverable(sock_error())) {
+            xmpp_log(LOG_ERROR, "xmpp: event watcher internal error %d", sock_error());
+        }
+        return;
     }
     
     /* no events happened */
     if (ret == 0) return;
     
     /* process events */
-    connitem = ctx->connlist;
-    while (connitem) {
-	conn = connitem->conn;
-
 	switch (conn->state) {
 	case XMPP_STATE_CONNECTING:
 	    if (FD_ISSET(conn->sock, &wfds)) {
-		/* connection complete */
-
-		/* check for error */
-		if (sock_connect_error(conn->sock) != 0) {
-		    /* connection failed */
-		    xmpp_log(LOG_DEBUG, "xmpp: connection failed");
-		    conn_disconnect(conn);
-		    break;
-		}
-
-		conn->state = XMPP_STATE_CONNECTED;
-		xmpp_log(LOG_DEBUG, "xmpp: connection successful");
-
-		
-		/* send stream init */
-		conn_open_stream(conn);
+            /* connection complete */
+            /* check for error */
+            if (sock_connect_error(conn->sock) != 0) {
+                /* connection failed */
+                xmpp_log(LOG_DEBUG, "xmpp: connection failed");
+                conn_disconnect(conn);
+                break;
+            }
+            conn->state = XMPP_STATE_CONNECTED;
+            xmpp_log(LOG_DEBUG, "xmpp: connection successful");
+            /* send stream init */
+            conn_open_stream(conn);
 	    }
-
 	    break;
 	case XMPP_STATE_CONNECTED:
 	    if (FD_ISSET(conn->sock, &rfds)) {
-		if (conn->tls) {
-		    ret = tls_read(conn->tls, buf, 4096);
-		} else {
-		    ret = sock_read(conn->sock, buf, 4096);
-		}
+            if (conn->tls) {
+                ret = tls_read(conn->tls, buf, 4096);
+            } else {
+                ret = sock_read(conn->sock, buf, 4096);
+            }
 
-		if (ret > 0) {
-		    ret = parser_feed(conn->parser, buf, ret);
-		    if (!ret) {
-			/* parse error, we need to shut down */
-			/* FIXME */
-			xmpp_log(LOG_DEBUG, "xmpp: parse error, disconnecting");
-			conn_disconnect(conn);
-		    }
-		} else {
-		    if (conn->tls) {
-			if (!tls_is_recoverable(tls_error(conn->tls)))
-			{
-			    xmpp_log(LOG_DEBUG, "xmpp: Unrecoverable TLS error, %d.", tls_error(conn->tls));
-			    conn->error = tls_error(conn->tls);
-			    conn_disconnect(conn);
-			}
-		    } else {
-			/* return of 0 means socket closed by server */
-			xmpp_log(LOG_DEBUG, "xmpp: Socket closed by remote host.");
-			conn->error = ECONNRESET;
-			conn_disconnect(conn);
-		    }
-		}
+            if (ret > 0) {
+                ret = parser_feed(conn->parser, buf, ret);
+                if (!ret) {
+                /* parse error, we need to shut down */
+                /* FIXME */
+                xmpp_log(LOG_DEBUG, "xmpp: parse error, disconnecting");
+                conn_disconnect(conn);
+                }
+            } else {
+                if (conn->tls) {
+                if (!tls_is_recoverable(tls_error(conn->tls)))
+                {
+                    xmpp_log(LOG_DEBUG, "xmpp: Unrecoverable TLS error, %d.", tls_error(conn->tls));
+                    conn->error = tls_error(conn->tls);
+                    conn_disconnect(conn);
+                }
+                } else {
+                /* return of 0 means socket closed by server */
+                xmpp_log(LOG_DEBUG, "xmpp: Socket closed by remote host.");
+                conn->error = ECONNRESET;
+                conn_disconnect(conn);
+                }
+            }
 	    }
-
 	    break;
 	case XMPP_STATE_DISCONNECTED:
 	    /* do nothing */
@@ -300,30 +253,26 @@ void xmpp_run_once(xmpp_ctx_t *ctx, const unsigned long timeout)
 	    break;
 	}
 
-	connitem = connitem->next;
-    }
-
     /* fire any ready handlers */
-    handler_fire_timed(ctx);
+    handler_fire_timed(conn);
 }
 
 /** Start the event loop.
  *  This function continuously calls xmpp_run_once and does not return
  *  until xmpp_stop has been called.
  *
- *  @param ctx a Strophe context object
+ *  @param conn a xmpp connection object
  *
  *  @ingroup EventLoop
  */
-void xmpp_run(xmpp_ctx_t *ctx)
-{
-    if (ctx->loop_status != XMPP_LOOP_NOTSTARTED) return;
-
-    ctx->loop_status = XMPP_LOOP_RUNNING;
-    while (ctx->loop_status == XMPP_LOOP_RUNNING) {
-	xmpp_run_once(ctx, DEFAULT_TIMEOUT);
+void xmpp_run(XmppConn *conn) {
+    if (conn->loop_status != XMPP_LOOP_NOTSTARTED) {
+        return;
     }
-
+    conn->loop_status = XMPP_LOOP_RUNNING;
+    while (conn->loop_status == XMPP_LOOP_RUNNING) {
+        xmpp_run_once(conn, DEFAULT_TIMEOUT);
+    }
     xmpp_log(LOG_DEBUG, "event: Event loop completed.");
 }
 
@@ -335,10 +284,9 @@ void xmpp_run(xmpp_ctx_t *ctx)
  *
  *  @ingroup EventLoop
  */
-void xmpp_stop(xmpp_ctx_t *ctx)
-{
+void xmpp_stop(XmppConn *conn) {
     xmpp_log(LOG_DEBUG, "event: Stopping event loop.");
-
-    if (ctx->loop_status == XMPP_LOOP_RUNNING)
-	ctx->loop_status = XMPP_LOOP_QUIT;
+    if (conn->loop_status == XMPP_LOOP_RUNNING) {
+        conn->loop_status = XMPP_LOOP_QUIT;
+    }
 }

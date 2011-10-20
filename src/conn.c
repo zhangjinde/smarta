@@ -48,41 +48,33 @@
 #define CONNECT_TIMEOUT 5000 /* 5 seconds */
 #endif
 
-static int _disconnect_cleanup(XmppConn * const conn, 
-			       void * const userdata);
+static int _disconnect_cleanup(XmppConn * const conn, void * const userdata);
 
-static void _handle_stream_start(char *name, char **attrs, 
-                                 void * const userdata);
-static void _handle_stream_end(char *name,
-                               void * const userdata);
-static void _handle_stream_stanza(XmppStanza *stanza,
-                                  void * const userdata);
+static void _handle_stream_start(char *name, char **attrs, void * const userdata);
+
+static void _handle_stream_end(char *name, void * const userdata);
+
+static void _handle_stream_stanza(XmppStanza *stanza, void * const userdata);
 
 /** Create a new Strophe connection object.
- *
- *  @param ctx a Strophe context object
  *
  *  @return a Strophe connection object or NULL on an error
  *
  *  @ingroup Connections
  */
-XmppConn *xmpp_conn_new(xmpp_ctx_t * const ctx)
+XmppConn *xmpp_conn_new()
 {
     XmppConn *conn = NULL;
-    xmpp_connlist_t *tail, *item;
 
-    if (ctx == NULL) return NULL;
 	conn = malloc(sizeof(XmppConn));
     
-    if (conn != NULL) {
-	conn->ctx = ctx;
-
 	conn->type = XMPP_UNKNOWN;
 	conn->sock = -1;
 	conn->tls = NULL;
 	conn->timeout_stamp = 0;
 	conn->error = 0;
 	conn->stream_error = NULL;
+    conn->loop_status = XMPP_LOOP_NOTSTARTED;
 
 	/* default send parameters */
 	conn->blocking_send = 0;
@@ -103,12 +95,12 @@ XmppConn *xmpp_conn_new(xmpp_ctx_t * const ctx)
 	conn->jid = NULL;
 	conn->pass = NULL;
 	conn->stream_id = NULL;
-        conn->bound_jid = NULL;
+    conn->bound_jid = NULL;
 
 	conn->tls_support = 0;
 	conn->tls_failed = 0;
 	conn->sasl_support = 0;
-        conn->secured = 0;
+    conn->secured = 0;
 
 	conn->bind_required = 0;
 	conn->session_required = 0;
@@ -117,8 +109,8 @@ XmppConn *xmpp_conn_new(xmpp_ctx_t * const ctx)
                               _handle_stream_end,
                               _handle_stream_stanza,
                               conn);
-        conn->reset_parser = 0;
-        conn_prepare_reset(conn, auth_handle_open);
+    conn->reset_parser = 0;
+    conn_prepare_reset(conn, auth_handle_open);
 
 	conn->authenticated = 0;
 	conn->conn_handler = NULL;
@@ -131,26 +123,6 @@ XmppConn *xmpp_conn_new(xmpp_ctx_t * const ctx)
 	/* give the caller a reference to connection */
 	conn->ref = 1;
 
-	/* add connection to ctx->connlist */
-	tail = conn->ctx->connlist;
-	while (tail && tail->next) tail = tail->next;
-
-	item = malloc(sizeof(xmpp_connlist_t));
-	if (!item) {
-	    xmpp_log(LOG_ERROR, "xmpp: failed to allocate memory");
-	    free(conn->lang);
-            parser_free(conn->parser);
-	    free(conn);
-	    conn = NULL;
-	} else {
-	    item->conn = conn;
-	    item->next = NULL;
-
-	    if (tail) tail->next = item;
-	    else conn->ctx->connlist = item;
-	}
-    }
-    
     return conn;
 }
 
@@ -181,38 +153,15 @@ XmppConn *xmpp_conn_clone(XmppConn * const conn)
  */
 int xmpp_conn_release(XmppConn * const conn)
 {
-    xmpp_ctx_t *ctx;
-    xmpp_connlist_t *item, *prev;
     xmpp_handlist_t *hlitem, *thli;
     hash_iterator_t *iter;
     const char *key;
     int released = 0;
 
-    if (conn->ref > 1) 
-	conn->ref--;
-    else {
-	ctx = conn->ctx;
-
-	/* remove connection from context's connlist */
-	if (ctx->connlist->conn == conn) {
-	    item = ctx->connlist;
-	    ctx->connlist = item->next;
-	    free(item);
-	} else {
-	    prev = NULL;
-	    item = ctx->connlist;
-	    while (item && item->conn != conn) {
-		prev = item;
-		item = item->next;
-	    }
-
-	    if (!item) {
-		xmpp_log(LOG_ERROR, "xmpp: Connection not in context's list\n");
-	    } else {
-		prev->next = item->next;
-		free(item);
-	    }
-	}
+    if (conn->ref > 1)  {
+        conn->ref--;
+        return released;
+    }
 
 	/* free handler stuff
 	 * note that userdata is the responsibility of the client
@@ -261,7 +210,7 @@ int xmpp_conn_release(XmppConn * const conn)
 	    free(conn->stream_error);
 	}
 
-        parser_free(conn->parser);
+    parser_free(conn->parser);
 	
 	if (conn->domain) free(conn->domain);
 	if (conn->jid) free(conn->jid);
@@ -271,7 +220,6 @@ int xmpp_conn_release(XmppConn * const conn)
 	if (conn->lang) free(conn->lang);
 	free(conn);
 	released = 1;
-    }
 
     return released;
 }
@@ -284,8 +232,7 @@ int xmpp_conn_release(XmppConn * const conn)
  *
  *  @ingroup Connections
  */
-const char *xmpp_conn_get_jid(const XmppConn * const conn)
-{
+char *xmpp_conn_get_jid(XmppConn * conn) {
     return conn->jid;
 }
 
@@ -302,8 +249,7 @@ const char *xmpp_conn_get_jid(const XmppConn * const conn)
  *
  * @ingroup Connections
  */
-const char *xmpp_conn_get_bound_jid(const XmppConn * const conn)
-{
+char *xmpp_conn_get_bound_jid(XmppConn *conn) {
     return conn->bound_jid;
 }
 
@@ -318,10 +264,10 @@ const char *xmpp_conn_get_bound_jid(const XmppConn * const conn)
  *
  *  @ingroup Connections
  */
-void xmpp_conn_set_jid(XmppConn * const conn, const char * const jid)
+void xmpp_conn_set_jid(XmppConn *conn, const char *jid)
 {
     if (conn->jid) free(conn->jid);
-    conn->jid = xmpp_strdup(jid);
+    conn->jid = strdup(jid);
 }
 
 /** Get the password used for authentication of a connection.
@@ -332,8 +278,7 @@ void xmpp_conn_set_jid(XmppConn * const conn, const char * const jid)
  *
  *  @ingroup Connections
  */
-const char *xmpp_conn_get_pass(const XmppConn * const conn)
-{
+char *xmpp_conn_get_pass(XmppConn *conn) {
     return conn->pass;
 }
 
@@ -346,22 +291,9 @@ const char *xmpp_conn_get_pass(const XmppConn * const conn)
  *
  *  @ingroup Connections
  */
-void xmpp_conn_set_pass(XmppConn * const conn, const char * const pass)
-{
+void xmpp_conn_set_pass(XmppConn *conn, const char *pass) {
     if (conn->pass) free(conn->pass);
-    conn->pass = xmpp_strdup(pass);
-}
-
-/** Get the strophe context that the connection is associated with.
-*  @param conn a Strophe connection object
-* 
-*  @return a Strophe context
-* 
-*  @ingroup Connections
-*/
-xmpp_ctx_t* xmpp_conn_get_context(XmppConn * const conn)
-{
-	return conn->ctx;
+    conn->pass = strdup(pass);
 }
 
 /** Initiate a connection to the XMPP server.

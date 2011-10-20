@@ -251,12 +251,8 @@ struct _xmpp_handlist_t {
 #define SASL_MASK_DIGESTMD5 0x02
 #define SASL_MASK_ANONYMOUS 0x04
 
-/* opaque run time context containing the above hooks */
-typedef struct _xmpp_ctx_t xmpp_ctx_t;
-
 struct _XmppConn {
     unsigned int ref;
-    xmpp_ctx_t *ctx;
     xmpp_conn_type_t type;
 
     xmpp_conn_state_t state;
@@ -289,6 +285,7 @@ struct _XmppConn {
     int blocking_send;
     int send_queue_max;
     int send_queue_len;
+    int loop_status;
     xmpp_send_queue_t *send_queue_head;
     xmpp_send_queue_t *send_queue_tail;
 
@@ -329,7 +326,7 @@ void conn_parser_reset(XmppConn * const conn);
 /* handler management */
 void handler_fire_stanza(XmppConn * const conn,
 			 XmppStanza * const stanza);
-uint64_t handler_fire_timed(xmpp_ctx_t * const ctx);
+uint64_t handler_fire_timed(XmppConn *conn);
 void handler_reset_timed(XmppConn *conn, int user_only);
 void handler_add_timed(XmppConn * const conn,
 		       xmpp_timed_handler handler,
@@ -367,25 +364,6 @@ void xmpp_shutdown(void);
 /* version */
 int xmpp_version_check(int major, int minor);
 
-/* run-time contexts */
-
-/* user-replaceable memory allocator */
-typedef struct _xmpp_mem_t xmpp_mem_t;
-
-/* user-replaceable log object */
-typedef struct _xmpp_log_t xmpp_log_t;
-
-xmpp_ctx_t *xmpp_ctx_new(const xmpp_mem_t * const mem, 
-			     const xmpp_log_t * const log);
-void xmpp_ctx_free(xmpp_ctx_t * const ctx);
-
-struct _xmpp_mem_t {
-    void *(*alloc)(const size_t size, void * const userdata);
-    void (*free)(void *p, void * const userdata);
-    void *(*realloc)(void *p, const size_t size, void * const userdata);
-    void *userdata;
-};
-
 typedef void (*xmpp_log_handler)(void * const userdata, 
 				 const xmpp_log_level_t level,
 				 const char * const area,
@@ -397,39 +375,24 @@ struct _xmpp_log_t {
     /* mutex_t lock; */
 };
 
-/* return a default logger filtering at a given level */
-xmpp_log_t *xmpp_get_default_logger(xmpp_log_level_t level);
-
 /* connection */
-
-typedef struct _xmpp_connlist_t {
-    XmppConn *conn;
-    struct _xmpp_connlist_t *next;
-} xmpp_connlist_t;
-
-struct _xmpp_ctx_t {
-    xmpp_loop_status_t loop_status;
-    xmpp_connlist_t *connlist;
-};
-
 struct _xmpp_stream_error_t {
     xmpp_error_type_t type;
     char *text;
     XmppStanza *stanza;
 }; 
 
-XmppConn *xmpp_conn_new(xmpp_ctx_t * const ctx);
+XmppConn *xmpp_conn_new();
 
 XmppConn * xmpp_conn_clone(XmppConn * const conn);
 
 int xmpp_conn_release(XmppConn * const conn);
 
-const char *xmpp_conn_get_jid(const XmppConn * const conn);
-const char *xmpp_conn_get_bound_jid(const XmppConn * const conn);
+char *xmpp_conn_get_jid(XmppConn *conn);
+char *xmpp_conn_get_bound_jid(XmppConn *conn);
 void xmpp_conn_set_jid(XmppConn * const conn, const char * const jid);
-const char *xmpp_conn_get_pass(const XmppConn * const conn);
+char *xmpp_conn_get_pass(XmppConn *conn);
 void xmpp_conn_set_pass(XmppConn * const conn, const char * const pass);
-xmpp_ctx_t* xmpp_conn_get_context(XmppConn * const conn);
 
 int xmpp_connect_client(XmppConn * const conn, 
 			  const char * const altdomain,
@@ -486,8 +449,8 @@ void xmpp_register_stanza_handler(conn, stanza, xmlns, type, handler)
 
 
 /** event loop **/
-void xmpp_run_once(xmpp_ctx_t *ctx, const unsigned long  timeout);
-void xmpp_run(xmpp_ctx_t *ctx);
-void xmpp_stop(xmpp_ctx_t *ctx);
+void xmpp_run_once(XmppConn *conn, const unsigned long  timeout);
+void xmpp_run(XmppConn *conn);
+void xmpp_stop(XmppConn *conn);
 
 #endif /* __LIBSTROPHE_STROPHE_H__ */

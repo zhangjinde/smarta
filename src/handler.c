@@ -30,6 +30,7 @@
 #endif
 
 #include "xmpp.h"
+#include "util.h"
 
 /** Fire off all stanza handlers that match.
  *  This function is called internally by the event loop whenever stanzas
@@ -131,32 +132,25 @@ void handler_fire_stanza(XmppConn * const conn,
 /** Fire off all timed handlers that are ready.
  *  This function is called internally by the event loop.
  *
- *  @param ctx a Strophe context object
- *
  *  @return the time in milliseconds until the next handler will be ready
  */
-uint64_t handler_fire_timed(xmpp_ctx_t * const ctx)
-{
-    xmpp_connlist_t *connitem;
+uint64_t handler_fire_timed(XmppConn *conn) {
     xmpp_handlist_t *handitem, *temp;
     int ret, fired;
     uint64_t elapsed, min;
 
     min = (uint64_t)(-1);
 
-    connitem = ctx->connlist;
-    while (connitem) {
-	if (connitem->conn->state != XMPP_STATE_CONNECTED) {
-	    connitem = connitem->next;
-	    continue;
+	if (conn->state != XMPP_STATE_CONNECTED) {
+        return min;
 	}
 	
 	/* enable all handlers that were added */
-	for (handitem = connitem->conn->timed_handlers; handitem;
-	     handitem = handitem->next)
+	for (handitem = conn->timed_handlers; handitem; handitem = handitem->next) {
 	    handitem->enabled = 1;
+    }
 
-	handitem = connitem->conn->timed_handlers;
+	handitem = conn->timed_handlers;
 	while (handitem) {
 	    /* skip newly added handlers */
 	    if (!handitem->enabled) {
@@ -165,7 +159,7 @@ uint64_t handler_fire_timed(xmpp_ctx_t * const ctx)
 	    }
 
 	    /* only fire user handlers after authentication */
-	    if (handitem->user_handler && !connitem->conn->authenticated) {
+	    if (handitem->user_handler && !conn->authenticated) {
 		handitem = handitem->next;
 		continue;
 	    }
@@ -176,7 +170,7 @@ uint64_t handler_fire_timed(xmpp_ctx_t * const ctx)
 		/* fire! */
 		fired = 1;
 		handitem->last_stamp = time_stamp();
-		ret = ((xmpp_timed_handler)handitem->handler)(connitem->conn, handitem->userdata);
+		ret = ((xmpp_timed_handler)handitem->handler)(conn, handitem->userdata);
 	    } else if (min > (handitem->period - elapsed))
 		min = handitem->period - elapsed;
 		
@@ -185,11 +179,8 @@ uint64_t handler_fire_timed(xmpp_ctx_t * const ctx)
 
 	    /* delete handler if it returned false */
 	    if (fired && !ret)
-		xmpp_timed_handler_delete(connitem->conn, temp->handler);
+		xmpp_timed_handler_delete(conn, temp->handler);
 	}
-
-	connitem = connitem->next;
-    }
 
     return min;
 }
@@ -200,8 +191,7 @@ uint64_t handler_fire_timed(xmpp_ctx_t * const ctx)
  *  @param conn a Strophe connection object
  *  @param user_only whether to reset all handlers or only user ones
  */
-void handler_reset_timed(XmppConn *conn, int user_only)
-{
+void handler_reset_timed(XmppConn *conn, int user_only) {
     xmpp_handlist_t *handitem;
 
     handitem = conn->timed_handlers;

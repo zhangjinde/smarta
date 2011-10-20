@@ -20,7 +20,6 @@
 #include "sock.h"
 
 struct _tls {
-    xmpp_ctx_t *ctx; /* do we need this? */
     sock_t sock;
     /* we don't implement anything */
 };

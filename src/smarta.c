@@ -106,8 +106,6 @@ void conn_handler(XmppConn * const conn, const xmpp_conn_event_t status,
 		  const int error, xmpp_stream_error_t * const stream_error,
 		  void * const userdata)
 {
-	xmpp_ctx_t *ctx = (xmpp_ctx_t*)userdata;
-
     if (status == XMPP_CONN_CONNECT) {
 	XmppStanza* pres;
 	fprintf(stdout, "DEBUG: smarta is connected\n");
@@ -122,7 +120,7 @@ void conn_handler(XmppConn * const conn, const xmpp_conn_event_t status,
     }
     else {
 	fprintf(stderr, "DEBUG: disconnected\n");
-	xmpp_stop(ctx);
+	xmpp_stop(conn);
     }
 }
 
@@ -240,10 +238,7 @@ loaderr:
 }
 
 int main(int argc, char **argv) {
-    //time_t start;
-    xmpp_ctx_t *ctx;
     XmppConn *conn;
-    xmpp_log_t *log;
     char *jid, *pass;
 
     init_config();
@@ -264,28 +259,25 @@ int main(int argc, char **argv) {
     /* init library */
     xmpp_initialize();
 
-    ctx = xmpp_ctx_new(NULL, NULL);
-
     /* create a connection */
-    conn = xmpp_conn_new(ctx);
+    conn = xmpp_conn_new();
 
     /* setup authentication information */
     xmpp_conn_set_jid(conn, jid);
     xmpp_conn_set_pass(conn, pass);
 
     /* initiate connection */
-    xmpp_connect_client(conn, NULL, 0, conn_handler, ctx);
+    xmpp_connect_client(conn, NULL, 0, conn_handler, NULL);
 
     /* sched checks */
     sched_services(conn);
 
     /* enter the event loop - 
        our connect handler will trigger an exit */
-    xmpp_run(ctx);
+    xmpp_run(conn);
 
     /* release our connection and context */
     xmpp_conn_release(conn);
-    xmpp_ctx_free(ctx);
 
     /* final shutdown of the library */
     xmpp_shutdown();
