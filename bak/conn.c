@@ -62,7 +62,7 @@ static void _handle_stream_stanza(XmppStanza *stanza, void * const userdata);
  *
  *  @ingroup Connections
  */
-XmppConn *xmpp_conn_new()
+XmppConn *xmpp_conn_new(char *jid, char *pass)
 {
     XmppConn *conn = NULL;
 
@@ -87,13 +87,9 @@ XmppConn *xmpp_conn_new()
 	conn->connect_timeout = CONNECT_TIMEOUT;
 
 	conn->lang = strdup("en");
-	if (!conn->lang) {
-	    free(conn);
-	    return NULL;
-	}
 	conn->domain = NULL;
-	conn->jid = NULL;
-	conn->pass = NULL;
+	conn->jid = strdup(jid);
+	conn->pass = strdup(pass);
 	conn->stream_id = NULL;
     conn->bound_jid = NULL;
 
@@ -105,10 +101,6 @@ XmppConn *xmpp_conn_new()
 	conn->bind_required = 0;
 	conn->session_required = 0;
 
-	conn->parser = parser_new(_handle_stream_start,
-                              _handle_stream_end,
-                              _handle_stream_stanza,
-                              conn);
     conn->reset_parser = 0;
     conn_prepare_reset(conn, auth_handle_open);
 
@@ -120,24 +112,6 @@ XmppConn *xmpp_conn_new()
 	conn->id_handlers = hash_new(32, NULL);
 	conn->handlers = NULL;
 
-	/* give the caller a reference to connection */
-	conn->ref = 1;
-
-    return conn;
-}
-
-/** Clone a Strophe connection object.
- *  
- *  @param conn a Strophe connection object
- *
- *  @return the same conn object passed in with its reference count
- *      incremented by 1
- *
- *  @ingroup Connections
- */
-XmppConn *xmpp_conn_clone(XmppConn * const conn)
-{
-    conn->ref++;
     return conn;
 }
 
@@ -157,11 +131,6 @@ int xmpp_conn_release(XmppConn * const conn)
     hash_iterator_t *iter;
     const char *key;
     int released = 0;
-
-    if (conn->ref > 1)  {
-        conn->ref--;
-        return released;
-    }
 
 	/* free handler stuff
 	 * note that userdata is the responsibility of the client
@@ -561,27 +530,6 @@ void xmpp_send(XmppConn * const conn,
     }
 }
 
-/** Send the opening &lt;stream:stream&gt; tag to the server.
- *  This function is used by Strophe to begin an XMPP stream.  It should
- *  not be used outside of the library.
- *
- *  @param conn a Strophe connection object
- */
-void conn_open_stream(XmppConn * const conn)
-{
-    xmpp_send_raw_string(conn, 
-			 "<?xml version=\"1.0\"?>"			\
-			 "<stream:stream to=\"%s\" "			\
-			 "xml:lang=\"%s\" "				\
-			 "version=\"1.0\" "				\
-			 "xmlns=\"%s\" "				\
-			 "xmlns:stream=\"%s\">", 
-			 conn->domain,
-			 conn->lang,
-			 conn->type == XMPP_CLIENT ? XMPP_NS_CLIENT : XMPP_NS_COMPONENT,
-			 XMPP_NS_STREAMS);
-}
-
 static void _log_open_tag(XmppConn *conn, char **attrs) {
     char buf[4096];
     size_t len, pos;
@@ -608,8 +556,7 @@ static void _log_open_tag(XmppConn *conn, char **attrs) {
     xmpp_log(LOG_DEBUG, "xmpp: RECV: %s", buf);
 }
 
-static char *_get_stream_attribute(char **attrs, char *name)
-{
+static char *_get_stream_attribute(char **attrs, char *name) {
     int i;
 
     if (!attrs) return NULL;
@@ -622,8 +569,7 @@ static char *_get_stream_attribute(char **attrs, char *name)
 }
 
 static void _handle_stream_start(char *name, char **attrs, 
-                                 void * const userdata)
-{
+                                 void * const userdata) {
     XmppConn *conn = (XmppConn *)userdata;
     char *id;
 
@@ -652,8 +598,7 @@ static void _handle_stream_start(char *name, char **attrs,
 }
 
 static void _handle_stream_end(char *name,
-                               void * const userdata)
-{
+                               void * const userdata) {
     XmppConn *conn = (XmppConn *)userdata;
 
     /* stream is over */
@@ -662,8 +607,7 @@ static void _handle_stream_end(char *name,
 }
 
 static void _handle_stream_stanza(XmppStanza *stanza,
-                                  void * const userdata)
-{
+                                  void * const userdata) {
     XmppConn *conn = (XmppConn *)userdata;
     char *buf;
     size_t len;

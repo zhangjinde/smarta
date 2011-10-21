@@ -26,6 +26,7 @@ typedef struct _Smarta {
     char *masterauth;
     int masterport;
     list *services;
+    aeEventLoop *el;
     char *logfile;
     int verbosity;
 } Smarta;

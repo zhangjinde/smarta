@@ -24,9 +24,8 @@
 #include <stdarg.h>
 #include <stdint.h>
 
-#include "sock.h"
-#include "tls.h"
 #include "hash.h"
+#include "dict.h"
 #include "stanza.h"
 #include "parser.h"
 
@@ -84,7 +83,7 @@
 /** @def XMPP_EOK
  *  Success error code.
  */
-#define XMPP_EOK 0
+#define XMPP_OK 0
 /** @def XMPP_EMEM
  *  Memory related failure error code.
  *  
@@ -109,34 +108,6 @@
 #define LOG_INFO 1
 #define LOG_WARN 2
 #define LOG_ERROR 3
-
-/** run-time context **/
-
-typedef enum {
-    XMPP_LOOP_NOTSTARTED,
-    XMPP_LOOP_RUNNING,
-    XMPP_LOOP_QUIT
-} xmpp_loop_status_t;
-
-typedef enum {
-    XMPP_LEVEL_DEBUG,
-    XMPP_LEVEL_INFO,
-    XMPP_LEVEL_WARN,
-    XMPP_LEVEL_ERROR
-} xmpp_log_level_t;
-
-typedef enum {
-    XMPP_UNKNOWN,
-    XMPP_CLIENT,
-    XMPP_COMPONENT
-} xmpp_conn_type_t;
-
-/* connect callback */
-typedef enum {
-    XMPP_CONN_CONNECT,
-    XMPP_CONN_DISCONNECT,
-    XMPP_CONN_FAIL
-} xmpp_conn_event_t;
 
 typedef enum {
     XMPP_SE_BAD_FORMAT,
@@ -163,111 +134,36 @@ typedef enum {
     XMPP_SE_UNSUPPORTED_STANZA_TYPE,
     XMPP_SE_UNSUPPORTED_VERSION,
     XMPP_SE_XML_NOT_WELL_FORMED
-} xmpp_error_type_t;
+} XmppErrorType;
 
 
-/** jid */
-char *xmpp_jid_new(const char *node, const char *domain, const char *resource);
-char *xmpp_jid_bare(const char *jid);
-char *xmpp_jid_node(const char *jid);
-char *xmpp_jid_domain(const char *jid);
-char *xmpp_jid_resource(const char *jid);
+typedef struct _XmppStreamError XmppStreamError;
 
-typedef struct _xmpp_stream_error_t xmpp_stream_error_t;
-
-/** connection **/
-
-/* opaque connection object */
 typedef enum {
-    XMPP_STATE_DISCONNECTED,
-    XMPP_STATE_CONNECTING,
-    XMPP_STATE_CONNECTED
-} xmpp_conn_state_t;
+    XMPP_STREAM_DISCONNECTED,
+    XMPP_STREAM_CONNECTING,
+    XMPP_STREAM_TLS_NEGOTIATING,
+    XMPP_STREAM_TSL_OPENED,
+    XMPP_STREAM_SASL_AUTHENTICATING,
+    XMPP_STREAM_SASL_AUTHED,
+    XMPP_STREAM_CONNECTED
+} XmppStreamState;
 
-typedef struct _xmpp_send_queue_t xmpp_send_queue_t;
-struct _xmpp_send_queue_t {
-    char *data;
-    size_t len;
-    size_t written;
-    xmpp_send_queue_t *next;
-};
+typedef struct _XmppStream XmppStream;
 
-typedef struct _XmppConn XmppConn;
+struct _XmppStream {
 
-typedef void (*xmpp_open_handler)(XmppConn * const conn);
+    int fd; //socket
 
-typedef struct _xmpp_handlist_t xmpp_handlist_t;
+    XmppStreamState state;
 
-typedef void (*xmpp_conn_handler)(XmppConn * const conn, 
-				  const xmpp_conn_event_t event,
-				  const int error,
-				  xmpp_stream_error_t * const stream_error,
-				  void * const userdata);
-
-/* if the handle returns false it is removed */
-typedef int (*xmpp_timed_handler)(XmppConn * const conn, 
-				  void * const userdata);
-
-/* if the handler returns false it is removed */
-typedef int (*xmpp_handler)(XmppConn * const conn,
-			     XmppStanza * const stanza,
-			     void * const userdata);
-
-struct _xmpp_handlist_t {
-    /* common members */
-    int user_handler;
-    void *handler;
-    void *userdata;
-    int enabled; /* handlers are added disabled and enabled after the
-		  * handler chain is processed to prevent stanzas from
-		  * getting processed by newly added handlers */
-    xmpp_handlist_t *next;
-
-    union {
-	/* timed handlers */
-	struct {
-	    unsigned long period;
-	    uint64_t last_stamp;
-	};
-	/* id handlers */
-	struct {
-	    char *id;
-	};
-	/* normal handlers */
-	struct {
-	    char *ns;
-	    char *name;
-	    char *type;
-	};
-    };
-};
-
-#define SASL_MASK_PLAIN 0x01
-#define SASL_MASK_DIGESTMD5 0x02
-#define SASL_MASK_ANONYMOUS 0x04
-
-struct _XmppConn {
-    unsigned int ref;
-    xmpp_conn_type_t type;
-
-    xmpp_conn_state_t state;
     uint64_t timeout_stamp;
     int error;
-    xmpp_stream_error_t *stream_error;
-    sock_t sock;
-    tls_t *tls;
+    XmppStreamError *stream_error;
 
     int tls_support;
-    int tls_failed; /* set when tls fails, so we don't try again */
-    int sasl_support; /* if true, field is a bitfield of supported 
-			 mechanisms */ 
-    int secured; /* set when stream is secured with TLS */
+    int sasl_support; /* if true, field is a bitfield of supported mechanisms */ 
 
-    /* if server returns <bind/> or <session/> we must do them */
-    int bind_required;
-    int session_required;
-
-    char *lang;
     char *domain;
     char *connectdomain;
     char *connectport;
@@ -276,176 +172,55 @@ struct _XmppConn {
     char *bound_jid;
     char *stream_id;
 
-    /* send queue and parameters */
-    int blocking_send;
-    int send_queue_max;
-    int send_queue_len;
-    int loop_status;
-    xmpp_send_queue_t *send_queue_head;
-    xmpp_send_queue_t *send_queue_tail;
-
-    /* xml parser */
-    int reset_parser;
     Parser *parser;
 
     /* timeouts */
     unsigned int connect_timeout;
 
-    /* event handlers */    
-
-    /* stream open handler */
-    xmpp_open_handler open_handler;
-
     /* user handlers only get called after authentication */
     int authenticated;
     
-    /* connection events handler */
-    xmpp_conn_handler conn_handler;
-
     void *userdata;
 
     /* other handlers */
-    xmpp_handlist_t *timed_handlers;
-    hash_t *id_handlers;
-    xmpp_handlist_t *handlers;
+    dict *iq_callbacks;
 };
 
 
-
-void conn_disconnect(XmppConn * const conn);
-void conn_disconnect_clean(XmppConn * const conn);
-void conn_open_stream(XmppConn * const conn);
-void conn_prepare_reset(XmppConn * const conn, xmpp_open_handler handler);
-void conn_parser_reset(XmppConn * const conn);
-
-/* handler management */
-void handler_fire_stanza(XmppConn * const conn,
-			 XmppStanza * const stanza);
-uint64_t handler_fire_timed(XmppConn *conn);
-void handler_reset_timed(XmppConn *conn, int user_only);
-void handler_add_timed(XmppConn * const conn,
-		       xmpp_timed_handler handler,
-		       const unsigned long period,
-		       void * const userdata);
-void handler_add_id(XmppConn * const conn,
-		    xmpp_handler handler,
-		    const char * const id,
-		    void * const userdata);
-void handler_add(XmppConn * const conn,
-		 xmpp_handler handler,
-		 const char * const ns,
-		 const char * const name,
-		 const char * const type,
-		 void * const userdata);
-
-/* utility functions */
-void disconnect_mem_error(XmppConn * const conn);
-
-/* auth functions */
-void auth_handle_open(XmppConn * const conn);
-
-/* replacement snprintf and vsnprintf */
-int xmpp_snprintf (char *str, size_t count, const char *fmt, ...);
-int xmpp_vsnprintf (char *str, size_t count, const char *fmt, va_list arg);
-
-
+#define SASL_MASK_PLAIN 0x01
+#define SASL_MASK_DIGESTMD5 0x02
+#define SASL_MASK_ANONYMOUS 0x04
 
 void xmpp_log(int level, const char *fmt, ...);
 
-/* initialization and shutdown */
-void xmpp_initialize(void);
-void xmpp_shutdown(void);
+/* replacement snprintf and vsnprintf */
+int xmpp_snprintf (char *str, size_t count, char *fmt, ...);
 
-/* version */
-int xmpp_version_check(int major, int minor);
-
-typedef void (*xmpp_log_handler)(void * const userdata, 
-				 const xmpp_log_level_t level,
-				 const char * const area,
-				 const char * const msg);
-
-struct _xmpp_log_t {
-    xmpp_log_handler handler;
-    void *userdata;
-    /* mutex_t lock; */
-};
+int xmpp_vsnprintf (char *str, size_t count, char *fmt, va_list arg);
 
 /* connection */
-struct _xmpp_stream_error_t {
-    xmpp_error_type_t type;
+struct _XmppStreamError {
+    XmppErrorType type;
     char *text;
     XmppStanza *stanza;
 }; 
 
-XmppConn *xmpp_conn_new();
+//char *xmpp_conn_get_jid(XmppConn *conn);
+//char *xmpp_conn_get_bound_jid(XmppConn *conn);
+//void xmpp_conn_set_jid(XmppConn * const conn, const char * const jid);
+//char *xmpp_conn_get_pass(XmppConn *conn);
+//void xmpp_conn_set_pass(XmppConn * const conn, const char * const pass);
 
-XmppConn * xmpp_conn_clone(XmppConn * const conn);
+XmppStream *xmpp_stream_new(int fd);
 
-int xmpp_conn_release(XmppConn * const conn);
+int xmpp_stream_open(XmppStream *stream);
 
-char *xmpp_conn_get_jid(XmppConn *conn);
-char *xmpp_conn_get_bound_jid(XmppConn *conn);
-void xmpp_conn_set_jid(XmppConn * const conn, const char * const jid);
-char *xmpp_conn_get_pass(XmppConn *conn);
-void xmpp_conn_set_pass(XmppConn * const conn, const char * const pass);
+int xmpp_stream_feed(XmppStream *stream, char *buf, int nread);
 
-int xmpp_connect_client(XmppConn * const conn, 
-			  const char * const altdomain,
-			  unsigned short altport,
-			  xmpp_conn_handler callback,
-			  void * const userdata);
+void xmpp_send(XmppStream * stream, XmppStanza *stanza);
 
-/*
-int xmpp_connect_component(conn, name)
-*/
-void xmpp_disconnect(XmppConn * const conn);
+void xmpp_send_raw_string(XmppStream *stream, char *fmt, ...);
 
-void xmpp_send(XmppConn * const conn,
-	       XmppStanza * const stanza);
-
-void xmpp_send_raw_string(XmppConn * const conn, 
-			  const char * const fmt, ...);
-void xmpp_send_raw(XmppConn * const conn, 
-		   const char * const data, const size_t len);
-
-
-/* handlers */
-
-
-void xmpp_timed_handler_add(XmppConn * const conn,
-			    xmpp_timed_handler handler,
-			    const unsigned long period,
-			    void * const userdata);
-void xmpp_timed_handler_delete(XmppConn * const conn,
-			       xmpp_timed_handler handler);
-
-
-
-void xmpp_handler_add(XmppConn * const conn,
-		      xmpp_handler handler,
-		      const char * const ns,
-		      const char * const name,
-		      const char * const type,
-		      void * const userdata);
-void xmpp_handler_delete(XmppConn * const conn,
-			 xmpp_handler handler);
-
-void xmpp_id_handler_add(XmppConn * const conn,
-			 xmpp_handler handler,
-			 const char * const id,
-			 void * const userdata);
-void xmpp_id_handler_delete(XmppConn * const conn,
-			    xmpp_handler handler,
-			    const char * const id);
-
-/*
-void xmpp_register_stanza_handler(conn, stanza, xmlns, type, handler)
-*/
-
-
-/** event loop **/
-void xmpp_run_once(XmppConn *conn, const unsigned long  timeout);
-void xmpp_run(XmppConn *conn);
-void xmpp_stop(XmppConn *conn);
+void xmpp_send_raw(XmppStream *stream, char *data, size_t len);
 
 #endif /* __SMARTA_STROPHE_H__ */

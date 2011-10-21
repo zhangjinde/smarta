@@ -1,20 +1,6 @@
 /* parser.c
 ** strophe XMPP client library -- xml parser handlers and utility functions
-**
-** Copyright (C) 2005-2009 Collecta, Inc. 
-**
-**  This software is provided AS-IS with no warranty, either express
-**  or implied.
-**
-**  This software is distributed under license and may not be copied,
-**  modified or distributed except as expressly authorized under the
-**  terms of the license contained in the file LICENSE.txt in this
-**  distribution.
 */
-
-/** @file
- *  XML parser handlers.
- */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -25,9 +11,63 @@
 #include "xmpp.h"
 #include "parser.h"
 
+Parser *parser_new(parser_start_callback startcb,
+                     parser_end_callback endcb,
+                     parser_stanza_callback stanzacb,
+                     void *userdata) {
+    Parser *parser;
 
-static void _set_attributes(XmppStanza *stanza, const XML_Char **attrs)
-{
+    parser = malloc(sizeof(Parser));
+    if (parser != NULL) {
+        parser->expat = NULL;
+        parser->startcb = startcb;
+        parser->endcb = endcb;
+        parser->stanzacb = stanzacb;
+        parser->userdata = userdata;
+        parser->depth = 0;
+        parser->stanza = NULL;
+
+        parser_reset(parser);
+    }
+
+    return parser;
+}
+
+int parser_feed(Parser *parser, char *chunk, int len) {
+    return XML_Parse(parser->expat, chunk, len, 0);
+}
+
+/* shuts down and restarts XML parser.  true on success */
+int parser_reset(Parser *parser) {
+    if (parser->expat)
+	XML_ParserFree(parser->expat);
+
+    if (parser->stanza) 
+	xmpp_stanza_release(parser->stanza);
+
+    parser->expat = XML_ParserCreate(NULL);
+    if (!parser->expat) return 0;
+
+    parser->depth = 0;
+    parser->stanza = NULL;
+
+    XML_SetUserData(parser->expat, parser);
+    XML_SetElementHandler(parser->expat, _start_element, _end_element);
+    XML_SetCharacterDataHandler(parser->expat, _characters);
+
+    return 1;
+}
+
+/* free a parser */
+void parser_free(Parser *parser) {
+    if (parser->expat)
+        XML_ParserFree(parser->expat);
+
+    free(parser);
+}
+
+
+static void _set_attributes(XmppStanza *stanza, const XML_Char **attrs) {
     int i;
 
     if (!attrs) return;
@@ -39,8 +79,7 @@ static void _set_attributes(XmppStanza *stanza, const XML_Char **attrs)
 
 static void _start_element(void *userdata,
                            const XML_Char *name,
-                           const XML_Char **attrs)
-{
+                           const XML_Char **attrs) {
     Parser *parser = (Parser *)userdata;
     XmppStanza *child;
 
@@ -86,8 +125,7 @@ static void _start_element(void *userdata,
     parser->depth++;
 }
 
-static void _end_element(void *userdata, const XML_Char *name)
-{
+static void _end_element(void *userdata, const XML_Char *name) {
     Parser *parser = (Parser *)userdata;
 
     parser->depth--;
@@ -110,8 +148,7 @@ static void _end_element(void *userdata, const XML_Char *name)
     }
 }
 
-static void _characters(void *userdata, const XML_Char *s, int len)
-{
+static void _characters(void *userdata, const XML_Char *s, int len) {
     Parser *parser = (Parser *)userdata;
     XmppStanza *stanza;
 
@@ -119,71 +156,9 @@ static void _characters(void *userdata, const XML_Char *s, int len)
 
     /* create and populate stanza */
     stanza = xmpp_stanza_new();
-    if (!stanza) {
-	/* FIXME: allocation error, disconnect */
-	return;
-    }
     xmpp_stanza_set_text_with_size(stanza, s, len);
 
     xmpp_stanza_add_child(parser->stanza, stanza);
     xmpp_stanza_release(stanza);
 }
 
-Parser *parser_new(parser_start_callback startcb,
-                     parser_end_callback endcb,
-                     parser_stanza_callback stanzacb,
-                     void *userdata)
-{
-    Parser *parser;
-
-    parser = malloc(sizeof(Parser));
-    if (parser != NULL) {
-        parser->expat = NULL;
-        parser->startcb = startcb;
-        parser->endcb = endcb;
-        parser->stanzacb = stanzacb;
-        parser->userdata = userdata;
-        parser->depth = 0;
-        parser->stanza = NULL;
-
-        parser_reset(parser);
-    }
-
-    return parser;
-}
-
-/* free a parser */
-void parser_free(Parser *parser)
-{
-    if (parser->expat)
-        XML_ParserFree(parser->expat);
-
-    free(parser);
-}
-
-/* shuts down and restarts XML parser.  true on success */
-int parser_reset(Parser *parser)
-{
-    if (parser->expat)
-	XML_ParserFree(parser->expat);
-
-    if (parser->stanza) 
-	xmpp_stanza_release(parser->stanza);
-
-    parser->expat = XML_ParserCreate(NULL);
-    if (!parser->expat) return 0;
-
-    parser->depth = 0;
-    parser->stanza = NULL;
-
-    XML_SetUserData(parser->expat, parser);
-    XML_SetElementHandler(parser->expat, _start_element, _end_element);
-    XML_SetCharacterDataHandler(parser->expat, _characters);
-
-    return 1;
-}
-
-int parser_feed(Parser *parser, char *chunk, int len)
-{
-    return XML_Parse(parser->expat, chunk, len, 0);
-}

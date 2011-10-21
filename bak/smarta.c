@@ -11,11 +11,10 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "ae.h"
 #include "sds.h"
-#include "anet.h"
 #include "adlist.h"
 #include "xmpp.h"
+#include "sched.h"
 #include "smarta.h"
 
 #define CONFIGLINE_MAX 1024
@@ -25,11 +24,105 @@
 
 Smarta smarta;
 
-static void smarta_run(); 
+int version_handler(XmppConn * const conn, XmppStanza * const stanza, void * const userdata)
+{
+	XmppStanza *reply, *query, *name, *version, *text;
+	char *ns;
+	printf("Received version request from %s\n", xmpp_stanza_get_attribute(stanza, "from"));
+	
+	reply = xmpp_stanza_new();
+	xmpp_stanza_set_name(reply, "iq");
+	xmpp_stanza_set_type(reply, "result");
+	xmpp_stanza_set_id(reply, xmpp_stanza_get_id(stanza));
+	xmpp_stanza_set_attribute(reply, "to", xmpp_stanza_get_attribute(stanza, "from"));
+	
+	query = xmpp_stanza_new();
+	xmpp_stanza_set_name(query, "query");
+    ns = xmpp_stanza_get_ns(xmpp_stanza_get_children(stanza));
+    if (ns) {
+        xmpp_stanza_set_ns(query, ns);
+    }
 
-static void xmpp_read(aeEventLoop *el, int fd, void *privdata, int mask);
+	name = xmpp_stanza_new();
+	xmpp_stanza_set_name(name, "name");
+	xmpp_stanza_add_child(query, name);
+	
+	text = xmpp_stanza_new();
+	xmpp_stanza_set_text(text, "libstrophe example bot");
+	xmpp_stanza_add_child(name, text);
+	
+	version = xmpp_stanza_new();
+	xmpp_stanza_set_name(version, "version");
+	xmpp_stanza_add_child(query, version);
+	
+	text = xmpp_stanza_new();
+	xmpp_stanza_set_text(text, "1.0");
+	xmpp_stanza_add_child(version, text);
+	
+	xmpp_stanza_add_child(reply, query);
 
-static int smarta_cron(struct aeEventLoop *eventLoop, long long id, void *clientData);
+	xmpp_send(conn, reply);
+	xmpp_stanza_release(reply);
+	return 1;
+}
+
+int message_handler(XmppConn * const conn, XmppStanza * const stanza, void * const userdata)
+{
+	XmppStanza *reply, *body, *text;
+	char *intext, *replytext;
+	
+	if(!xmpp_stanza_get_child_by_name(stanza, "body")) return 1;
+	if(!strcmp(xmpp_stanza_get_attribute(stanza, "type"), "error")) return 1;
+	
+	intext = xmpp_stanza_get_text(xmpp_stanza_get_child_by_name(stanza, "body"));
+	
+	printf("Incoming message from %s: %s\n", xmpp_stanza_get_attribute(stanza, "from"), intext);
+	
+	reply = xmpp_stanza_new();
+	xmpp_stanza_set_name(reply, "message");
+	xmpp_stanza_set_type(reply, xmpp_stanza_get_type(stanza)?xmpp_stanza_get_type(stanza):"chat");
+	xmpp_stanza_set_attribute(reply, "to", xmpp_stanza_get_attribute(stanza, "from"));
+	
+	body = xmpp_stanza_new();
+	xmpp_stanza_set_name(body, "body");
+	
+	replytext = malloc(strlen(" to you too!") + strlen(intext) + 1);
+	strcpy(replytext, intext);
+	strcat(replytext, " to you too!");
+	
+	text = xmpp_stanza_new();
+	xmpp_stanza_set_text(text, replytext);
+	xmpp_stanza_add_child(body, text);
+	xmpp_stanza_add_child(reply, body);
+	
+	xmpp_send(conn, reply);
+	xmpp_stanza_release(reply);
+	free(replytext);
+	return 1;
+}
+
+/* define a handler for connection events */
+void conn_handler(XmppConn * const conn, const xmpp_conn_event_t status, 
+		  const int error, xmpp_stream_error_t * const stream_error,
+		  void * const userdata)
+{
+    if (status == XMPP_CONN_CONNECT) {
+	XmppStanza* pres;
+	fprintf(stdout, "DEBUG: smarta is connected\n");
+	xmpp_handler_add(conn,version_handler, "jabber:iq:version", "iq", NULL, NULL);
+	xmpp_handler_add(conn,message_handler, NULL, "message", NULL, NULL);
+	
+	/* Send initial <presence/> so that we appear online to contacts */
+	pres = xmpp_stanza_new();
+	xmpp_stanza_set_name(pres, "presence");
+	xmpp_send(conn, pres);
+	xmpp_stanza_release(pres);
+    }
+    else {
+	fprintf(stderr, "DEBUG: disconnected\n");
+	xmpp_stop(conn);
+    }
+}
 
 void version() {
     printf("Smart agent version 0.1\n");
@@ -41,7 +134,8 @@ void usage() {
     exit(1);
 }
 
-void smarta_init() {
+
+void init_config() {
     smarta.isslave = 0;
     smarta.verbosity = 0;
     smarta.logfile = "smarta.log";
@@ -55,6 +149,14 @@ int yesnotoi(char *s) {
     if (!strcasecmp(s,"yes")) return 1;
     else if (!strcasecmp(s,"no")) return 0;
     else return -1;
+}
+
+char *zstrdup(const char *s) {
+    size_t l = strlen(s)+1;
+    char *p = malloc(l);
+
+    memcpy(p,s,l);
+    return p;
 }
 
 void load_config(char *filename) {
@@ -107,17 +209,17 @@ void load_config(char *filename) {
             state = IN_SERVICE_BLOCK;
             service = malloc(sizeof(Service));
         } else if ((state == IN_SMARTA_BLOCK) && !strcasecmp(argv[0],"name") && argc == 2) {
-            smarta.name = strdup(argv[1]);
+            smarta.name = zstrdup(argv[1]);
         } else if ((state == IN_SMARTA_BLOCK) && !strcasecmp(argv[0],"server") && argc == 2) {
-            smarta.server = strdup(argv[1]);
+            smarta.server = zstrdup(argv[1]);
         } else if ((state == IN_SMARTA_BLOCK) && !strcasecmp(argv[0],"apikey") && argc == 2) {
-            smarta.apikey = strdup(argv[1]);
+            smarta.apikey = zstrdup(argv[1]);
         } else if ((state == IN_SERVICE_BLOCK) && !strcasecmp(argv[0],"name") && argc == 2) {
-            service->name = strdup(argv[1]);
+            service->name = zstrdup(argv[1]);
         } else if ((state == IN_SERVICE_BLOCK) && !strcasecmp(argv[0],"period") && argc == 2) {
             service->period = atoi(argv[1]);
         } else if ((state == IN_SERVICE_BLOCK) && !strcasecmp(argv[0],"command") && argc == 2) {
-            service->command = strdup(argv[1]);
+            service->command = zstrdup(argv[1]);
         } else {
             err = "Bad directive or wrong number of arguments"; goto loaderr;
         }
@@ -140,10 +242,10 @@ loaderr:
 int main(int argc, char **argv) {
     int fd;
     char err[4096];
-    char *domain; // *jid, *pass;
+    char *domain, *jid, *pass;
     XmppStream *stream;
 
-    smarta_init();
+    init_config();
 
     if (argc == 2) {
         if (strcmp(argv[1], "-v") == 0 ||
@@ -158,16 +260,17 @@ int main(int argc, char **argv) {
     domain = "nodehub.cn";
 
     fd = anetTcpConnect(err, domain, 5222);
-    if (fd == -1) {
+    xmpp_log(LOG_DEBUG, "sock_connect to %s, returned %d", domain, conn->fd);
+    if (conn->fd == -1) {
         exit(-1);
     }
-    xmpp_log(LOG_DEBUG, "sock_connect to %s, returned %d", domain, fd);
     /* create stream */
     stream = xmpp_stream_new(fd);
     
-    aeCreateFileEvent(smarta.el, fd, AE_READABLE, xmpp_read, stream); //| AE_WRITABLE
+    aeCreateFileEvent(el, conn->fd, 
+        AE_READABLE, xmpp_read, stream); //| AE_WRITABLE
 
-    xmpp_log(LOG_DEBUG, "attempting to connect to nodehub.cn");
+    xmpp_log(LOG_DEBUG, "attempting to connect to %s", conn->domain);
 
     /* open stream */
     if(xmpp_stream_open(stream) < 0) {
@@ -175,24 +278,29 @@ int main(int argc, char **argv) {
         exit(1);
     }
 
-    smarta_run();
+    /*FIXME: sched checks */
+    //sched_services(conn);
+
+    smarta_run()
 
     return 0;
 }
 
 void xmpp_read(aeEventLoop *el, int fd, void *privdata, int mask) {
+
     int nread;
     char buf[4096];
 
     XmppStream *stream = (XmppStream *)privdata;
 
-    nread = anetRead(fd, buf, 4096);
+    nread = read(fd, buf, 4096);
     if(nread <= 0) {
-        //FIXME: DISCONNECTED.
-        xmpp_log(LOG_DEBUG, "xmpp server is disconnected");
+        //TODO: DISCONNECTED.
+        infoLog("xmpp", "xmpp server is disconnected");
         exit(1);
+    
     }
-    xmpp_log(LOG_DEBUG, "RECV %d data: %s \n", nread, buf);
+    debugLog("xmpp", "len: %d, data: %s \n", nread, buf);
     xmpp_stream_feed(stream, buf, nread);
 }
 
