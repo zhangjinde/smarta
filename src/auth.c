@@ -286,8 +286,7 @@ static int _handle_proceedtls_default(XmppConn * const conn,
 
 static int _handle_sasl_result(XmppConn * const conn,
 			       XmppStanza * const stanza,
-			       void * const userdata)
-{
+			       void * const userdata) {
     char *name;
 
     name = xmpp_stanza_get_name(stanza);
@@ -445,214 +444,210 @@ static void _auth(XmppConn * const conn)
     /* if there is no node in conn->jid, we assume anonymous connect */
     str = xmpp_jid_node(conn->jid);
     if (str == NULL) {
-	anonjid = 1;
+        anonjid = 1;
     } else {
-	free(str);
-	anonjid = 0;
+        free(str);
+        anonjid = 0;
     }
 
-    if (conn->tls_support)
-    {
-	tls_t *tls = tls_new(conn->sock);
+    if (conn->tls_support) {
+        tls_t *tls = tls_new(conn->sock);
 
-	/* If we couldn't init tls, it isn't there, so go on */
-	if (!tls)
-	{
-	    conn->tls_support = 0;
-	    _auth(conn);
-	    return;
-	}
-	else
-	{
-	    tls_free(tls);
-	}
+        /* If we couldn't init tls, it isn't there, so go on */
+        if (!tls) {
+            conn->tls_support = 0;
+            _auth(conn);
+            return;
+        } else {
+            tls_free(tls);
+        }
 
-	auth = _make_starttls(conn);
+        auth = _make_starttls(conn);
 
-	if (!auth) {
-	    disconnect_mem_error(conn);
-	    return;
-	}
+        if (!auth) {
+            disconnect_mem_error(conn);
+            return;
+        }
 
-	handler_add(conn, _handle_proceedtls_default, 
-		    XMPP_NS_TLS, NULL, NULL, NULL);
+        handler_add(conn, _handle_proceedtls_default, 
+                XMPP_NS_TLS, NULL, NULL, NULL);
 
-	xmpp_send(conn, auth);
-	xmpp_stanza_release(auth);
+        xmpp_send(conn, auth);
+        xmpp_stanza_release(auth);
 
 	/* TLS was tried, unset flag */
-	conn->tls_support = 0;
+        conn->tls_support = 0;
     } else if (anonjid && conn->sasl_support & SASL_MASK_ANONYMOUS) {
-	/* some crap here */
-	auth = _make_sasl_auth(conn, "ANONYMOUS");
-	if (!auth) {
-	    disconnect_mem_error(conn);
-	    return;
-	}
+        /* some crap here */
+        auth = _make_sasl_auth(conn, "ANONYMOUS");
+        if (!auth) {
+            disconnect_mem_error(conn);
+            return;
+        }
 
-	handler_add(conn, _handle_sasl_result, XMPP_NS_SASL,
-	            NULL, NULL, "ANONYMOUS");
+        handler_add(conn, _handle_sasl_result, XMPP_NS_SASL,
+                    NULL, NULL, "ANONYMOUS");
 
-	xmpp_send(conn, auth);
-	xmpp_stanza_release(auth);
+        xmpp_send(conn, auth);
+        xmpp_stanza_release(auth);
 
-	/* SASL ANONYMOUS was tried, unset flag */
-	conn->sasl_support &= ~SASL_MASK_ANONYMOUS;
+        /* SASL ANONYMOUS was tried, unset flag */
+        conn->sasl_support &= ~SASL_MASK_ANONYMOUS;
     } else if (anonjid) {
-	xmpp_log(LOG_ERROR, "auth: No node in JID, and SASL ANONYMOUS unsupported.");
-	xmpp_disconnect(conn);
+        xmpp_log(LOG_ERROR, "auth: No node in JID, and SASL ANONYMOUS unsupported.");
+        xmpp_disconnect(conn);
     } else if (conn->sasl_support & SASL_MASK_DIGESTMD5) {
-	auth = _make_sasl_auth(conn, "DIGEST-MD5");
-	if (!auth) {
-	    disconnect_mem_error(conn);
-	    return;
+        auth = _make_sasl_auth(conn, "DIGEST-MD5");
+        if (!auth) {
+            disconnect_mem_error(conn);
+            return;
 
-	}
+        }
 
-	handler_add(conn, _handle_digestmd5_challenge, 
-		    XMPP_NS_SASL, NULL, NULL, NULL);
+        handler_add(conn, _handle_digestmd5_challenge, 
+                XMPP_NS_SASL, NULL, NULL, NULL);
 
-	xmpp_send(conn, auth);
-	xmpp_stanza_release(auth);
+        xmpp_send(conn, auth);
+        xmpp_stanza_release(auth);
 
-	/* SASL DIGEST-MD5 was tried, unset flag */
-	conn->sasl_support &= ~SASL_MASK_DIGESTMD5;
+        /* SASL DIGEST-MD5 was tried, unset flag */
+        conn->sasl_support &= ~SASL_MASK_DIGESTMD5;
     } else if (conn->sasl_support & SASL_MASK_PLAIN) {
-	auth = _make_sasl_auth(conn, "PLAIN");
-	if (!auth) {
-	    disconnect_mem_error(conn);
-	    return;
-	}
-	authdata = xmpp_stanza_new();
-	if (!authdata) {
-	    disconnect_mem_error(conn);
-	    return;
-	}	
-	authid = _get_authid(conn);
-	if (!authid) {
-	    disconnect_mem_error(conn);
-	    return;
-	}
-	str = sasl_plain(authid, conn->pass);
-	if (!str) {
-	    disconnect_mem_error(conn);
-	    return;
-	}
-	xmpp_stanza_set_text(authdata, str);
-	free(str);
+        auth = _make_sasl_auth(conn, "PLAIN");
+        if (!auth) {
+            disconnect_mem_error(conn);
+            return;
+        }
+        authdata = xmpp_stanza_new();
+        if (!authdata) {
+            disconnect_mem_error(conn);
+            return;
+        }	
+        authid = _get_authid(conn);
+        if (!authid) {
+            disconnect_mem_error(conn);
+            return;
+        }
+        str = sasl_plain(authid, conn->pass);
+        if (!str) {
+            disconnect_mem_error(conn);
+            return;
+        }
+        xmpp_stanza_set_text(authdata, str);
+        free(str);
 
-	xmpp_stanza_add_child(auth, authdata);
-	xmpp_stanza_release(authdata);
+        xmpp_stanza_add_child(auth, authdata);
+        xmpp_stanza_release(authdata);
 
-	handler_add(conn, _handle_sasl_result,
-		    XMPP_NS_SASL, NULL, NULL, "PLAIN");
+        handler_add(conn, _handle_sasl_result,
+                XMPP_NS_SASL, NULL, NULL, "PLAIN");
 
-	xmpp_send(conn, auth);
-	xmpp_stanza_release(auth);
+        xmpp_send(conn, auth);
+        xmpp_stanza_release(auth);
 
-	/* SASL PLAIN was tried */
-	conn->sasl_support &= ~SASL_MASK_PLAIN;
+        /* SASL PLAIN was tried */
+        conn->sasl_support &= ~SASL_MASK_PLAIN;
     } else if (conn->type == XMPP_CLIENT) {
-	/* legacy client authentication */
-	
-	iq = xmpp_stanza_new();
-	if (!iq) {
-	    disconnect_mem_error(conn);
-	    return;
-	}
-	xmpp_stanza_set_name(iq, "iq");
-	xmpp_stanza_set_type(iq, "set");
-	xmpp_stanza_set_id(iq, "_xmpp_auth1");
+        /* legacy client authentication */
+        
+        iq = xmpp_stanza_new();
+        if (!iq) {
+            disconnect_mem_error(conn);
+            return;
+        }
+        xmpp_stanza_set_name(iq, "iq");
+        xmpp_stanza_set_type(iq, "set");
+        xmpp_stanza_set_id(iq, "_xmpp_auth1");
 
-	query = xmpp_stanza_new();
-	if (!query) {
-	    xmpp_stanza_release(iq);
-	    disconnect_mem_error(conn);
-	    return;
-	}
-	xmpp_stanza_set_name(query, "query");
-	xmpp_stanza_set_ns(query, XMPP_NS_AUTH);
-	xmpp_stanza_add_child(iq, query);
-	xmpp_stanza_release(query);
+        query = xmpp_stanza_new();
+        if (!query) {
+            xmpp_stanza_release(iq);
+            disconnect_mem_error(conn);
+            return;
+        }
+        xmpp_stanza_set_name(query, "query");
+        xmpp_stanza_set_ns(query, XMPP_NS_AUTH);
+        xmpp_stanza_add_child(iq, query);
+        xmpp_stanza_release(query);
 
-	child = xmpp_stanza_new();
-	if (!child) {
-	    xmpp_stanza_release(iq);
-	    disconnect_mem_error(conn);
-	    return;
-	}
-	xmpp_stanza_set_name(child, "username");
-	xmpp_stanza_add_child(query, child);
-	xmpp_stanza_release(child);
+        child = xmpp_stanza_new();
+        if (!child) {
+            xmpp_stanza_release(iq);
+            disconnect_mem_error(conn);
+            return;
+        }
+        xmpp_stanza_set_name(child, "username");
+        xmpp_stanza_add_child(query, child);
+        xmpp_stanza_release(child);
 
-	authdata = xmpp_stanza_new();
-	if (!authdata) {
-	    xmpp_stanza_release(iq);
-	    disconnect_mem_error(conn);
-	    return;
-	}
-	str = xmpp_jid_node(conn->jid);
-	xmpp_stanza_set_text(authdata, str);
-	free(str);
-	xmpp_stanza_add_child(child, authdata);
-	xmpp_stanza_release(authdata);
+        authdata = xmpp_stanza_new();
+        if (!authdata) {
+            xmpp_stanza_release(iq);
+            disconnect_mem_error(conn);
+            return;
+        }
+        str = xmpp_jid_node(conn->jid);
+        xmpp_stanza_set_text(authdata, str);
+        free(str);
+        xmpp_stanza_add_child(child, authdata);
+        xmpp_stanza_release(authdata);
 
-	child = xmpp_stanza_new();
-	if (!child) {
-	    xmpp_stanza_release(iq);
-	    disconnect_mem_error(conn);
-	    return;
-	}
-	xmpp_stanza_set_name(child, "password");
-	xmpp_stanza_add_child(query, child);
-	xmpp_stanza_release(child);
+        child = xmpp_stanza_new();
+        if (!child) {
+            xmpp_stanza_release(iq);
+            disconnect_mem_error(conn);
+            return;
+        }
+        xmpp_stanza_set_name(child, "password");
+        xmpp_stanza_add_child(query, child);
+        xmpp_stanza_release(child);
 
-	authdata = xmpp_stanza_new();
-	if (!authdata) {
-	    xmpp_stanza_release(iq);
-	    disconnect_mem_error(conn);
-	    return;
-	}
-	xmpp_stanza_set_text(authdata, conn->pass);
-	xmpp_stanza_add_child(child, authdata);
-	xmpp_stanza_release(authdata);
+        authdata = xmpp_stanza_new();
+        if (!authdata) {
+            xmpp_stanza_release(iq);
+            disconnect_mem_error(conn);
+            return;
+        }
+        xmpp_stanza_set_text(authdata, conn->pass);
+        xmpp_stanza_add_child(child, authdata);
+        xmpp_stanza_release(authdata);
 
-	child = xmpp_stanza_new();
-	if (!child) {
-	    xmpp_stanza_release(iq);
-	    disconnect_mem_error(conn);
-	    return;
-	}
-	xmpp_stanza_set_name(child, "resource");
-	xmpp_stanza_add_child(query, child);
-	xmpp_stanza_release(child);
+        child = xmpp_stanza_new();
+        if (!child) {
+            xmpp_stanza_release(iq);
+            disconnect_mem_error(conn);
+            return;
+        }
+        xmpp_stanza_set_name(child, "resource");
+        xmpp_stanza_add_child(query, child);
+        xmpp_stanza_release(child);
 
-	authdata = xmpp_stanza_new();
-	if (!authdata) {
-	    xmpp_stanza_release(iq);
-	    disconnect_mem_error(conn);
-	    return;
-	}
-	str = xmpp_jid_resource(conn->jid);
-	if (str) {
-	    xmpp_stanza_set_text(authdata, str);
-	    free(str);
-	} else {
-	    xmpp_stanza_release(authdata);
-	    xmpp_stanza_release(iq);
-	    xmpp_log(LOG_ERROR, "auth: Cannot authenticate without resource");
-	    xmpp_disconnect(conn);
-	    return;
-	}
-	xmpp_stanza_add_child(child, authdata);
-	xmpp_stanza_release(authdata);
+        authdata = xmpp_stanza_new();
+        if (!authdata) {
+            xmpp_stanza_release(iq);
+            disconnect_mem_error(conn);
+            return;
+        }
+        str = xmpp_jid_resource(conn->jid);
+        if (str) {
+            xmpp_stanza_set_text(authdata, str);
+            free(str);
+        } else {
+            xmpp_stanza_release(authdata);
+            xmpp_stanza_release(iq);
+            xmpp_log(LOG_ERROR, "auth: Cannot authenticate without resource");
+            xmpp_disconnect(conn);
+            return;
+        }
+        xmpp_stanza_add_child(child, authdata);
+        xmpp_stanza_release(authdata);
 
-	handler_add_id(conn, _handle_legacy, "_xmpp_auth1", NULL);
-	handler_add_timed(conn, _handle_missing_legacy, 
-			  LEGACY_TIMEOUT, NULL);
+        handler_add_id(conn, _handle_legacy, "_xmpp_auth1", NULL);
+        handler_add_timed(conn, _handle_missing_legacy, 
+                  LEGACY_TIMEOUT, NULL);
 
-	xmpp_send(conn, iq);
-	xmpp_stanza_release(iq);
+        xmpp_send(conn, iq);
+        xmpp_stanza_release(iq);
     }
 }
 
@@ -666,8 +661,7 @@ static void _auth(XmppConn * const conn)
  *
  *  @param conn a Strophe connection object
  */
-void auth_handle_open(XmppConn * const conn)
-{
+void auth_handle_open(XmppConn * const conn) {
     /* reset all timed handlers */
     handler_reset_timed(conn, 0);
 
@@ -678,13 +672,13 @@ void auth_handle_open(XmppConn * const conn)
     /* setup handlers for incoming <stream:features> */
     handler_add(conn, _handle_features,
 		NULL, "stream:features", NULL, NULL);
+
     handler_add_timed(conn, _handle_missing_features,
 		      FEATURES_TIMEOUT, NULL);
 }
 
 /* called when stream:stream tag received after SASL auth */
-static void _handle_open_sasl(XmppConn * const conn)
-{
+static void _handle_open_sasl(XmppConn * const conn) {
     xmpp_log(LOG_DEBUG, "auth: Reopened stream successfully.");
 
     /* setup stream:features handlers */
@@ -696,8 +690,7 @@ static void _handle_open_sasl(XmppConn * const conn)
 
 static int _handle_features_sasl(XmppConn * const conn,
 				 XmppStanza * const stanza,
-				 void * const userdata)
-{
+				 void * const userdata) {
     XmppStanza *bind, *session, *iq, *res, *text;
     char *resource;
 
@@ -747,7 +740,7 @@ static int _handle_features_sasl(XmppConn * const conn,
 	}
 
 	/* request a specific resource if we have one */
-        resource = xmpp_jid_resource(conn->jid);
+    resource = xmpp_jid_resource(conn->jid);
 	if ((resource != NULL) && (strlen(resource) == 0)) {
 	    /* jabberd2 doesn't handle an empty resource */
 	    free(resource);
@@ -819,11 +812,10 @@ static int _handle_bind(XmppConn * const conn,
 	xmpp_disconnect(conn);
     } else if (type && strcmp(type, "result") == 0) {
         XmppStanza *binding = xmpp_stanza_get_child_by_name(stanza, "bind");
-	xmpp_log(LOG_DEBUG, "auth: Bind successful.");
+        xmpp_log(LOG_DEBUG, "auth: Bind successful.");
 
         if (binding) {
-            XmppStanza *jid_stanza = xmpp_stanza_get_child_by_name(binding,
-                                                                      "jid");
+            XmppStanza *jid_stanza = xmpp_stanza_get_child_by_name(binding, "jid");
             if (jid_stanza) {
                 conn->bound_jid = xmpp_stanza_get_text(jid_stanza);
             }

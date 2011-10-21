@@ -28,6 +28,71 @@ wait_for_legacy_auth_method/2,
 wait_for_auth_result/2,
 logged_in/2, logged_in/3
 
+== XMPP Features
+
+after first openstream:
+
+<stream:features>
+    <starttls xmlns="urn:ietf:params:xml:ns:xmpp-tls"/>
+    <mechanisms xmlns="urn:ietf:params:xml:ns:xmpp-sasl">
+        <mechanism>PLAIN</mechanism>
+    </mechanisms>
+</stream:features>
+
+starttls:
+
+<starttls xmlns="urn:ietf:params:xml:ns:xmpp-tls"/>
+<proceed xmlns="urn:ietf:params:xml:ns:xmpp-tls"/>
+
+reopen stream:
+
+<stream:stream xmlns='jabber:client' xmlns:stream='http://etherx.jabber.org/streams' id='3863363214' from='nodehub.cn' version='1.0' xml:lang='en'>
+
+<stream:features>
+    <mechanisms xmlns="urn:ietf:params:xml:ns:xmpp-sasl">
+        <mechanism>PLAIN</mechanism>
+    </mechanisms>
+</stream:features>
+
+begin to auth:
+<auth mechanism="PLAIN" xmlns="urn:ietf:params:xml:ns:xmpp-sasl">
+    AG5vZGUuZXJ5bGVlLm1lAE9Ta25MV1hx
+</auth>
+<success xmlns="urn:ietf:params:xml:ns:xmpp-sasl"/>
+
+reopen stream:
+
+<?xml version="1.0"?>
+<stream:stream to="nodehub.cn" xml:lang="en" version="1.0" xmlns="jabber:client" xmlns:stream="http://etherx.jabber.org/streams">
+
+<stream:features>
+    <bind xmlns="urn:ietf:params:xml:ns:xmpp-bind"/>
+    <session xmlns="urn:ietf:params:xml:ns:xmpp-session"/>
+</stream:features>
+
+begin to bind:
+
+<iq id="_xmpp_bind1" type="set"><bind xmlns="urn:ietf:params:xml:ns:xmpp-bind"/></iq>
+<iq id="_xmpp_bind1" type="result">
+    <bind xmlns="urn:ietf:params:xml:ns:xmpp-bind">
+        <jid>node.erylee.me@nodehub.cn/1983397901319162340856874</jid>
+    </bind>
+</iq>
+
+create session:
+<iq id="_xmpp_session1" type="set">
+    <session xmlns="urn:ietf:params:xml:ns:xmpp-session"/>
+</iq>
+<iq id="_xmpp_session1" type="result">
+    <session xmlns="urn:ietf:params:xml:ns:xmpp-session"/>
+</iq>
+
+send presence:
+
+<presence/>
+<presence xml:lang="en" to="node.erylee.me@nodehub.cn/1983397901319162340856874" from="node.erylee.me@nodehub.cn/1983397901319162340856874"/>
+
+
 == Build Instructions ==
 
 $ ./bootstrap.sh

@@ -269,7 +269,7 @@ int main(int argc, char **argv) {
     /* initiate connection */
     xmpp_connect_client(conn, NULL, 0, conn_handler, NULL);
 
-    /* sched checks */
+    /*FIXME: sched checks */
     sched_services(conn);
 
     /* enter the event loop - 

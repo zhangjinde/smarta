@@ -317,15 +317,15 @@ void xmpp_conn_set_pass(XmppConn *conn, const char *pass) {
  *
  *  @ingroup Connections
  */
-int xmpp_connect_client(XmppConn * const conn, 
-			  const char * const altdomain,
+int xmpp_connect_client(XmppConn *conn, 
+			  const char *altdomain,
 			  unsigned short altport,
 			  xmpp_conn_handler callback,
-			  void * const userdata)
-{
+			  void *userdata) {
+
     char connectdomain[2048];
     int connectport;
-    const char * domain;
+    char * domain;
 
     conn->type = XMPP_CLIENT;
 
@@ -458,8 +458,7 @@ void xmpp_disconnect(XmppConn * const conn)
  *      arguments to format
  */
 void xmpp_send_raw_string(XmppConn * const conn, 
-			  const char * const fmt, ...)
-{
+			  const char * const fmt, ...) {
     va_list ap;
     size_t len;
     char buf[1024]; /* small buffer for common case */
@@ -506,8 +505,7 @@ void xmpp_send_raw_string(XmppConn * const conn,
  *  @param len the length of the data in the buffer
  */
 void xmpp_send_raw(XmppConn * const conn,
-		   const char * const data, const size_t len)
-{
+		   const char * const data, const size_t len) {
     xmpp_send_queue_t *item;
 
     if (conn->state != XMPP_STATE_CONNECTED) return;
@@ -549,8 +547,7 @@ void xmpp_send_raw(XmppConn * const conn,
  *  @ingroup Connections
  */
 void xmpp_send(XmppConn * const conn,
-	       XmppStanza * const stanza)
-{
+	       XmppStanza * const stanza) {
     char *buf;
     size_t len;
     int ret;
@@ -585,8 +582,7 @@ void conn_open_stream(XmppConn * const conn)
 			 XMPP_NS_STREAMS);
 }
 
-static void _log_open_tag(XmppConn *conn, char **attrs)
-{
+static void _log_open_tag(XmppConn *conn, char **attrs) {
     char buf[4096];
     size_t len, pos;
     int i;
@@ -641,8 +637,9 @@ static void _handle_stream_start(char *name, char **attrs,
         if (conn->stream_id) free(conn->stream_id);
 
         id = _get_stream_attribute(attrs, "id");
-        if (id)
+        if (id) {
             conn->stream_id = strdup(id);
+        }
 
         if (!conn->stream_id) {
             xmpp_log(LOG_ERROR, "conn Memory allocation failed.");
