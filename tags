@@ -4,8 +4,27 @@
 !_TAG_PROGRAM_NAME	Exuberant Ctags	//
 !_TAG_PROGRAM_URL	http://ctags.sourceforge.net	/official site/
 !_TAG_PROGRAM_VERSION	5.8	//
+AE_ALL_EVENTS	src/ae.h	/^#define AE_ALL_EVENTS /;"	d
+AE_DONT_WAIT	src/ae.h	/^#define AE_DONT_WAIT /;"	d
+AE_ERR	src/ae.h	/^#define AE_ERR /;"	d
+AE_FILE_EVENTS	src/ae.h	/^#define AE_FILE_EVENTS /;"	d
+AE_NOMORE	src/ae.h	/^#define AE_NOMORE /;"	d
+AE_NONE	src/ae.h	/^#define AE_NONE /;"	d
+AE_NOTUSED	src/ae.h	/^#define AE_NOTUSED(/;"	d
+AE_OK	src/ae.h	/^#define AE_OK /;"	d
+AE_READABLE	src/ae.h	/^#define AE_READABLE /;"	d
+AE_SETSIZE	src/ae.h	/^#define AE_SETSIZE /;"	d
+AE_TIME_EVENTS	src/ae.h	/^#define AE_TIME_EVENTS /;"	d
+AE_WRITABLE	src/ae.h	/^#define AE_WRITABLE /;"	d
+AF_LOCAL	src/anet.h	/^#define AF_LOCAL /;"	d
 AL_START_HEAD	src/adlist.h	/^#define AL_START_HEAD /;"	d
 AL_START_TAIL	src/adlist.h	/^#define AL_START_TAIL /;"	d
+ANET_CONNECT_NONBLOCK	src/anet.c	/^#define ANET_CONNECT_NONBLOCK /;"	d	file:
+ANET_CONNECT_NONE	src/anet.c	/^#define ANET_CONNECT_NONE /;"	d	file:
+ANET_ERR	src/anet.h	/^#define ANET_ERR /;"	d
+ANET_ERR_LEN	src/anet.h	/^#define ANET_ERR_LEN /;"	d
+ANET_H	src/anet.h	/^#define ANET_H$/;"	d
+ANET_OK	src/anet.h	/^#define ANET_OK /;"	d
 BIND_TIMEOUT	src/auth.c	/^#define BIND_TIMEOUT /;"	d	file:
 CONFIGLINE_MAX	src/smarta.c	/^#define CONFIGLINE_MAX /;"	d	file:
 CONNECT_TIMEOUT	src/conn.c	/^#define CONNECT_TIMEOUT /;"	d	file:
@@ -37,9 +56,14 @@ F3	src/md5.c	/^#define F3(/;"	d	file:
 F4	src/md5.c	/^#define F4(/;"	d	file:
 FEATURES_TIMEOUT	src/auth.c	/^#define FEATURES_TIMEOUT /;"	d	file:
 GET_32BIT_LSB_FIRST	src/md5.c	/^#define GET_32BIT_LSB_FIRST(/;"	d	file:
+HAVE_BACKTRACE	src/config.h	/^#define HAVE_BACKTRACE /;"	d
+HAVE_EPOLL	src/config.h	/^#define HAVE_EPOLL /;"	d
+HAVE_KQUEUE	src/config.h	/^#define HAVE_KQUEUE /;"	d
+HAVE_PROCFS	src/config.h	/^#define HAVE_PROCFS /;"	d
 HAVE_STDARGS	src/snprintf.c	/^#  undef HAVE_STDARGS$/;"	d	file:
 HAVE_STDARGS	src/snprintf.c	/^# define HAVE_STDARGS /;"	d	file:
 HAVE_STDARG_H	src/snprintf.c	/^#define HAVE_STDARG_H /;"	d	file:
+HAVE_TASKINFO	src/config.h	/^#define HAVE_TASKINFO /;"	d
 HAVE_VARARGS_H	src/snprintf.c	/^#define HAVE_VARARGS_H$/;"	d	file:
 IN_COMMADN_BLOCK	src/smarta.c	/^#define IN_COMMADN_BLOCK /;"	d	file:
 IN_SERVICE_BLOCK	src/smarta.c	/^#define IN_SERVICE_BLOCK /;"	d	file:
@@ -173,6 +197,8 @@ _XOPEN_SOURCE	src/fmacros.h	/^#define _XOPEN_SOURCE$/;"	d
 _XmppConn	src/xmpp.h	/^struct _XmppConn {$/;"	s
 _XmppStanza	src/stanza.h	/^struct _XmppStanza {$/;"	s
 __ADLIST_H__	src/adlist.h	/^#define __ADLIST_H__$/;"	d
+__AE_H__	src/ae.h	/^#define __AE_H__$/;"	d
+__CONFIG_H	src/config.h	/^#define __CONFIG_H$/;"	d
 __HIREDIS_FMACRO_H	src/fmacros.h	/^#define __HIREDIS_FMACRO_H$/;"	d
 __SDS_H	src/sds.h	/^#define __SDS_H$/;"	d
 __SHA1_H	src/sha1.h	/^#define __SHA1_H$/;"	d
@@ -205,7 +231,7 @@ _handle_missing_features	src/auth.c	/^static int _handle_missing_features(XmppCo
 _handle_missing_features_sasl	src/auth.c	/^static int _handle_missing_features_sasl(XmppConn * const conn,$/;"	f	file:
 _handle_missing_legacy	src/auth.c	/^static int _handle_missing_legacy(XmppConn * const conn,$/;"	f	file:
 _handle_missing_session	src/auth.c	/^static int _handle_missing_session(XmppConn * const conn,$/;"	f	file:
-_handle_open_sasl	src/auth.c	/^static void _handle_open_sasl(XmppConn * const conn)$/;"	f	file:
+_handle_open_sasl	src/auth.c	/^static void _handle_open_sasl(XmppConn * const conn) {$/;"	f	file:
 _handle_proceedtls_default	src/auth.c	/^static int _handle_proceedtls_default(XmppConn * const conn,$/;"	f	file:
 _handle_sasl_result	src/auth.c	/^static int _handle_sasl_result(XmppConn * const conn,$/;"	f	file:
 _handle_session	src/auth.c	/^static int _handle_session(XmppConn * const conn,$/;"	f	file:
@@ -219,7 +245,7 @@ _hash_t	src/hash.c	/^struct _hash_t {$/;"	s	file:
 _hashentry_t	src/hash.c	/^struct _hashentry_t {$/;"	s	file:
 _id_handler_add	src/handler.c	/^static void _id_handler_add(XmppConn * const conn,$/;"	f	file:
 _in_progress	src/sock.c	/^static int _in_progress(int error)$/;"	f	file:
-_log_open_tag	src/conn.c	/^static void _log_open_tag(XmppConn *conn, char **attrs)$/;"	f	file:
+_log_open_tag	src/conn.c	/^static void _log_open_tag(XmppConn *conn, char **attrs) {$/;"	f	file:
 _make_quoted	src/sasl.c	/^static char *_make_quoted(const char *s) {$/;"	f	file:
 _make_sasl_auth	src/auth.c	/^static XmppStanza *_make_sasl_auth(XmppConn * const conn,$/;"	f	file:
 _make_starttls	src/auth.c	/^static XmppStanza *_make_starttls(XmppConn * const conn)$/;"	f	file:
@@ -227,6 +253,7 @@ _make_string	src/sasl.c	/^static char *_make_string(const char *s, const unsigne
 _parse_digest_challenge	src/sasl.c	/^static hash_t *_parse_digest_challenge(const char *msg)$/;"	f	file:
 _render_stanza_recursive	src/stanza.c	/^static int _render_stanza_recursive(XmppStanza *stanza,$/;"	f	file:
 _render_update	src/stanza.c	/^static inline void _render_update(int *written, const int length,$/;"	f	file:
+_rfds	src/ae_select.c	/^    fd_set _rfds, _wfds;$/;"	m	struct:aeApiState	file:
 _set_attributes	src/parser.c	/^static void _set_attributes(XmppStanza *stanza, const XML_Char **attrs)$/;"	f	file:
 _snp_pow10	src/snprintf.c	/^static LDOUBLE _snp_pow10 (int exp)$/;"	f	file:
 _snp_round	src/snprintf.c	/^static long _snp_round (LDOUBLE value)$/;"	f	file:
@@ -235,22 +262,99 @@ _timed_handler_add	src/handler.c	/^static void _timed_handler_add(XmppConn * con
 _tls	src/tls_dummy.c	/^struct _tls {$/;"	s	file:
 _tls	src/tls_gnutls.c	/^struct _tls {$/;"	s	file:
 _tls	src/tls_openssl.c	/^struct _tls {$/;"	s	file:
+_wfds	src/ae_select.c	/^    fd_set _rfds, _wfds;$/;"	m	struct:aeApiState	file:
 _xmpp_handlist_t	src/xmpp.h	/^struct _xmpp_handlist_t {$/;"	s
 _xmpp_log_t	src/xmpp.h	/^struct _xmpp_log_t {$/;"	s
 _xmpp_send_queue_t	src/xmpp.h	/^struct _xmpp_send_queue_t {$/;"	s
 _xmpp_stream_error_t	src/xmpp.h	/^struct _xmpp_stream_error_t {$/;"	s
 aa	src/sock.c	/^	unsigned char aa;$/;"	m	struct:dnsquery_header	file:
 abs_val	src/snprintf.c	/^static LDOUBLE abs_val (LDOUBLE value)$/;"	f	file:
+aeAddMillisecondsToNow	src/ae.c	/^static void aeAddMillisecondsToNow(long long milliseconds, long *sec, long *ms) {$/;"	f	file:
+aeApiAddEvent	src/ae_epoll.c	/^static int aeApiAddEvent(aeEventLoop *eventLoop, int fd, int mask) {$/;"	f	file:
+aeApiAddEvent	src/ae_kqueue.c	/^static int aeApiAddEvent(aeEventLoop *eventLoop, int fd, int mask) {$/;"	f	file:
+aeApiAddEvent	src/ae_select.c	/^static int aeApiAddEvent(aeEventLoop *eventLoop, int fd, int mask) {$/;"	f	file:
+aeApiCreate	src/ae_epoll.c	/^static int aeApiCreate(aeEventLoop *eventLoop) {$/;"	f	file:
+aeApiCreate	src/ae_kqueue.c	/^static int aeApiCreate(aeEventLoop *eventLoop) {$/;"	f	file:
+aeApiCreate	src/ae_select.c	/^static int aeApiCreate(aeEventLoop *eventLoop) {$/;"	f	file:
+aeApiDelEvent	src/ae_epoll.c	/^static void aeApiDelEvent(aeEventLoop *eventLoop, int fd, int delmask) {$/;"	f	file:
+aeApiDelEvent	src/ae_kqueue.c	/^static void aeApiDelEvent(aeEventLoop *eventLoop, int fd, int mask) {$/;"	f	file:
+aeApiDelEvent	src/ae_select.c	/^static void aeApiDelEvent(aeEventLoop *eventLoop, int fd, int mask) {$/;"	f	file:
+aeApiFree	src/ae_epoll.c	/^static void aeApiFree(aeEventLoop *eventLoop) {$/;"	f	file:
+aeApiFree	src/ae_kqueue.c	/^static void aeApiFree(aeEventLoop *eventLoop) {$/;"	f	file:
+aeApiFree	src/ae_select.c	/^static void aeApiFree(aeEventLoop *eventLoop) {$/;"	f	file:
+aeApiName	src/ae_epoll.c	/^static char *aeApiName(void) {$/;"	f	file:
+aeApiName	src/ae_kqueue.c	/^static char *aeApiName(void) {$/;"	f	file:
+aeApiName	src/ae_select.c	/^static char *aeApiName(void) {$/;"	f	file:
+aeApiPoll	src/ae_epoll.c	/^static int aeApiPoll(aeEventLoop *eventLoop, struct timeval *tvp) {$/;"	f	file:
+aeApiPoll	src/ae_kqueue.c	/^static int aeApiPoll(aeEventLoop *eventLoop, struct timeval *tvp) {$/;"	f	file:
+aeApiPoll	src/ae_select.c	/^static int aeApiPoll(aeEventLoop *eventLoop, struct timeval *tvp) {$/;"	f	file:
+aeApiState	src/ae_epoll.c	/^typedef struct aeApiState {$/;"	s	file:
+aeApiState	src/ae_epoll.c	/^} aeApiState;$/;"	t	typeref:struct:aeApiState	file:
+aeApiState	src/ae_kqueue.c	/^typedef struct aeApiState {$/;"	s	file:
+aeApiState	src/ae_kqueue.c	/^} aeApiState;$/;"	t	typeref:struct:aeApiState	file:
+aeApiState	src/ae_select.c	/^typedef struct aeApiState {$/;"	s	file:
+aeApiState	src/ae_select.c	/^} aeApiState;$/;"	t	typeref:struct:aeApiState	file:
+aeBeforeSleepProc	src/ae.h	/^typedef void aeBeforeSleepProc(struct aeEventLoop *eventLoop);$/;"	t
+aeCreateEventLoop	src/ae.c	/^aeEventLoop *aeCreateEventLoop(void) {$/;"	f
+aeCreateFileEvent	src/ae.c	/^int aeCreateFileEvent(aeEventLoop *eventLoop, int fd, int mask,$/;"	f
+aeCreateTimeEvent	src/ae.c	/^long long aeCreateTimeEvent(aeEventLoop *eventLoop, long long milliseconds,$/;"	f
+aeDeleteEventLoop	src/ae.c	/^void aeDeleteEventLoop(aeEventLoop *eventLoop) {$/;"	f
+aeDeleteFileEvent	src/ae.c	/^void aeDeleteFileEvent(aeEventLoop *eventLoop, int fd, int mask)$/;"	f
+aeDeleteTimeEvent	src/ae.c	/^int aeDeleteTimeEvent(aeEventLoop *eventLoop, long long id)$/;"	f
+aeEventFinalizerProc	src/ae.h	/^typedef void aeEventFinalizerProc(struct aeEventLoop *eventLoop, void *clientData);$/;"	t
+aeEventLoop	src/ae.h	/^typedef struct aeEventLoop {$/;"	s
+aeEventLoop	src/ae.h	/^} aeEventLoop;$/;"	t	typeref:struct:aeEventLoop
+aeFileEvent	src/ae.h	/^typedef struct aeFileEvent {$/;"	s
+aeFileEvent	src/ae.h	/^} aeFileEvent;$/;"	t	typeref:struct:aeFileEvent
+aeFileProc	src/ae.h	/^typedef void aeFileProc(struct aeEventLoop *eventLoop, int fd, void *clientData, int mask);$/;"	t
+aeFiredEvent	src/ae.h	/^typedef struct aeFiredEvent {$/;"	s
+aeFiredEvent	src/ae.h	/^} aeFiredEvent;$/;"	t	typeref:struct:aeFiredEvent
+aeGetApiName	src/ae.c	/^char *aeGetApiName(void) {$/;"	f
+aeGetTime	src/ae.c	/^static void aeGetTime(long *seconds, long *milliseconds)$/;"	f	file:
+aeMain	src/ae.c	/^void aeMain(aeEventLoop *eventLoop) {$/;"	f
+aeProcessEvents	src/ae.c	/^int aeProcessEvents(aeEventLoop *eventLoop, int flags)$/;"	f
+aeSearchNearestTimer	src/ae.c	/^static aeTimeEvent *aeSearchNearestTimer(aeEventLoop *eventLoop)$/;"	f	file:
+aeSetBeforeSleepProc	src/ae.c	/^void aeSetBeforeSleepProc(aeEventLoop *eventLoop, aeBeforeSleepProc *beforesleep) {$/;"	f
+aeStop	src/ae.c	/^void aeStop(aeEventLoop *eventLoop) {$/;"	f
+aeTimeEvent	src/ae.h	/^typedef struct aeTimeEvent {$/;"	s
+aeTimeEvent	src/ae.h	/^} aeTimeEvent;$/;"	t	typeref:struct:aeTimeEvent
+aeTimeProc	src/ae.h	/^typedef int aeTimeProc(struct aeEventLoop *eventLoop, long long id, void *clientData);$/;"	t
+aeWait	src/ae.c	/^int aeWait(int fd, int mask, long long milliseconds) {$/;"	f
 ancount	src/sock.c	/^	unsigned short ancount;$/;"	m	struct:dnsquery_header	file:
+anetCreateSocket	src/anet.c	/^static int anetCreateSocket(char *err, int domain) {$/;"	f	file:
+anetGenericAccept	src/anet.c	/^static int anetGenericAccept(char *err, int s, struct sockaddr *sa, socklen_t *len) {$/;"	f	file:
+anetListen	src/anet.c	/^static int anetListen(char *err, int s, struct sockaddr *sa, socklen_t len) {$/;"	f	file:
+anetNonBlock	src/anet.c	/^int anetNonBlock(char *err, int fd)$/;"	f
+anetPeerToString	src/anet.c	/^int anetPeerToString(int fd, char *ip, int *port) {$/;"	f
+anetRead	src/anet.c	/^int anetRead(int fd, char *buf, int count)$/;"	f
+anetResolve	src/anet.c	/^int anetResolve(char *err, char *host, char *ipbuf)$/;"	f
+anetSetError	src/anet.c	/^static void anetSetError(char *err, const char *fmt, ...)$/;"	f	file:
+anetSetSendBuffer	src/anet.c	/^int anetSetSendBuffer(char *err, int fd, int buffsize)$/;"	f
+anetTcpAccept	src/anet.c	/^int anetTcpAccept(char *err, int s, char *ip, int *port) {$/;"	f
+anetTcpConnect	src/anet.c	/^int anetTcpConnect(char *err, char *addr, int port)$/;"	f
+anetTcpGenericConnect	src/anet.c	/^static int anetTcpGenericConnect(char *err, char *addr, int port, int flags)$/;"	f	file:
+anetTcpKeepAlive	src/anet.c	/^int anetTcpKeepAlive(char *err, int fd)$/;"	f
+anetTcpNoDelay	src/anet.c	/^int anetTcpNoDelay(char *err, int fd)$/;"	f
+anetTcpNonBlockConnect	src/anet.c	/^int anetTcpNonBlockConnect(char *err, char *addr, int port)$/;"	f
+anetTcpServer	src/anet.c	/^int anetTcpServer(char *err, int port, char *bindaddr)$/;"	f
+anetUnixAccept	src/anet.c	/^int anetUnixAccept(char *err, int s) {$/;"	f
+anetUnixConnect	src/anet.c	/^int anetUnixConnect(char *err, char *path)$/;"	f
+anetUnixGenericConnect	src/anet.c	/^int anetUnixGenericConnect(char *err, char *path, int flags)$/;"	f
+anetUnixNonBlockConnect	src/anet.c	/^int anetUnixNonBlockConnect(char *err, char *path)$/;"	f
+anetUnixServer	src/anet.c	/^int anetUnixServer(char *err, char *path, mode_t perm)$/;"	f
+anetWrite	src/anet.c	/^int anetWrite(int fd, char *buf, int count)$/;"	f
+aof_fsync	src/config.h	/^#define aof_fsync /;"	d
+apidata	src/ae.h	/^    void *apidata; \/* This is used for polling API specific data *\/$/;"	m	struct:aeEventLoop
 apikey	src/smarta.h	/^    char *apikey;$/;"	m	struct:_Smarta
 arcount	src/sock.c	/^	unsigned short arcount;$/;"	m	struct:dnsquery_header	file:
 attributes	src/stanza.h	/^    hash_t *attributes;$/;"	m	struct:_XmppStanza
-auth_handle_open	src/auth.c	/^void auth_handle_open(XmppConn * const conn)$/;"	f
+auth_handle_open	src/auth.c	/^void auth_handle_open(XmppConn * const conn) {$/;"	f
 authenticated	src/xmpp.h	/^    int authenticated;$/;"	m	struct:_XmppConn
 base64_decode	src/sasl.c	/^unsigned char *base64_decode(const char * const buffer, const unsigned len) {$/;"	f
 base64_decoded_len	src/sasl.c	/^int base64_decoded_len(const char * const buffer, const unsigned len) {$/;"	f
 base64_encode	src/sasl.c	/^char *base64_encode(const unsigned char * const buffer, const unsigned len) {$/;"	f
 base64_encoded_len	src/sasl.c	/^int base64_encoded_len(const unsigned len) {$/;"	f
+beforesleep	src/ae.h	/^    aeBeforeSleepProc *beforesleep;$/;"	m	struct:aeEventLoop
 bind_required	src/xmpp.h	/^    int bind_required;$/;"	m	struct:_XmppConn
 bits	src/md5.h	/^	uint32_t bits[2];$/;"	m	struct:MD5Context
 blk	src/sha1.c	/^#define blk(/;"	d	file:
@@ -264,6 +368,8 @@ calc_domain_name_size	src/sock.c	/^int calc_domain_name_size(unsigned char *buf,
 char_to_int	src/snprintf.c	/^#define char_to_int(/;"	d	file:
 check_service	src/sched.c	/^int check_service(XmppConn *conn, void *userdata) {$/;"	f
 children	src/stanza.h	/^    XmppStanza *children;$/;"	m	struct:_XmppStanza
+clientData	src/ae.h	/^    void *clientData;$/;"	m	struct:aeFileEvent
+clientData	src/ae.h	/^    void *clientData;$/;"	m	struct:aeTimeEvent
 command	src/smarta.h	/^    char *command;$/;"	m	struct:_Service
 conn_disconnect	src/conn.c	/^void conn_disconnect(XmppConn * const conn) $/;"	f
 conn_disconnect_clean	src/conn.c	/^void conn_disconnect_clean(XmppConn * const conn)$/;"	f
@@ -296,8 +402,15 @@ enabled	src/xmpp.h	/^    int enabled; \/* handlers are added disabled and enable
 endcb	src/parser.h	/^    parser_end_callback endcb;$/;"	m	struct:_Parser
 entries	src/hash.c	/^    hashentry_t **entries;$/;"	m	struct:_hash_t	file:
 entry	src/hash.c	/^    hashentry_t *entry;$/;"	m	struct:_hash_iterator_t	file:
+epfd	src/ae_epoll.c	/^    int epfd;$/;"	m	struct:aeApiState	file:
 error	src/xmpp.h	/^    int error;$/;"	m	struct:_XmppConn
+events	src/ae.h	/^    aeFileEvent events[AE_SETSIZE]; \/* Registered events *\/$/;"	m	struct:aeEventLoop
+events	src/ae_epoll.c	/^    struct epoll_event events[AE_SETSIZE];$/;"	m	struct:aeApiState	typeref:struct:aeApiState::epoll_event	file:
+events	src/ae_kqueue.c	/^    struct kevent events[AE_SETSIZE];$/;"	m	struct:aeApiState	typeref:struct:aeApiState::kevent	file:
 expat	src/parser.h	/^    XML_Parser expat;$/;"	m	struct:_Parser
+fd	src/ae.h	/^    int fd;$/;"	m	struct:aeFiredEvent
+finalizerProc	src/ae.h	/^    aeEventFinalizerProc *finalizerProc;$/;"	m	struct:aeTimeEvent
+fired	src/ae.h	/^    aeFiredEvent fired[AE_SETSIZE]; \/* Fired events *\/$/;"	m	struct:aeEventLoop
 fmtfp	src/snprintf.c	/^static int fmtfp (char *buffer, size_t *currlen, size_t maxlen,$/;"	f	file:
 fmtint	src/snprintf.c	/^static int fmtint (char *buffer, size_t *currlen, size_t maxlen,$/;"	f	file:
 fmtstr	src/snprintf.c	/^static int fmtstr (char *buffer, size_t *currlen, size_t maxlen,$/;"	f	file:
@@ -328,6 +441,7 @@ hash_release	src/hash.c	/^void hash_release(hash_t * const table)$/;"	f
 hash_t	src/hash.h	/^typedef struct _hash_t hash_t;$/;"	t	typeref:struct:_hash_t
 hashentry_t	src/hash.c	/^typedef struct _hashentry_t hashentry_t;$/;"	t	typeref:struct:_hashentry_t	file:
 head	src/adlist.h	/^    listNode *head;$/;"	m	struct:list
+id	src/ae.h	/^    long long id; \/* time event identifier. *\/$/;"	m	struct:aeTimeEvent
 id	src/sock.c	/^	unsigned short id;$/;"	m	struct:dnsquery_header	file:
 id	src/xmpp.h	/^	    char *id;$/;"	m	struct:_xmpp_handlist_t::__anon9::__anon11
 id_handlers	src/xmpp.h	/^    hash_t *id_handlers;$/;"	m	struct:_XmppConn
@@ -345,6 +459,7 @@ int8_t	src/sha1.c	/^  typedef signed char             int8_t;$/;"	t	file:
 isslave	src/smarta.h	/^    int isslave;$/;"	m	struct:_Smarta
 jid	src/xmpp.h	/^    char *jid;$/;"	m	struct:_XmppConn
 key	src/hash.c	/^    char *key;$/;"	m	struct:_hashentry_t	file:
+kqfd	src/ae_kqueue.c	/^    int kqfd;$/;"	m	struct:aeApiState	file:
 lang	src/xmpp.h	/^    char *lang;$/;"	m	struct:_XmppConn
 last_stamp	src/xmpp.h	/^	    uint64_t last_stamp;$/;"	m	struct:_xmpp_handlist_t::__anon9::__anon10
 lasterror	src/tls_openssl.c	/^    int lasterror;$/;"	m	struct:_tls	file:
@@ -391,10 +506,13 @@ main	src/sds.c	/^int main(void) {$/;"	f
 main	src/sha1.c	/^int main(int argc, char** argv) {$/;"	f
 main	src/smarta.c	/^int main(int argc, char **argv) {$/;"	f
 main	src/snprintf.c	/^int main (void)$/;"	f
+mask	src/ae.h	/^    int mask; \/* one of AE_(READABLE|WRITABLE) *\/$/;"	m	struct:aeFileEvent
+mask	src/ae.h	/^    int mask;$/;"	m	struct:aeFiredEvent
 masterauth	src/smarta.h	/^    char *masterauth;$/;"	m	struct:_Smarta
 masterhost	src/smarta.h	/^    char *masterhost;$/;"	m	struct:_Smarta
 masterport	src/smarta.h	/^    int masterport;$/;"	m	struct:_Smarta
 match	src/adlist.h	/^    int (*match)(void *ptr, void *key);$/;"	m	struct:list
+maxfd	src/ae.h	/^    int maxfd;$/;"	m	struct:aeEventLoop
 message_handler	src/smarta.c	/^int message_handler(XmppConn * const conn, XmppStanza * const stanza, void * const userdata)$/;"	f
 name	src/smarta.h	/^    char *name;$/;"	m	struct:_Command
 name	src/smarta.h	/^    char *name;$/;"	m	struct:_Service
@@ -415,6 +533,7 @@ netbuf_get_dnsquery_srvrdata	src/sock.c	/^void netbuf_get_dnsquery_srvrdata(unsi
 netbuf_get_domain_name	src/sock.c	/^int netbuf_get_domain_name(unsigned char *buf, int buflen, int *offset, char *namebuf, int namebuflen)$/;"	f
 next	src/adlist.h	/^    listNode *next;$/;"	m	struct:listIter
 next	src/adlist.h	/^    struct listNode *next;$/;"	m	struct:listNode	typeref:struct:listNode::listNode
+next	src/ae.h	/^    struct aeTimeEvent *next;$/;"	m	struct:aeTimeEvent	typeref:struct:aeTimeEvent::aeTimeEvent
 next	src/hash.c	/^    hashentry_t *next;$/;"	m	struct:_hashentry_t	file:
 next	src/stanza.h	/^    XmppStanza *next;$/;"	m	struct:_XmppStanza
 next	src/xmpp.h	/^    xmpp_handlist_t *next;$/;"	m	struct:_xmpp_handlist_t
@@ -441,6 +560,7 @@ port	src/sock.c	/^	unsigned short port;$/;"	m	struct:dnsquery_srvrdata	file:
 prev	src/adlist.h	/^    struct listNode *prev;$/;"	m	struct:listNode	typeref:struct:listNode::listNode
 prev	src/stanza.h	/^    XmppStanza *prev;$/;"	m	struct:_XmppStanza
 priority	src/sock.c	/^	unsigned short priority;$/;"	m	struct:dnsquery_srvrdata	file:
+processTimeEvents	src/ae.c	/^static int processTimeEvents(aeEventLoop *eventLoop) {$/;"	f	file:
 qclass	src/sock.c	/^	unsigned short qclass;$/;"	m	struct:dnsquery_question	file:
 qdcount	src/sock.c	/^	unsigned short qdcount;$/;"	m	struct:dnsquery_header	file:
 qname	src/sock.c	/^	char qname[1024];$/;"	m	struct:dnsquery_question	file:
@@ -451,11 +571,15 @@ rcode	src/sock.c	/^	unsigned char rcode;$/;"	m	struct:dnsquery_header	file:
 rd	src/sock.c	/^	unsigned char rd;$/;"	m	struct:dnsquery_header	file:
 rdata	src/sock.c	/^	struct dnsquery_srvrdata rdata;$/;"	m	struct:dnsquery_resourcerecord	typeref:struct:dnsquery_resourcerecord::dnsquery_srvrdata	file:
 rdlength	src/sock.c	/^	unsigned short rdlength;$/;"	m	struct:dnsquery_resourcerecord	file:
+redis_fstat	src/config.h	/^#define redis_fstat /;"	d
+redis_stat	src/config.h	/^#define redis_stat /;"	d
 ref	src/hash.c	/^    unsigned int ref;$/;"	m	struct:_hash_iterator_t	file:
 ref	src/hash.c	/^    unsigned int ref;$/;"	m	struct:_hash_t	file:
 ref	src/stanza.h	/^    int ref;$/;"	m	struct:_XmppStanza
 ref	src/xmpp.h	/^    unsigned int ref;$/;"	m	struct:_XmppConn
 reset_parser	src/xmpp.h	/^    int reset_parser;$/;"	m	struct:_XmppConn
+rfds	src/ae_select.c	/^    fd_set rfds, wfds;$/;"	m	struct:aeApiState	file:
+rfileProc	src/ae.h	/^    aeFileProc *rfileProc;$/;"	m	struct:aeFileEvent
 rol	src/sha1.c	/^#define rol(/;"	d	file:
 sasl_digest_md5	src/sasl.c	/^char *sasl_digest_md5(const char *challenge,$/;"	f
 sasl_plain	src/sasl.c	/^char *sasl_plain(const char *authid, const char *password) {$/;"	f
@@ -525,6 +649,7 @@ stanzacb	src/parser.h	/^    parser_stanza_callback stanzacb;$/;"	m	struct:_Parse
 startcb	src/parser.h	/^    parser_start_callback startcb;$/;"	m	struct:_Parser
 state	src/sha1.h	/^    uint32_t state[5];$/;"	m	struct:__anon1
 state	src/xmpp.h	/^    xmpp_conn_state_t state;$/;"	m	struct:_XmppConn
+stop	src/ae.h	/^    int stop;$/;"	m	struct:aeEventLoop
 stream_error	src/xmpp.h	/^    xmpp_stream_error_t *stream_error;$/;"	m	struct:_XmppConn
 stream_id	src/xmpp.h	/^    char *stream_id;$/;"	m	struct:_XmppConn
 table	src/hash.c	/^    hash_t *table;$/;"	m	struct:_hash_iterator_t	file:
@@ -536,48 +661,51 @@ test_data	src/sha1.c	/^static char *test_data[] = {$/;"	v	file:
 test_report	src/sds.c	/^#define test_report(/;"	d	file:
 test_results	src/sha1.c	/^static char *test_results[] = {$/;"	v	file:
 text	src/xmpp.h	/^    char *text;$/;"	m	struct:_xmpp_stream_error_t
+timeEventHead	src/ae.h	/^    aeTimeEvent *timeEventHead;$/;"	m	struct:aeEventLoop
+timeEventNextId	src/ae.h	/^    long long timeEventNextId;$/;"	m	struct:aeEventLoop
+timeProc	src/ae.h	/^    aeTimeProc *timeProc;$/;"	m	struct:aeTimeEvent
 time_elapsed	src/util.c	/^uint64_t time_elapsed(uint64_t t1, uint64_t t2) {$/;"	f
 time_stamp	src/util.c	/^uint64_t time_stamp(void) {$/;"	f
 timed_handlers	src/xmpp.h	/^    xmpp_handlist_t *timed_handlers;$/;"	m	struct:_XmppConn
 timeout_stamp	src/xmpp.h	/^    uint64_t timeout_stamp;$/;"	m	struct:_XmppConn
 tls	src/xmpp.h	/^    tls_t *tls;$/;"	m	struct:_XmppConn
-tls_clear_pending_write	src/tls_dummy.c	/^int tls_clear_pending_write(tls_t *tls)$/;"	f
-tls_clear_pending_write	src/tls_openssl.c	/^int tls_clear_pending_write(tls_t *tls)$/;"	f
-tls_error	src/tls_dummy.c	/^int tls_error(tls_t *tls)$/;"	f
-tls_error	src/tls_gnutls.c	/^int tls_error(tls_t *tls)$/;"	f
-tls_error	src/tls_openssl.c	/^int tls_error(tls_t *tls)$/;"	f
+tls_clear_pending_write	src/tls_dummy.c	/^int tls_clear_pending_write(tls_t *tls) {$/;"	f
+tls_clear_pending_write	src/tls_openssl.c	/^int tls_clear_pending_write(tls_t *tls) {$/;"	f
+tls_error	src/tls_dummy.c	/^int tls_error(tls_t *tls) {$/;"	f
+tls_error	src/tls_gnutls.c	/^int tls_error(tls_t *tls) {$/;"	f
+tls_error	src/tls_openssl.c	/^int tls_error(tls_t *tls) {$/;"	f
 tls_failed	src/xmpp.h	/^    int tls_failed; \/* set when tls fails, so we don't try again *\/$/;"	m	struct:_XmppConn
-tls_free	src/tls_dummy.c	/^void tls_free(tls_t *tls)$/;"	f
-tls_free	src/tls_gnutls.c	/^void tls_free(tls_t *tls)$/;"	f
-tls_free	src/tls_openssl.c	/^void tls_free(tls_t *tls)$/;"	f
-tls_initialize	src/tls_dummy.c	/^void tls_initialize(void)$/;"	f
-tls_initialize	src/tls_gnutls.c	/^void tls_initialize(void)$/;"	f
-tls_initialize	src/tls_openssl.c	/^void tls_initialize(void)$/;"	f
-tls_is_recoverable	src/tls_dummy.c	/^int tls_is_recoverable(int error)$/;"	f
-tls_is_recoverable	src/tls_openssl.c	/^int tls_is_recoverable(int error)$/;"	f
-tls_new	src/tls_dummy.c	/^tls_t *tls_new(sock_t sock)$/;"	f
-tls_new	src/tls_gnutls.c	/^tls_t *tls_new(sock_t sock)$/;"	f
+tls_free	src/tls_dummy.c	/^void tls_free(tls_t *tls) {$/;"	f
+tls_free	src/tls_gnutls.c	/^void tls_free(tls_t *tls) {$/;"	f
+tls_free	src/tls_openssl.c	/^void tls_free(tls_t *tls) {$/;"	f
+tls_initialize	src/tls_dummy.c	/^void tls_initialize(void) {$/;"	f
+tls_initialize	src/tls_gnutls.c	/^void tls_initialize(void) {$/;"	f
+tls_initialize	src/tls_openssl.c	/^void tls_initialize(void) {$/;"	f
+tls_is_recoverable	src/tls_dummy.c	/^int tls_is_recoverable(int error) {$/;"	f
+tls_is_recoverable	src/tls_openssl.c	/^int tls_is_recoverable(int error) {$/;"	f
+tls_new	src/tls_dummy.c	/^tls_t *tls_new(sock_t sock) {$/;"	f
+tls_new	src/tls_gnutls.c	/^tls_t *tls_new(sock_t sock) {$/;"	f
 tls_new	src/tls_openssl.c	/^tls_t *tls_new(sock_t sock)$/;"	f
-tls_read	src/tls_dummy.c	/^int tls_read(tls_t *tls, void * const buff, const size_t len)$/;"	f
-tls_read	src/tls_gnutls.c	/^int tls_read(tls_t *tls, void * const buff, const size_t len)$/;"	f
-tls_read	src/tls_openssl.c	/^int tls_read(tls_t *tls, void * const buff, const size_t len)$/;"	f
-tls_set_credentials	src/tls_dummy.c	/^int tls_set_credentials(tls_t *tls, const char *cafilename)$/;"	f
-tls_set_credentials	src/tls_gnutls.c	/^int tls_set_credentials(tls_t *tls, const char *cafilename)$/;"	f
-tls_set_credentials	src/tls_openssl.c	/^int tls_set_credentials(tls_t *tls, const char *cafilename)$/;"	f
-tls_shutdown	src/tls_dummy.c	/^void tls_shutdown(void)$/;"	f
-tls_shutdown	src/tls_gnutls.c	/^void tls_shutdown(void)$/;"	f
-tls_shutdown	src/tls_openssl.c	/^void tls_shutdown(void)$/;"	f
-tls_start	src/tls_dummy.c	/^int tls_start(tls_t *tls)$/;"	f
-tls_start	src/tls_gnutls.c	/^int tls_start(tls_t *tls)$/;"	f
-tls_start	src/tls_openssl.c	/^int tls_start(tls_t *tls)$/;"	f
-tls_stop	src/tls_dummy.c	/^int tls_stop(tls_t *tls)$/;"	f
-tls_stop	src/tls_gnutls.c	/^int tls_stop(tls_t *tls)$/;"	f
-tls_stop	src/tls_openssl.c	/^int tls_stop(tls_t *tls)$/;"	f
+tls_read	src/tls_dummy.c	/^int tls_read(tls_t *tls, void * const buff, const size_t len) {$/;"	f
+tls_read	src/tls_gnutls.c	/^int tls_read(tls_t *tls, void * const buff, const size_t len) {$/;"	f
+tls_read	src/tls_openssl.c	/^int tls_read(tls_t *tls, void * const buff, const size_t len) {$/;"	f
+tls_set_credentials	src/tls_dummy.c	/^int tls_set_credentials(tls_t *tls, const char *cafilename) {$/;"	f
+tls_set_credentials	src/tls_gnutls.c	/^int tls_set_credentials(tls_t *tls, const char *cafilename) {$/;"	f
+tls_set_credentials	src/tls_openssl.c	/^int tls_set_credentials(tls_t *tls, const char *cafilename) {$/;"	f
+tls_shutdown	src/tls_dummy.c	/^void tls_shutdown(void) {$/;"	f
+tls_shutdown	src/tls_gnutls.c	/^void tls_shutdown(void) {$/;"	f
+tls_shutdown	src/tls_openssl.c	/^void tls_shutdown(void) {$/;"	f
+tls_start	src/tls_dummy.c	/^int tls_start(tls_t *tls) {$/;"	f
+tls_start	src/tls_gnutls.c	/^int tls_start(tls_t *tls) {$/;"	f
+tls_start	src/tls_openssl.c	/^int tls_start(tls_t *tls) {$/;"	f
+tls_stop	src/tls_dummy.c	/^int tls_stop(tls_t *tls) {$/;"	f
+tls_stop	src/tls_gnutls.c	/^int tls_stop(tls_t *tls) {$/;"	f
+tls_stop	src/tls_openssl.c	/^int tls_stop(tls_t *tls) {$/;"	f
 tls_support	src/xmpp.h	/^    int tls_support;$/;"	m	struct:_XmppConn
 tls_t	src/tls.h	/^typedef struct _tls tls_t;$/;"	t	typeref:struct:_tls
-tls_write	src/tls_dummy.c	/^int tls_write(tls_t *tls, const void * const buff, const size_t len)$/;"	f
-tls_write	src/tls_gnutls.c	/^int tls_write(tls_t *tls, const void * const buff, const size_t len)$/;"	f
-tls_write	src/tls_openssl.c	/^int tls_write(tls_t *tls, const void * const buff, const size_t len)$/;"	f
+tls_write	src/tls_dummy.c	/^int tls_write(tls_t *tls, const void * const buff, const size_t len) {$/;"	f
+tls_write	src/tls_gnutls.c	/^int tls_write(tls_t *tls, const void * const buff, const size_t len) {$/;"	f
+tls_write	src/tls_openssl.c	/^int tls_write(tls_t *tls, const void * const buff, const size_t len) {$/;"	f
 ttl	src/sock.c	/^	unsigned int ttl;$/;"	m	struct:dnsquery_resourcerecord	file:
 type	src/sock.c	/^	unsigned short type;$/;"	m	struct:dnsquery_resourcerecord	file:
 type	src/stanza.h	/^    XmppStanzaType type;$/;"	m	struct:_XmppStanza
@@ -604,6 +732,10 @@ verbosity	src/smarta.h	/^    int verbosity;$/;"	m	struct:_Smarta
 version	src/smarta.c	/^void version() {$/;"	f
 version_handler	src/smarta.c	/^int version_handler(XmppConn * const conn, XmppStanza * const stanza, void * const userdata)$/;"	f
 weight	src/sock.c	/^	unsigned short weight;$/;"	m	struct:dnsquery_srvrdata	file:
+wfds	src/ae_select.c	/^    fd_set rfds, wfds;$/;"	m	struct:aeApiState	file:
+wfileProc	src/ae.h	/^    aeFileProc *wfileProc;$/;"	m	struct:aeFileEvent
+when_ms	src/ae.h	/^    long when_ms; \/* milliseconds *\/$/;"	m	struct:aeTimeEvent
+when_sec	src/ae.h	/^    long when_sec; \/* seconds *\/$/;"	m	struct:aeTimeEvent
 written	src/xmpp.h	/^    size_t written;$/;"	m	struct:_xmpp_send_queue_t
 xmpp_conn_clone	src/conn.c	/^XmppConn *xmpp_conn_clone(XmppConn * const conn)$/;"	f
 xmpp_conn_event_t	src/xmpp.h	/^} xmpp_conn_event_t;$/;"	t	typeref:enum:__anon6
@@ -617,7 +749,7 @@ xmpp_conn_set_jid	src/conn.c	/^void xmpp_conn_set_jid(XmppConn *conn, const char
 xmpp_conn_set_pass	src/conn.c	/^void xmpp_conn_set_pass(XmppConn *conn, const char *pass) {$/;"	f
 xmpp_conn_state_t	src/xmpp.h	/^} xmpp_conn_state_t;$/;"	t	typeref:enum:__anon8
 xmpp_conn_type_t	src/xmpp.h	/^} xmpp_conn_type_t;$/;"	t	typeref:enum:__anon5
-xmpp_connect_client	src/conn.c	/^int xmpp_connect_client(XmppConn * const conn, $/;"	f
+xmpp_connect_client	src/conn.c	/^int xmpp_connect_client(XmppConn *conn, $/;"	f
 xmpp_disconnect	src/conn.c	/^void xmpp_disconnect(XmppConn * const conn)$/;"	f
 xmpp_error_type_t	src/xmpp.h	/^} xmpp_error_type_t;$/;"	t	typeref:enum:__anon7
 xmpp_handler	src/xmpp.h	/^typedef int (*xmpp_handler)(XmppConn * const conn,$/;"	t
