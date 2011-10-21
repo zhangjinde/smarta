@@ -27,21 +27,17 @@ struct _tls {
     gnutls_certificate_credentials_t cred;
 };
 
-void tls_initialize(void)
-{
+void tls_initialize(void) {
     /* initialize the GNU TLS global state */
     gnutls_global_init();
-
 }
 
-void tls_shutdown(void)
-{
+void tls_shutdown(void) {
     /* tear down the GNU TLS global state */
     gnutls_global_deinit();
 }
 
-tls_t *tls_new(sock_t sock)
-{
+tls_t *tls_new(sock_t sock) {
     tls_t *tls = malloc(sizeof(tls_t));
     const int cert_type_priority[3] = { GNUTLS_CRT_X509,
         GNUTLS_CRT_OPENPGP, 0 };
@@ -63,15 +59,13 @@ tls_t *tls_new(sock_t sock)
     return tls;
 }
 
-void tls_free(tls_t *tls)
-{
+void tls_free(tls_t *tls) {
     gnutls_deinit(tls->session);
     gnutls_certificate_free_credentials(tls->cred);
     free(tls);
 }
 
-int tls_set_credentials(tls_t *tls, const char *cafilename)
-{
+int tls_set_credentials(tls_t *tls, const char *cafilename) {
     int err;
 
     /* set trusted credentials -- takes a .pem filename */
@@ -85,37 +79,24 @@ int tls_set_credentials(tls_t *tls, const char *cafilename)
     return err;
 }
 
-int tls_start(tls_t *tls)
-{
+int tls_start(tls_t *tls) {
     return gnutls_handshake(tls->session);
 }
 
-int tls_stop(tls_t *tls)
-{
+int tls_stop(tls_t *tls) {
     return gnutls_bye(tls->session, GNUTLS_SHUT_RDWR);
 }
 
-int tls_error(tls_t *tls)
-{
+int tls_error(tls_t *tls) {
     /* todo: some kind of error polling/dump */
     return 0;
 }
 
-int tls_read(tls_t *tls, void * const buff, const size_t len)
-{
-    int ret;
-
-    ret = gnutls_record_recv(tls->session, buff, len);
-
-    return ret;
+int tls_read(tls_t *tls, void * const buff, const size_t len) {
+    return gnutls_record_recv(tls->session, buff, len);
 }
 
-int tls_write(tls_t *tls, const void * const buff, const size_t len)
-{
-    int ret;
-
-    ret = gnutls_record_send(tls->session, buff, len);
-
-    return ret;
+int tls_write(tls_t *tls, const void * const buff, const size_t len) {
+    return gnutls_record_send(tls->session, buff, len);
 }
 

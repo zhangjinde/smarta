@@ -24,64 +24,52 @@ struct _tls {
     /* we don't implement anything */
 };
 
-void tls_initialize(void)
-{
+void tls_initialize(void) {
     return;
 }
 
-void tls_shutdown(void)
-{
+void tls_shutdown(void) {
     return;
 }
 
-tls_t *tls_new(sock_t sock)
-{
+tls_t *tls_new(sock_t sock) {
     /* always fail */
     return NULL;
 }
 
-void tls_free(tls_t *tls)
-{
+void tls_free(tls_t *tls) {
     return;
 }
 
-int tls_set_credentials(tls_t *tls, const char *cafilename)
-{
+int tls_set_credentials(tls_t *tls, const char *cafilename) {
     return -1;
 }
 
-int tls_start(tls_t *tls)
-{
+int tls_start(tls_t *tls) {
     return -1;
 }
 
-int tls_stop(tls_t *tls)
-{
+int tls_stop(tls_t *tls) {
     return -1;
 }
 
-int tls_error(tls_t *tls)
-{
+int tls_error(tls_t *tls) {
     /* todo: some kind of error polling/dump */
     return 0;
 }
 
-int tls_read(tls_t *tls, void * const buff, const size_t len)
-{
+int tls_read(tls_t *tls, void * const buff, const size_t len) {
     return -1;
 }
 
-int tls_write(tls_t *tls, const void * const buff, const size_t len)
-{
+int tls_write(tls_t *tls, const void * const buff, const size_t len) {
     return -1;
 }
 
-int tls_clear_pending_write(tls_t *tls)
-{
+int tls_clear_pending_write(tls_t *tls) {
     return -1;
 }
 
-int tls_is_recoverable(int error)
-{
+int tls_is_recoverable(int error) {
     return 0;
 }
