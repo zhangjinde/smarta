@@ -9,17 +9,17 @@
 
 #define MAX_INPUT_BUFFER 4096
 
-extern smarta_t smarta;
+extern Smarta smarta;
 
 static int check_service(XmppConn * const conn, void * const userdata);
 static void send_message(XmppConn * conn, sds result);
 
 void sched_services(XmppConn *conn) {
-    service_t *service;
+    Service *service;
     listNode *node;
     listIter *iter = listGetIterator(smarta.services, AL_START_HEAD);
     while((node = listNext(iter)) != NULL) {
-        service = (service_t *)node->value;
+        service = (Service *)node->value;
         printf("sched service: %s\n", service->name);
         //FUCK: could only add one handler!!! *60
         handler_add_timed(conn, check_service, service->period*60*1000, service);
@@ -31,7 +31,7 @@ int check_service(XmppConn *conn, void *userdata) {
 	char output_buffer[MAX_INPUT_BUFFER] = "";
 	sds raw_command = sdsnew("cd /opt/csmarta/plugins ; ./");
     sds result =sdsempty();
-    service_t *service = (service_t *)userdata;
+    Service *service = (Service *)userdata;
     printf("check service: %s\n", service->name);
     raw_command = sdscat(raw_command, service->command);
     fp = popen(raw_command, "r");

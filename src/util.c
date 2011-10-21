@@ -20,13 +20,9 @@
 #include <stdlib.h>
 #include <string.h>
 
-#ifdef _WIN32
-#include <winsock2.h>
-#else
 #include <sys/time.h>
 #include <time.h>
 #include <stdint.h>
-#endif
 
 #include "xmpp.h"
 #include "util.h"
@@ -38,17 +34,12 @@
  *
  *  @return an integer time stamp
  */
-uint64_t time_stamp(void)
-{
-#ifdef _WIN32
-    return timeGetTime();
-#else
+uint64_t time_stamp(void) {
     struct timeval tv;
 
     gettimeofday(&tv, NULL);
 
     return (uint64_t)tv.tv_sec * 1000 + (uint64_t)tv.tv_usec / 1000;
-#endif
 }
 
 /** Get the time elapsed between two time stamps.

@@ -19,11 +19,7 @@
 #ifndef __SMARTA_UTIL_H__
 #define __SMARTA_UTIL_H__
 
-#ifndef _WIN32
 #include <stdint.h>
-#else
-typedef unsigned __int64 uint64_t; 
-#endif
 
 /* timing functions */
 uint64_t time_stamp(void);

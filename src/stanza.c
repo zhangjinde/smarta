@@ -26,10 +26,6 @@
 #include "xmpp.h"
 #include "hash.h"
 
-#ifdef _WIN32
-#define inline __inline
-#endif
-
 /** Create a stanza object.
  *  This function allocates and initializes and blank stanza object.
  *  The stanza will have a reference count of one, so the caller does not

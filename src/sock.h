@@ -21,12 +21,7 @@
 
 #include <stdio.h>
 
-#ifndef _WIN32
 typedef int sock_t;
-#else
-#include <winsock2.h>
-typedef SOCKET sock_t;
-#endif
 
 void sock_initialize(void);
 void sock_shutdown(void);

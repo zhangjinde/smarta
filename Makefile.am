@@ -28,11 +28,4 @@ smarta_SOURCES = src/smarta.c src/auth.c src/conn.c \
 smarta_CFLAGS = $(SMARTA_FLAGS)
 smarta_LDADD = $(SMARTA_LIBS) 
 
-## Tests
-TESTS = tests/check_parser
-check_PROGRAMS = tests/check_parser
-tests_check_parser_SOURCES = tests/check_parser.c
-tests_check_parser_CFLAGS = @check_CFLAGS@ $(PARSER_CFLAGS) $(SMARTA_FLAGS) \
-	-I$(top_srcdir)/src
-tests_check_parser_LDADD = @check_LIBS@ $(SMARTA_LIBS)
 

@@ -4,13 +4,18 @@
 #include "adlist.h"
 #include "sds.h"
 
-typedef struct _service_t {
+typedef struct _Service {
     char *name;
     long period;
     char *command;
-} service_t;
+} Service;
 
-typedef struct _smarta_t {
+typedef struct _Command {
+    char *name;
+    char *usage;
+} Command;
+
+typedef struct _Smarta {
     char *name;
     char *server;
     char *apikey;
@@ -23,11 +28,6 @@ typedef struct _smarta_t {
     list *services;
     char *logfile;
     int verbosity;
-} smarta_t;
-
-typedef struct _command_t {
-    char *name;
-    char *usage;
-} command_t;
+} Smarta;
 
 #endif

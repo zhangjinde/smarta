@@ -24,10 +24,6 @@
 #include "sasl.h"
 #include "sds.h"
 
-#ifdef _WIN32
-#define strcasecmp stricmp
-#endif
-
 /* TODO: these should configurable at runtime on a per connection basis  */
 
 #ifndef FEATURES_TIMEOUT

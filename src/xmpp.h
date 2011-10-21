@@ -22,9 +22,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
-#ifndef _WIN32
 #include <stdint.h>
-#endif
 
 #include "sock.h"
 #include "tls.h"

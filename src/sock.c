@@ -21,54 +21,31 @@
 #include <string.h>
 #include <sys/types.h>
 
-#ifdef _WIN32
-#include <winsock2.h>
-#include <ws2tcpip.h>
-#include <windns.h>
-#include <Iphlpapi.h>
-#define snprintf _snprintf
-#else
 #include <errno.h>
 #include <unistd.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <netdb.h>
 #include <fcntl.h>
-#endif
 
 #include "sock.h"
 
 void sock_initialize(void)
 {
-#ifdef _WIN32
-    WSADATA wsad;
-    WSAStartup(0x0101, &wsad);
-#endif
 }
 
 void sock_shutdown(void)
 {
-#ifdef _WIN32
-    WSACleanup();
-#endif
 }
 
 int sock_error(void)
 {
-#ifdef _WIN32
-    return WSAGetLastError();
-#else
     return errno;
-#endif
 }
 
 static int _in_progress(int error)
 {
-#ifdef _WIN32
-    return (error == WSAEWOULDBLOCK || error == WSAEINPROGRESS);
-#else
     return (errno == EINPROGRESS);
-#endif
 }
 
 sock_t sock_connect(const char * const host, const unsigned int port)
@@ -112,55 +89,31 @@ sock_t sock_connect(const char * const host, const unsigned int port)
 
 int sock_close(const sock_t sock)
 {
-#ifdef _WIN32
-    return closesocket(sock);
-#else
     return close(sock);
-#endif
 }
 
 int sock_set_blocking(const sock_t sock)
 {
-#ifdef _WIN32
-    u_long block = 0;
-    return ioctlsocket(sock, FIONBIO, &block);
-#else
     return fcntl(sock, F_SETFL, 0);
-#endif
 }
 
-int sock_set_nonblocking(const sock_t sock)
-{
-#ifdef _WIN32
-    u_long nonblock = 1;
-    return ioctlsocket(sock, FIONBIO, &nonblock);
-#else
+int sock_set_nonblocking(const sock_t sock) {
     return fcntl(sock, F_SETFL, O_NONBLOCK);
-#endif
 }
 
-int sock_read(const sock_t sock, void * const buff, const size_t len)
-{
+int sock_read(const sock_t sock, void * const buff, const size_t len) {
     return recv(sock, buff, len, 0);
 }
 
-int sock_write(const sock_t sock, const void * const buff, const size_t len)
-{
+int sock_write(const sock_t sock, const void * const buff, const size_t len) {
     return send(sock, buff, len, 0);
 }
 
-int sock_is_recoverable(const int error)
-{
-#ifdef _WIN32
-    return (error == WSAEINTR || error == WSAEWOULDBLOCK || 
-	    error == WSAEINPROGRESS);
-#else
+int sock_is_recoverable(const int error) {
     return (error == EAGAIN || error == EINTR);
-#endif
 }
 
-int sock_connect_error(const sock_t sock)
-{
+int sock_connect_error(const sock_t sock) {
     struct sockaddr sa;
     unsigned len;
     char temp;
@@ -178,11 +131,7 @@ int sock_connect_error(const sock_t sock)
 
     /* it's possible that the error wasn't ENOTCONN, so if it wasn't,
      * return that */
-#ifdef _WIN32
-    if (sock_error() != WSAENOTCONN) return sock_error();
-#else
     if (sock_error() != ENOTCONN) return sock_error();
-#endif
 
     /* load the correct error into errno through error slippage */
     recv(sock, &temp, 1, 0);

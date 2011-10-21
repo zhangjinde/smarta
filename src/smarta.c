@@ -22,7 +22,7 @@
 #define IN_SERVICE_BLOCK 2
 #define IN_COMMADN_BLOCK 3
 
-smarta_t smarta;
+Smarta smarta;
 
 int version_handler(XmppConn * const conn, XmppStanza * const stanza, void * const userdata)
 {
@@ -163,7 +163,7 @@ void load_config(char *filename) {
     int linenum = 0;
     sds line = NULL;
     int state = 0;
-    service_t *service;
+    Service *service;
 
     if ((fp = fopen(filename,"r")) == NULL) {
         //redisLog(REDIS_WARNING, "Fatal error, can't open config file '%s'", filename);
@@ -205,7 +205,7 @@ void load_config(char *filename) {
             state = 0;
         } else if (!strcasecmp(argv[0],"service") && !strcasecmp(argv[1],"{") && argc == 2) {
             state = IN_SERVICE_BLOCK;
-            service = malloc(sizeof(service_t));
+            service = malloc(sizeof(Service));
         } else if ((state == IN_SMARTA_BLOCK) && !strcasecmp(argv[0],"name") && argc == 2) {
             smarta.name = zstrdup(argv[1]);
         } else if ((state == IN_SMARTA_BLOCK) && !strcasecmp(argv[0],"server") && argc == 2) {

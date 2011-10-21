@@ -16,15 +16,8 @@
 #include <stdlib.h>
 #include <string.h>
 
-#ifndef _WIN32
 #include <sys/select.h>
 #include <errno.h>
-#else
-#include <winsock2.h>
-#define ETIMEDOUT WSAETIMEDOUT
-#define ECONNRESET WSAECONNRESET
-#define ECONNABORTED WSAECONNABORTED
-#endif
 
 #include "util.h"
 #include "xmpp.h"

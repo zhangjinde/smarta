@@ -23,11 +23,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#ifndef _WIN32
 #include <stdint.h>
-#else
-#include "ostypes.h"
-#endif
 
 #include "xmpp.h"
 #include "util.h"
