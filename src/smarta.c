@@ -10,6 +10,9 @@
 #include <time.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
+#include <errno.h>
+#include <sys/uio.h>
 
 #include "ae.h"
 #include "sds.h"
@@ -184,9 +187,11 @@ void xmpp_read(aeEventLoop *el, int fd, void *privdata, int mask) {
     int nread;
     char buf[4096];
 
+    printf("xmpp_read is callded\n");
+
     XmppStream *stream = (XmppStream *)privdata;
 
-    nread = anetRead(fd, buf, 4096);
+    nread = read(fd, buf, 4096);
     if(nread <= 0) {
         //FIXME: DISCONNECTED.
         xmpp_log(LOG_DEBUG, "xmpp server is disconnected");
@@ -221,7 +226,7 @@ void xmpp_log(int level, const char *fmt, ...) {
 }
 
 static void before_sleep(struct aeEventLoop *eventLoop) {
-    //printf("sleep....\n");
+    printf("sleep....\n");
     //NOTHING
 }
 

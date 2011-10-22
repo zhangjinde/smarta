@@ -11,6 +11,14 @@
 #include "xmpp.h"
 #include "parser.h"
 
+static void _start_element(void *userdata,
+                           const XML_Char *name,
+                           const XML_Char **attrs);
+
+static void _end_element(void *userdata, const XML_Char *name);
+
+static void _characters(void *userdata, const XML_Char *s, int len);
+
 Parser *parser_new(parser_start_callback startcb,
                      parser_end_callback endcb,
                      parser_stanza_callback stanzacb,

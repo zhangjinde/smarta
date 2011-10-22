@@ -24,3 +24,4 @@ smarta.log
 src/.deps/*
 aclocal.m4
 src/.dirstamp
+.exrc

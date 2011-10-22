@@ -55,15 +55,3 @@ uint64_t time_stamp(void) {
 uint64_t time_elapsed(uint64_t t1, uint64_t t2) {
     return (uint64_t)(t2 - t1);
 }
-
-/** Disconnect the stream with a memory error.
- *  This is a convenience function used internally by various parts of
- *  the Strophe library for terminating the connection because of a 
- *  memory error.
- *
- *  @param conn a Strophe connection object
- */
-void disconnect_mem_error(XmppConn * const conn) {
-    xmpp_log(LOG_ERROR, "xmpp: Memory allocation error");
-    xmpp_disconnect(conn);
-}

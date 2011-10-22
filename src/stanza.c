@@ -307,7 +307,7 @@ static int _render_stanza_recursive(XmppStanza *stanza,
  *  @param buf a reference to a string pointer
  *  @param buflen a reference to a size_t
  *
- *  @return 0 on success (XMPP_EOK), and a number less than 0 on failure
+ *  @return 0 on success (XMPP_OK), and a number less than 0 on failure
  *      (XMPP_EMEM, XMPP_EINVOP)
  *
  *  @ingroup Stanza
@@ -352,7 +352,7 @@ int  XmppStanzao_text(XmppStanza *stanza,
     *buf = buffer;
     *buflen = ret;
 
-    return XMPP_EOK;
+    return XMPP_OK;
 }
 
 /** Set the name of a stanza.
@@ -360,7 +360,7 @@ int  XmppStanzao_text(XmppStanza *stanza,
  *  @param stanza a Strophe stanza object
  *  @param name a string with the name of the stanza
  *
- *  @return XMPP_EOK on success, a number less than 0 on failure (XMPP_EMEM,
+ *  @return XMPP_OK on success, a number less than 0 on failure (XMPP_EMEM,
  *      XMPP_EINVOP)
  *
  *  @ingroup Stanza
@@ -375,7 +375,7 @@ int xmpp_stanza_set_name(XmppStanza *stanza,
     stanza->type = XMPP_STANZA_TAG;
     stanza->data = strdup(name);
 
-    return XMPP_EOK;
+    return XMPP_OK;
 }
 
 /** Get the stanza name.
@@ -462,7 +462,7 @@ int xmpp_stanza_get_attributes(XmppStanza * const stanza,
  *  @param key a string with the attribute name
  *  @param value a string with the attribute value
  *
- *  @return XMPP_EOK (0) on success or a number less than 0 on failure
+ *  @return XMPP_OK (0) on success or a number less than 0 on failure
  *
  *  @ingroup Stanza
  */
@@ -484,7 +484,7 @@ int xmpp_stanza_set_attribute(XmppStanza * const stanza,
 
     hash_add(stanza->attributes, key, val);
 
-    return XMPP_EOK;
+    return XMPP_OK;
 }
 
 /** Set the stanza namespace.
@@ -494,7 +494,7 @@ int xmpp_stanza_set_attribute(XmppStanza * const stanza,
  *  @param stanza a Strophe stanza object
  *  @param ns a string with the namespace
  *
- *  @return XMPP_EOK (0) on success or a number less than 0 on failure
+ *  @return XMPP_OK (0) on success or a number less than 0 on failure
  *
  *  @ingroup Stanza
  */
@@ -511,7 +511,7 @@ int xmpp_stanza_set_ns(XmppStanza * const stanza,
  *  @param stanza a Strophe stanza object
  *  @param child the child stanza object
  *
- *  @return XMPP_EOK (0) on success or a number less than 0 on failure
+ *  @return XMPP_OK (0) on success or a number less than 0 on failure
  *
  *  @ingroup Stanza
  */
@@ -533,7 +533,7 @@ int xmpp_stanza_add_child(XmppStanza *stanza, XmppStanza *child)
 	child->prev = s;
     }
 
-    return XMPP_EOK;
+    return XMPP_OK;
 }
 
 /** Set the text data for a text stanza.
@@ -545,7 +545,7 @@ int xmpp_stanza_add_child(XmppStanza *stanza, XmppStanza *child)
  *  @param stanza a Strophe stanza object
  *  @param text a string with the text
  *
- *  @return XMPP_EOK (0) on success or a number less than zero on failure
+ *  @return XMPP_OK (0) on success or a number less than zero on failure
  *
  *  @ingroup Stanza
  */
@@ -559,7 +559,7 @@ int xmpp_stanza_set_text(XmppStanza *stanza,
     if (stanza->data) free(stanza->data);
     stanza->data = strdup(text);
 
-    return XMPP_EOK;
+    return XMPP_OK;
 }
 
 /** Set the text data for a text stanza.
@@ -572,7 +572,7 @@ int xmpp_stanza_set_text(XmppStanza *stanza,
  *  @param text a buffer with the text
  *  @param size the length of the text
  *
- *  @return XMPP_EOK (0) on success and a number less than 0 on failure
+ *  @return XMPP_OK (0) on success and a number less than 0 on failure
  * 
  *  @ingroup Stanza
  */
@@ -591,7 +591,7 @@ int xmpp_stanza_set_text_with_size(XmppStanza *stanza,
     memcpy(stanza->data, text, size);
     stanza->data[size] = 0;
 
-    return XMPP_EOK;
+    return XMPP_OK;
 }
 
 /** Get the 'id' attribute of the stanza object.
@@ -812,7 +812,7 @@ char *xmpp_stanza_get_text_ptr(XmppStanza * const stanza)
  *  @param stanza a Strophe stanza object
  *  @param id a string containing the 'id' value
  *
- *  @return XMPP_EOK (0) on success or a number less than 0 on failure
+ *  @return XMPP_OK (0) on success or a number less than 0 on failure
  *
  *  @ingroup Stanza
  */
@@ -829,7 +829,7 @@ int xmpp_stanza_set_id(XmppStanza * const stanza,
  *  @param stanza a Strophe stanza object
  *  @param type a string containing the 'type' value
  *
- *  @return XMPP_EOK (0) on success or a number less than 0 on failure
+ *  @return XMPP_OK (0) on success or a number less than 0 on failure
  *
  *  @ingroup Stanza
  */

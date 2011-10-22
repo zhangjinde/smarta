@@ -165,7 +165,8 @@ int dictExpand(dict *d, unsigned long size)
     /* Allocate the new hashtable and initialize all pointers to NULL */
     n.size = realsize;
     n.sizemask = realsize-1;
-    n.table = zcalloc(realsize*sizeof(dictEntry*));
+    //FIXME: later
+    n.table = calloc(1, realsize*sizeof(dictEntry*));
     n.used = 0;
 
     /* Is this the first initialization? If so it's not really a rehashing
@@ -193,7 +194,7 @@ int dictRehash(dict *d, int n) {
 
         /* Check if we already rehashed the whole table... */
         if (d->ht[0].used == 0) {
-            zfree(d->ht[0].table);
+            free(d->ht[0].table);
             d->ht[0] = d->ht[1];
             _dictReset(&d->ht[1]);
             d->rehashidx = -1;
@@ -333,7 +334,7 @@ static int dictGenericDelete(dict *d, const void *key, int nofree)
                     dictFreeEntryKey(d, he);
                     dictFreeEntryVal(d, he);
                 }
-                zfree(he);
+                free(he);
                 d->ht[table].used--;
                 return DICT_OK;
             }
@@ -367,13 +368,13 @@ int _dictClear(dict *d, dictht *ht)
             nextHe = he->next;
             dictFreeEntryKey(d, he);
             dictFreeEntryVal(d, he);
-            zfree(he);
+            free(he);
             ht->used--;
             he = nextHe;
         }
     }
     /* Free the table and the allocated cache structure */
-    zfree(ht->table);
+    free(ht->table);
     /* Re-initialize the table */
     _dictReset(ht);
     return DICT_OK; /* never fails */
@@ -384,7 +385,7 @@ void dictRelease(dict *d)
 {
     _dictClear(d,&d->ht[0]);
     _dictClear(d,&d->ht[1]);
-    zfree(d);
+    free(d);
 }
 
 dictEntry *dictFind(dict *d, const void *key)
@@ -470,7 +471,7 @@ void dictReleaseIterator(dictIterator *iter)
 {
     if (iter->safe && !(iter->index == -1 && iter->table == 0))
         iter->d->iterators--;
-    zfree(iter);
+    free(iter);
 }
 
 /* Return a random entry from the hash table. Useful to
@@ -684,7 +685,7 @@ static void _dictStringDestructor(void *privdata, void *key)
 {
     DICT_NOTUSED(privdata);
 
-    zfree(key);
+    free(key);
 }
 
 dictType dictTypeHeapStringCopyKey = {
