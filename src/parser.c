@@ -91,6 +91,8 @@ static void _start_element(void *userdata,
     Parser *parser = (Parser *)userdata;
     XmppStanza *child;
 
+    printf("start_element: %s\n", name);
+
     if (parser->depth == 0) {
         /* notify the owner */
         if (parser->startcb)
@@ -105,9 +107,6 @@ static void _start_element(void *userdata,
 	} else if (!parser->stanza) {
 	    /* starting a new toplevel stanza */
 	    parser->stanza = xmpp_stanza_new();
-	    if (!parser->stanza) {
-		/* FIXME: can't allocate, disconnect */
-	    }
 	    xmpp_stanza_set_name(parser->stanza, name);
 	    _set_attributes(parser->stanza, attrs);
 	} else {
@@ -136,6 +135,8 @@ static void _start_element(void *userdata,
 static void _end_element(void *userdata, const XML_Char *name) {
     Parser *parser = (Parser *)userdata;
 
+    printf("end_element: %s\n", name);
+
     parser->depth--;
 
     if (parser->depth == 0) {
@@ -147,11 +148,18 @@ static void _end_element(void *userdata, const XML_Char *name) {
 	    /* we're finishing a child stanza, so set current to the parent */
 	    parser->stanza = parser->stanza->parent;
 	} else {
-            if (parser->stanzacb)
-                parser->stanzacb(parser->stanza,
-                                 parser->userdata);
-	    xmpp_stanza_release(parser->stanza);
+        if (parser->stanzacb) {
+            parser->stanzacb(parser->stanza, parser->userdata);
+        }
+        if(parser->stanza == NULL) {
+            printf("assert failure: stanza is null!\n");
+        }
+        printf("before release parser stanza\n");
+        if(parser->stanza != NULL) {
+            xmpp_stanza_release(parser->stanza);
+        }
 	    parser->stanza = NULL;
+        printf("release parser stanza\n");
 	}
     }
 }

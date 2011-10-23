@@ -105,7 +105,7 @@ void xmpp_iq_new();
 void xmpp_presence_new();
 */
 
-int XmppStanzao_text(XmppStanza *stanza,
+int XmppStanzao_text(const XmppStanza *stanza,
     char ** const buf, size_t * const buflen);
 
 #endif /* _SMARTA_STANZA_H__ */

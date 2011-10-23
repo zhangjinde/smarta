@@ -14,9 +14,9 @@ static void xmpp_stream_starttls(XmppStream *stream);
 
 static XmppStanza *_make_starttls(XmppStream *stream);
 
-static void xmpp_stream_auth(XmppStream *stream, XmppStanza *mechanisms);
+static void xmpp_stream_auth(XmppStream *const stream, XmppStanza *mechanisms);
 
-static XmppStanza *_make_sasl_auth(XmppStream *stream, const char *mechanism);
+static XmppStanza *_make_sasl_auth(const char *mechanism);
 
 static void xmpp_stream_bind(XmppStream *stream, XmppStanza *bind); 
 
@@ -27,7 +27,7 @@ static void _on_stream_start(
     void * const userdata);
 
 static void _on_stream_stanza(
-    XmppStanza *stanza,
+    XmppStanza * const stanza,
     void * const userdata);
 
 static void _on_stream_end(
@@ -120,7 +120,7 @@ static void _on_stream_end(char *name, void * const userdata) {
     //conn_disconnect_clean(conn);
 }
 
-static void _on_stream_stanza(XmppStanza *stanza, void * const userdata) {
+static void _on_stream_stanza(XmppStanza * const stanza, void * const userdata) {
     XmppStream *stream = (XmppStream *)userdata;
     char *buf;
     size_t len;
@@ -139,8 +139,15 @@ static void _on_stream_stanza(XmppStanza *stanza, void * const userdata) {
     if(!strcasecmp(name, "stream:features")) {
         mechanisms = xmpp_stanza_get_child_by_name(stanza, "mechanisms");
         if(mechanisms) {
-            //TODO: send plain auth.
+            xmpp_stanza_new();
+            if(stream->parser->stanza == NULL) {
+                printf("stanza is null before stream_auth\n");
+            }
             xmpp_stream_auth(stream, mechanisms);
+            if(stream->parser->stanza == NULL) {
+                printf("stanza is null after stream_auth\n");
+            }
+            printf("auth sent\n");
             stream->state = XMPP_STREAM_SASL_AUTHENTICATING;
             return;
         }
@@ -194,14 +201,14 @@ void xmpp_send_raw_string(XmppStream *stream, char *fmt, ...) {
 	xmpp_vsnprintf(bigbuf, len, fmt, ap);
 	va_end(ap);
 
-	xmpp_log(LOG_DEBUG, "conn: SENT: %s", bigbuf);
+	xmpp_log(LOG_DEBUG, "xmpp: SENT: %s", bigbuf);
 
 	/* len - 1 so we don't send trailing \0 */
 	xmpp_send_raw(stream, bigbuf, len - 1);
 
 	free(bigbuf);
     } else {
-	xmpp_log(LOG_DEBUG, "conn: SENT: %s", buf);
+	xmpp_log(LOG_DEBUG, "xmpp: SENT: %s", buf);
 
 	xmpp_send_raw(stream, buf, len);
     }
@@ -274,28 +281,41 @@ static XmppStanza *_make_starttls(XmppStream *stream) {
     return starttls;
 }
 
-static void xmpp_stream_auth(XmppStream *stream, XmppStanza *mechanisms) {
+static void xmpp_stream_auth(XmppStream * const stream, XmppStanza *mechanisms) {
     char *str;
     XmppStanza *auth, *authdata;
+    if(stream->parser->stanza == NULL) {
+        printf("fuck null 0\n");
 
-    auth = _make_sasl_auth(stream, "PLAIN");
+    }
+    auth = _make_sasl_auth("PLAIN");
+    if(stream->parser->stanza == NULL) {
+        printf("fuck null 1\n");
+
+    }
+
     authdata = xmpp_stanza_new();
+
     str = sasl_plain(stream->jid, stream->pass);
     xmpp_stanza_set_text(authdata, str);
+    free(str);
+
     xmpp_stanza_add_child(auth, authdata);
+    xmpp_stanza_release(authdata);
+
+
     xmpp_send(stream, auth);
 
-    free(str);
-    xmpp_stanza_release(authdata);
+    if(stream->parser->stanza == NULL) {
+        printf("fuck null 2\n");
+    }
+
     xmpp_stanza_release(auth);
+    printf("auth stanza is released\n");
 }
 
-static XmppStanza *_make_sasl_auth(XmppStream *stream,
-				 const char *mechanism) {
-    XmppStanza *auth;
-
-    /* build auth stanza */
-    auth = xmpp_stanza_new();
+static XmppStanza *_make_sasl_auth(const char *mechanism) {
+    XmppStanza *auth = xmpp_stanza_new();
 	xmpp_stanza_set_name(auth, "auth");
 	xmpp_stanza_set_ns(auth, XMPP_NS_SASL);
 	xmpp_stanza_set_attribute(auth, "mechanism", mechanism);

@@ -187,7 +187,7 @@ int main(int argc, char **argv) {
 
 void xmpp_read(aeEventLoop *el, int fd, void *privdata, int mask) {
     int nread;
-    char buf[4096];
+    char buf[4096] = {0};
 
     printf("xmpp_read is callded\n");
 
@@ -199,7 +199,7 @@ void xmpp_read(aeEventLoop *el, int fd, void *privdata, int mask) {
         xmpp_log(LOG_DEBUG, "xmpp server is disconnected");
         exit(1);
     }
-    xmpp_log(LOG_DEBUG, "RECV %d data: %s \n", nread, buf);
+    printf("nread: %d, data: %s\n", nread, buf);
     xmpp_stream_feed(stream, buf, nread);
 }
 

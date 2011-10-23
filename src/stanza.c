@@ -37,12 +37,10 @@
  *
  *  @ingroup Stanza
  */
-XmppStanza *xmpp_stanza_new()
-{
+XmppStanza *xmpp_stanza_new() {
     XmppStanza *stanza;
 
     stanza = malloc(sizeof(XmppStanza));
-    if (stanza != NULL) {
 	stanza->ref = 1;
 	stanza->type = XMPP_STANZA_UNKNOWN;
 	stanza->prev = NULL;
@@ -51,7 +49,6 @@ XmppStanza *xmpp_stanza_new()
 	stanza->parent = NULL;
 	stanza->data = NULL;
 	stanza->attributes = NULL;
-    }
 
     return stanza; 
 }
@@ -312,7 +309,7 @@ static int _render_stanza_recursive(XmppStanza *stanza,
  *
  *  @ingroup Stanza
  */
-int  XmppStanzao_text(XmppStanza *stanza,
+int  XmppStanzao_text(const XmppStanza *stanza,
 			 char ** const buf,
 			 size_t * const buflen)
 {
