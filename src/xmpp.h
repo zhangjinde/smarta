@@ -205,11 +205,11 @@ struct _XmppStreamError {
     XmppStanza *stanza;
 }; 
 
-//char *xmpp_conn_get_jid(XmppConn *conn);
+char *xmpp_stream_get_jid(XmppStream *stream);
+void xmpp_stream_set_jid(XmppStream *stream, const char *jid);
+char *xmpp_stream_get_pass(XmppStream *stream);
+void xmpp_stream_set_pass(XmppStream *stream, const char *pass);
 //char *xmpp_conn_get_bound_jid(XmppConn *conn);
-//void xmpp_conn_set_jid(XmppConn * const conn, const char * const jid);
-//char *xmpp_conn_get_pass(XmppConn *conn);
-//void xmpp_conn_set_pass(XmppConn * const conn, const char * const pass);
 
 XmppStream *xmpp_stream_new(int fd);
 

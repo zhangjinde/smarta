@@ -167,6 +167,8 @@ int main(int argc, char **argv) {
     xmpp_log(LOG_DEBUG, "sock_connect to %s, returned %d", domain, fd);
     /* create stream */
     stream = xmpp_stream_new(fd);
+    xmpp_stream_set_jid(stream, smarta.name);
+    xmpp_stream_set_pass(stream, smarta.apikey);
     
     aeCreateFileEvent(smarta.el, fd, AE_READABLE, xmpp_read, stream); //| AE_WRITABLE
 

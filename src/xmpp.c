@@ -5,9 +5,22 @@
 #include <string.h>
 
 #include "anet.h"
+#include "sasl.h"
 #include "xmpp.h"
 #include "stanza.h"
 #include "util.h"
+
+static void xmpp_stream_starttls(XmppStream *stream);
+
+static XmppStanza *_make_starttls(XmppStream *stream);
+
+static void xmpp_stream_auth(XmppStream *stream, XmppStanza *mechanisms);
+
+static XmppStanza *_make_sasl_auth(XmppStream *stream, const char *mechanism);
+
+static void xmpp_stream_bind(XmppStream *stream, XmppStanza *bind); 
+
+static void xmpp_stream_session(XmppStream *stream);
 
 static void _on_stream_start(
     char *name, char **attrs, 
@@ -37,6 +50,21 @@ XmppStream *xmpp_stream_new(int fd) {
           stream);
 
     return stream;
+}
+
+char *xmpp_stream_get_jid(XmppStream *stream) {
+    return stream->jid;
+}
+
+void xmpp_stream_set_jid(XmppStream *stream, const char *jid) {
+    stream->jid = strdup(jid);
+}
+
+char *xmpp_stream_get_pass(XmppStream *stream) {
+    return stream->pass;
+}
+void xmpp_stream_set_pass(XmppStream *stream, const char *pass) {
+    stream->pass = strdup(pass);
 }
 
 int xmpp_stream_open(XmppStream *stream) {
@@ -69,7 +97,7 @@ static void _on_stream_start(char *name, char **attrs,
 
     if (strcmp(name, "stream:stream") != 0) {
         printf("name = %s\n", name);
-        xmpp_log(LOG_ERROR, "conn: Server did not open valid stream.");
+        xmpp_log(LOG_ERROR, "STREAM: Server did not open valid stream.");
         //TODO:fix me
         //xmpp_conn_disconnect(stream->conn);
     } else {
@@ -84,8 +112,7 @@ static void _on_stream_start(char *name, char **attrs,
     }
 }
 
-static void _on_stream_end(char *name,
-                               void * const userdata) {
+static void _on_stream_end(char *name, void * const userdata) {
     //XmppStream *stream = (XmppStream *)userdata;
 
     /* stream is over */
@@ -93,17 +120,53 @@ static void _on_stream_end(char *name,
     //conn_disconnect_clean(conn);
 }
 
-static void _on_stream_stanza(XmppStanza *stanza,
-                                  void * const userdata) {
-    //XmppStream *stream = (XmppStream *)userdata;
+static void _on_stream_stanza(XmppStanza *stanza, void * const userdata) {
+    XmppStream *stream = (XmppStream *)userdata;
     char *buf;
     size_t len;
+    char *ns, *name, *type;
+    XmppStanza *mechanisms, *bind, *session;
 
     if (XmppStanzao_text(stanza, &buf, &len) == 0) {
         printf("RECV: %s\n", buf);
         xmpp_log(LOG_DEBUG, "xmpp: RECV: %s", buf);
         free(buf);
     }
+    ns = xmpp_stanza_get_ns(stanza);
+    name = xmpp_stanza_get_name(stanza);
+    type = xmpp_stanza_get_type(stanza);
+    printf("ns: %s, name: %s\n", ns, name);
+    if(!strcasecmp(name, "stream:features")) {
+        mechanisms = xmpp_stanza_get_child_by_name(stanza, "mechanisms");
+        if(mechanisms) {
+            //TODO: send plain auth.
+            xmpp_stream_auth(stream, mechanisms);
+            stream->state = XMPP_STREAM_SASL_AUTHENTICATING;
+            return;
+        }
+        bind = xmpp_stanza_get_child_by_name(stanza, "bind");
+        if(bind) {
+            //TODO: 
+            xmpp_stream_bind(stream, bind);
+            return;
+        }
+        session = xmpp_stanza_get_child_by_name(stanza, "session");
+        if(session) {
+            //TODO: send session
+            xmpp_stream_session(stream);
+            return;
+        }
+        
+        return;
+    } else if(strcmp(name, "proceed")) {
+        //TODO: TLS PROCEED
+
+    }else if(strcmp(name, "success") == 0) {
+        printf("sasl auth success\n");
+        //reopen stream
+        xmpp_stream_open(stream);
+    }
+    //handle features
 
     //handler_fire_stanza(conn, stanza);
 }
@@ -191,6 +254,107 @@ static void _log_open_tag(char **attrs) {
     if (len < 0) return;
 
     xmpp_log(LOG_DEBUG, "xmpp: RECV: %s", buf);
+}
+
+static void xmpp_stream_starttls(XmppStream *stream) {
+    XmppStanza *startTLS;
+    startTLS = _make_starttls(stream);
+    xmpp_send(stream, startTLS);
+    xmpp_stanza_release(startTLS);
+}
+
+static XmppStanza *_make_starttls(XmppStream *stream) {
+    XmppStanza *starttls;
+    /* build start stanza */
+    starttls = xmpp_stanza_new();
+    if (starttls) {
+        xmpp_stanza_set_name(starttls, "starttls");
+        xmpp_stanza_set_ns(starttls, XMPP_NS_TLS);
+    }
+    return starttls;
+}
+
+static void xmpp_stream_auth(XmppStream *stream, XmppStanza *mechanisms) {
+    char *str;
+    XmppStanza *auth, *authdata;
+
+    auth = _make_sasl_auth(stream, "PLAIN");
+    authdata = xmpp_stanza_new();
+    str = sasl_plain(stream->jid, stream->pass);
+    xmpp_stanza_set_text(authdata, str);
+    xmpp_stanza_add_child(auth, authdata);
+    xmpp_send(stream, auth);
+
+    free(str);
+    xmpp_stanza_release(authdata);
+    xmpp_stanza_release(auth);
+}
+
+static XmppStanza *_make_sasl_auth(XmppStream *stream,
+				 const char *mechanism) {
+    XmppStanza *auth;
+
+    /* build auth stanza */
+    auth = xmpp_stanza_new();
+	xmpp_stanza_set_name(auth, "auth");
+	xmpp_stanza_set_ns(auth, XMPP_NS_SASL);
+	xmpp_stanza_set_attribute(auth, "mechanism", mechanism);
+    return auth;
+}
+
+static void xmpp_stream_bind(XmppStream *stream, XmppStanza *bind) {
+    //FIXME: add timer
+    XmppStanza *iq, *res, *text;
+
+    //iq element
+	iq = xmpp_stanza_new();
+	xmpp_stanza_set_name(iq, "iq");
+	xmpp_stanza_set_type(iq, "set");
+	xmpp_stanza_set_id(iq, "_xmpp_bind1");
+
+    //bind element
+	bind = xmpp_stanza_copy(bind);
+
+    //res element
+    res = xmpp_stanza_new();
+    xmpp_stanza_set_name(res, "resource");
+
+    //res text
+    text = xmpp_stanza_new();
+    xmpp_stanza_set_text(text, "smarta");
+
+    xmpp_stanza_add_child(res, text);
+    xmpp_stanza_add_child(bind, res);
+	xmpp_stanza_add_child(iq, bind);
+
+	/* send bind request */
+	xmpp_send(stream, iq);
+
+	xmpp_stanza_release(text);
+	xmpp_stanza_release(res);
+	xmpp_stanza_release(bind);
+	xmpp_stanza_release(iq);
+}
+
+static void xmpp_stream_session(XmppStream *stream) {
+    XmppStanza *iq, *session;
+
+    iq = xmpp_stanza_new();
+
+    xmpp_stanza_set_name(iq, "iq");
+    xmpp_stanza_set_type(iq, "set");
+    xmpp_stanza_set_id(iq, "_xmpp_session1");
+
+    session = xmpp_stanza_new();
+    xmpp_stanza_set_name(session, "session");
+    xmpp_stanza_set_ns(session, XMPP_NS_SESSION);
+
+    xmpp_stanza_add_child(iq, session);
+
+    xmpp_send(stream, iq);
+
+    xmpp_stanza_release(session);
+    xmpp_stanza_release(iq);
 }
 
 static char *_get_stream_attribute(char **attrs, char *name) {

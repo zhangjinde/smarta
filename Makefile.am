@@ -21,7 +21,7 @@ libexpat_a_SOURCES=expat/lib/xmlparse.c expat/lib/xmltok.c expat/lib/xmlrole.c
 noinst_PROGRAMS = smarta
 smarta_SOURCES = src/smarta.c \
 	src/hash.c src/xmpp.c src/jid.c \
-    src/md5.c src/sasl.c src/sha1.c \
+    src/md5.c src/sha1.c src/sasl.c \
 	src/snprintf.c src/stanza.c src/dict.c \
 	src/util.c src/parser.c \
     src/sds.c src/adlist.c src/ae.c src/anet.c
