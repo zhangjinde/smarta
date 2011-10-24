@@ -126,13 +126,15 @@ static void _on_stream_stanza(XmppStanza * const stanza, void * const userdata) 
     char *ns, *name, *type;
     XmppStanza *mechanisms, *bind, *session;
 
-    //if (xmpp_stanza_to_text(stanza, &buf, &len) == 0) {
-    //    xmpp_log(LOG_DEBUG, "XMPP RECV: %s", buf);
-    //    free(buf);
-    //}
+    if (xmpp_stanza_to_text(stanza, &buf, &len) == 0) {
+        xmpp_log(LOG_DEBUG, "XMPP RECV: %s", buf);
+        free(buf);
+    }
+    
     ns = xmpp_stanza_get_ns(stanza);
     name = xmpp_stanza_get_name(stanza);
     type = xmpp_stanza_get_type(stanza);
+    printf("ns: %s, name: %s\n", ns, name);
     xmpp_log(LOG_DEBUG, "ns: %s, name: %s\n", ns, name);
     if(strcmp(name, "stream:features") == 0) {
         mechanisms = xmpp_stanza_get_child_by_name(stanza, "mechanisms");
@@ -220,7 +222,8 @@ void xmpp_send(XmppStream *stream, XmppStanza *stanza) {
     int ret;
 
     if (stream->state == XMPP_STREAM_DISCONNECTED) return;
-
+    
+    //FIXME:later
 	if ((ret = xmpp_stanza_to_text(stanza, &buf, &len)) == 0) {
 	    xmpp_send_raw(stream, buf, len);
 	    xmpp_log(LOG_DEBUG, "XMPP SENT %d: %s", len, buf);
@@ -291,7 +294,6 @@ static void xmpp_stream_auth(XmppStream * const stream, XmppStanza *mechanisms) 
     xmpp_stanza_release(authdata);
 
     xmpp_send(stream, auth);
-
 
     xmpp_stanza_release(auth);
     printf("auth stanza is released\n");

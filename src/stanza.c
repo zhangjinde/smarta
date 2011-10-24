@@ -3,20 +3,17 @@
 **
 ** Copyright (C) 2005-2009 Collecta, Inc. 
 **
-**  This software is provided AS-IS with no warranty, either express
-**  or implied.
+** This software is provided AS-IS with no warranty, either express
+** or implied.
 **
-**  This software is distributed under license and may not be copied,
-**  modified or distributed except as expressly authorized under the
-**  terms of the license contained in the file LICENSE.txt in this
-**  distribution.
+** This software is distributed under license and may not be copied,
+** modified or distributed except as expressly authorized under the
+** terms of the license contained in the file LICENSE.txt in this
+** distribution.
 */
 
-/** @file
- *  Stanza creation and manipulation.
- */
-
-/** @defgroup Stanza Stanza creation and manipulation
+/*
+** @defgroup Stanza Stanza creation and manipulation
  */
 
 #include <stdio.h>
@@ -64,8 +61,7 @@ XmppStanza *xmpp_stanza_new() {
  *
  *  @ingroup Stanza
  */
-XmppStanza *xmpp_stanza_clone(XmppStanza * const stanza)
-{
+XmppStanza *xmpp_stanza_clone(XmppStanza * const stanza) {
     //XmppStanza *child;
 
     stanza->ref++;
@@ -85,8 +81,7 @@ XmppStanza *xmpp_stanza_clone(XmppStanza * const stanza)
  *
  *  @ingroup Stanza
  */
-XmppStanza *xmpp_stanza_copy(const XmppStanza * const stanza)
-{
+XmppStanza *xmpp_stanza_copy(const XmppStanza * const stanza) {
     XmppStanza *copy, *child, *copychild, *tail;
     hash_iterator_t *iter;
     const char *key;
