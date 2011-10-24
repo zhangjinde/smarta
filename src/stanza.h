@@ -42,7 +42,7 @@ int xmpp_stanza_is_tag(XmppStanza * const stanza);
 
 /** marshall a stanza into text for transmission or display **/
 int xmpp_stanza_to_text(XmppStanza *stanza, 
-			char ** const buf, size_t * const buflen);
+    char ** const buf, size_t * const buflen);
 
 XmppStanza *xmpp_stanza_get_children(XmppStanza * const stanza);
 XmppStanza *xmpp_stanza_get_child_by_name(XmppStanza * const stanza, 

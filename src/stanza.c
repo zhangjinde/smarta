@@ -244,21 +244,21 @@ static int _render_stanza_recursive(XmppStanza *stanza,
     if (stanza->type == XMPP_STANZA_TEXT) {
 	if (!stanza->data) return XMPP_EINVOP;
 
-	ret = xmpp_snprintf(ptr, left, "%s", stanza->data);
+	ret = snprintf(ptr, left, "%s", stanza->data);
 	if (ret < 0) return XMPP_EMEM;
 	_render_update(&written, buflen, ret, &left, &ptr);
     } else { /* stanza->type == XMPP_STANZA_TAG */
 	if (!stanza->data) return XMPP_EINVOP;
 
 	/* write begining of tag and attributes */
-	ret = xmpp_snprintf(ptr, left, "<%s", stanza->data);
+	ret = snprintf(ptr, left, "<%s", stanza->data);
 	if (ret < 0) return XMPP_EMEM;
 	_render_update(&written, buflen, ret, &left, &ptr);
 
 	if (stanza->attributes && hash_num_keys(stanza->attributes) > 0) {
 	    iter = hash_iter_new(stanza->attributes);
 	    while ((key = hash_iter_next(iter))) {
-		ret = xmpp_snprintf(ptr, left, " %s=\"%s\"", key,
+		ret = snprintf(ptr, left, " %s=\"%s\"", key,
 			       (char *)hash_get(stanza->attributes, key));
 		if (ret < 0) return XMPP_EMEM;
 		_render_update(&written, buflen, ret, &left, &ptr);
@@ -268,14 +268,14 @@ static int _render_stanza_recursive(XmppStanza *stanza,
 
 	if (!stanza->children) {
 	    /* write end if singleton tag */
-	    ret = xmpp_snprintf(ptr, left, "/>");
+	    ret = snprintf(ptr, left, "/>");
 	    if (ret < 0) return XMPP_EMEM;
 	    _render_update(&written, buflen, ret, &left, &ptr);
 	} else {
 	    /* this stanza has child stanzas */
 
 	    /* write end of start tag */
-	    ret = xmpp_snprintf(ptr, left, ">");
+	    ret = snprintf(ptr, left, ">");
 	    if (ret < 0) return XMPP_EMEM;
 	    _render_update(&written, buflen, ret, &left, &ptr);
 	    
@@ -291,7 +291,7 @@ static int _render_stanza_recursive(XmppStanza *stanza,
 	    }
 
 	    /* write end tag */
-	    ret = xmpp_snprintf(ptr, left, "</%s>", stanza->data);
+	    ret = snprintf(ptr, left, "</%s>", stanza->data);
 	    if (ret < 0) return XMPP_EMEM;
 	    
 	    _render_update(&written, buflen, ret, &left, &ptr);
@@ -316,7 +316,8 @@ static int _render_stanza_recursive(XmppStanza *stanza,
  *
  *  @ingroup Stanza
  */
-int xmpp_stanza_to_text(XmppStanza *stanza,
+int xmpp_stanza_to_text(
+    XmppStanza *stanza,
     char ** const buf,
     size_t * const buflen) {
 
@@ -327,11 +328,6 @@ int xmpp_stanza_to_text(XmppStanza *stanza,
     /* allocate a default sized buffer and attempt to render */
     length = 10240;
     buffer = malloc(length);
-    if (!buffer) {
-        *buf = NULL;
-        *buflen = 0;
-        return XMPP_EMEM;
-    }
 
     ret = _render_stanza_recursive(stanza, buffer, length);
     printf("1 recursive stanza: %d, ret: %d\n", stanza, ret);
@@ -339,12 +335,6 @@ int xmpp_stanza_to_text(XmppStanza *stanza,
 
     if (ret > length - 1) {
         tmp = realloc(buffer, ret + 1);
-        if (!tmp) {
-            free(buffer);
-            *buf = NULL;
-            *buflen = 0;
-            return XMPP_EMEM;
-        }
         length = ret + 1;
         buffer = tmp;
 

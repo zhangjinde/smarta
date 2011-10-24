@@ -170,6 +170,7 @@ int main(int argc, char **argv) {
     stream = xmpp_stream_new(fd);
     xmpp_stream_set_jid(stream, smarta.name);
     xmpp_stream_set_pass(stream, smarta.apikey);
+    smarta.stream = stream;
     
     aeCreateFileEvent(smarta.el, fd, AE_READABLE, xmpp_read, stream); //| AE_WRITABLE
 

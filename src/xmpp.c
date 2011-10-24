@@ -22,15 +22,15 @@ static void xmpp_stream_bind(XmppStream *stream, XmppStanza *bind);
 
 static void xmpp_stream_session(XmppStream *stream);
 
-static void _on_stream_start(
+static void _handle_stream_start(
     char *name, char **attrs, 
     void * const userdata);
 
-static void _on_stream_stanza(
+static void _handle_stream_stanza(
     XmppStanza * const stanza,
     void * const userdata);
 
-static void _on_stream_end(
+static void _handle_stream_end(
     char *name,
     void * const userdata);
 
@@ -44,9 +44,9 @@ XmppStream *xmpp_stream_new(int fd) {
 
     stream->fd = fd;
     stream->state = XMPP_STREAM_CONNECTING;
-    stream->parser = parser_new(_on_stream_start,
-          _on_stream_end,
-          _on_stream_stanza,
+    stream->parser = parser_new(_handle_stream_start,
+          _handle_stream_end,
+          _handle_stream_stanza,
           stream);
 
     return stream;
@@ -89,7 +89,7 @@ int xmpp_stream_feed(XmppStream *stream, char *buffer, int len) {
     return parser_feed(stream->parser, buffer, len);
 }
 
-static void _on_stream_start(char *name, char **attrs, 
+static void _handle_stream_start(char *name, char **attrs, 
     void * const userdata) {
 
     char *id;
@@ -112,14 +112,14 @@ static void _on_stream_start(char *name, char **attrs,
     }
 }
 
-static void _on_stream_end(char *name, void * const userdata) {
+static void _handle_stream_end(char *name, void * const userdata) {
     //XmppStream *stream = (XmppStream *)userdata;
     /* stream is over */
     xmpp_log(LOG_DEBUG, "XMPP RECV: </stream:stream>");
     //conn_disconnect_clean(conn);
 }
 
-static void _on_stream_stanza(XmppStanza * const stanza, void * const userdata) {
+static void _handle_stream_stanza(XmppStanza * const stanza, void * const userdata) {
     XmppStream *stream = (XmppStream *)userdata;
     char *buf;
     size_t len;
@@ -128,10 +128,10 @@ static void _on_stream_stanza(XmppStanza * const stanza, void * const userdata) 
 
     printf("before to_text: %d\n", stanza);
 
-    //if (xmpp_stanza_to_text(stanza, &buf, &len) == 0) {
-    //    xmpp_log(LOG_DEBUG, "XMPP RECV: %s", buf);
-    //    free(buf);
-    //}
+    if (xmpp_stanza_to_text(stanza, &buf, &len) == 0) {
+        xmpp_log(LOG_DEBUG, "XMPP RECV: %s", buf);
+        free(buf);
+    }
     printf("after to_text: %d\n", stanza);
     
     ns = xmpp_stanza_get_ns(stanza);
@@ -142,7 +142,7 @@ static void _on_stream_stanza(XmppStanza * const stanza, void * const userdata) 
     if(strcmp(name, "stream:features") == 0) {
         mechanisms = xmpp_stanza_get_child_by_name(stanza, "mechanisms");
         if(mechanisms) {
-            xmpp_stream_auth(stream, mechanisms);
+            //xmpp_stream_auth(stream, mechanisms);
             xmpp_log(LOG_DEBUG, "auth sent\n");
             stream->state = XMPP_STREAM_SASL_AUTHENTICATING;
             return;
@@ -181,7 +181,7 @@ void xmpp_send_raw_string(XmppStream *stream, char *fmt, ...) {
     char *bigbuf;
 
     va_start(ap, fmt);
-    len = xmpp_vsnprintf(buf, 1024, fmt, ap);
+    len = vsnprintf(buf, 1024, fmt, ap);
     va_end(ap);
 
     if (len >= 1024) {
@@ -194,7 +194,7 @@ void xmpp_send_raw_string(XmppStream *stream, char *fmt, ...) {
 	    return;
 	}
 	va_start(ap, fmt);
-	xmpp_vsnprintf(bigbuf, len, fmt, ap);
+	vsnprintf(bigbuf, len, fmt, ap);
 	va_end(ap);
 
 	xmpp_log(LOG_DEBUG, "XMPP SENT: %s", bigbuf);
@@ -216,7 +216,6 @@ void xmpp_send_raw(XmppStream *stream,
     if (stream->state == XMPP_STREAM_DISCONNECTED) return;
 
     anetWrite(stream->fd, data, len);
-
 }
 
 void xmpp_send(XmppStream *stream, XmppStanza *stanza) {
@@ -245,19 +244,19 @@ static void _log_open_tag(char **attrs) {
     if (!attrs) return;
 
     pos = 0;
-    len = xmpp_snprintf(buf, 4096, "<stream:stream");
+    len = snprintf(buf, 4096, "<stream:stream");
     if (len < 0) return;
     
     pos += len;
     
     for (i = 0; attrs[i]; i += 2) {
-        len = xmpp_snprintf(&buf[pos], 4096 - pos, " %s='%s'",
+        len = snprintf(&buf[pos], 4096 - pos, " %s='%s'",
                             attrs[i], attrs[i+1]);
         if (len < 0) return;
         pos += len;
     }
 
-    len = xmpp_snprintf(&buf[pos], 4096 - pos, ">");
+    len = snprintf(&buf[pos], 4096 - pos, ">");
     if (len < 0) return;
 
     xmpp_log(LOG_DEBUG, "XMPP RECV: %s", buf);

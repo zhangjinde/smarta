@@ -2,6 +2,7 @@
 #define _SMARTA_H_
 
 #include "adlist.h"
+#include "xmpp.h"
 #include "sds.h"
 #include "ae.h"
 
@@ -30,6 +31,7 @@ typedef struct _Smarta {
     aeEventLoop *el;
     char *logfile;
     int verbosity;
+    XmppStream *stream;
 } Smarta;
 
 #endif

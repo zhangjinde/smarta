@@ -193,9 +193,6 @@ struct _XmppStream {
 
 void xmpp_log(int level, const char *fmt, ...);
 
-/* replacement snprintf and vsnprintf */
-int xmpp_snprintf (char *str, size_t count, char *fmt, ...);
-
 int xmpp_vsnprintf (char *str, size_t count, char *fmt, va_list arg);
 
 /* connection */
