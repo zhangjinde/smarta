@@ -82,7 +82,4 @@ int xmpp_stanza_set_id(XmppStanza * const stanza,
 int xmpp_stanza_set_type(XmppStanza * const stanza, 
 			 const char * const type);
 
-int XmppStanzao_text(const XmppStanza *stanza,
-    char ** const buf, size_t * const buflen);
-
 #endif /* _SMARTA_STANZA_H__ */

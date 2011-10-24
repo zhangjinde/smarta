@@ -126,11 +126,10 @@ static void _on_stream_stanza(XmppStanza * const stanza, void * const userdata) 
     char *ns, *name, *type;
     XmppStanza *mechanisms, *bind, *session;
 
-    if (XmppStanzao_text(stanza, &buf, &len) == 0) {
-        xmpp_log(LOG_DEBUG, "RECV: %s\n", buf);
-        xmpp_log(LOG_DEBUG, "XMPP RECV: %s", buf);
-        free(buf);
-    }
+    //if (xmpp_stanza_to_text(stanza, &buf, &len) == 0) {
+    //    xmpp_log(LOG_DEBUG, "XMPP RECV: %s", buf);
+    //    free(buf);
+    //}
     ns = xmpp_stanza_get_ns(stanza);
     name = xmpp_stanza_get_name(stanza);
     type = xmpp_stanza_get_type(stanza);
@@ -138,18 +137,7 @@ static void _on_stream_stanza(XmppStanza * const stanza, void * const userdata) 
     if(strcmp(name, "stream:features") == 0) {
         mechanisms = xmpp_stanza_get_child_by_name(stanza, "mechanisms");
         if(mechanisms) {
-            printf("location1 of stream->parser:%d\n", stream->parser);
-            //printf("location1 of stream->parser->stanza: %d\n", stream->parser->stanza);
-            xmpp_stanza_new();
-            printf("location2 of stream->parser:%d\n", stream->parser);
-            printf("location2 of stream->parser->stanza: %d\n", stream->parser->stanza);
-            if(stream->parser->stanza == NULL) {
-                printf("stanza is null before stream_auth\n");
-            }
             xmpp_stream_auth(stream, mechanisms);
-            if(stream->parser->stanza == NULL) {
-                printf("stanza is null after stream_auth\n");
-            }
             xmpp_log(LOG_DEBUG, "auth sent\n");
             stream->state = XMPP_STREAM_SASL_AUTHENTICATING;
             return;
@@ -233,9 +221,9 @@ void xmpp_send(XmppStream *stream, XmppStanza *stanza) {
 
     if (stream->state == XMPP_STREAM_DISCONNECTED) return;
 
-	if ((ret = XmppStanzao_text(stanza, &buf, &len)) == 0) {
+	if ((ret = xmpp_stanza_to_text(stanza, &buf, &len)) == 0) {
 	    xmpp_send_raw(stream, buf, len);
-	    xmpp_log(LOG_DEBUG, "conn: SENT: %s", buf);
+	    xmpp_log(LOG_DEBUG, "XMPP SENT %d: %s", len, buf);
 	    free(buf);
 	}
 }

@@ -41,7 +41,7 @@ XmppStanza *xmpp_stanza_new() {
     XmppStanza *stanza;
 
     stanza = malloc(sizeof(XmppStanza));
-    printf("stanza memory location: %d\n", stanza);
+    printf("stanza location: %d\n", stanza);
 
 	stanza->ref = 1;
 	stanza->type = XMPP_STANZA_UNKNOWN;
@@ -66,7 +66,7 @@ XmppStanza *xmpp_stanza_new() {
  */
 XmppStanza *xmpp_stanza_clone(XmppStanza * const stanza)
 {
-    XmppStanza *child;
+    //XmppStanza *child;
 
     stanza->ref++;
 
@@ -149,27 +149,37 @@ copy_error:
  *
  *  @ingroup Stanza
  */
-int xmpp_stanza_release(XmppStanza * const stanza)
-{
+int xmpp_stanza_release(XmppStanza * const stanza) {
     int released = 0;
     XmppStanza *child, *tchild;
+    
+    printf("xmpp_stanza_released is called, stanza: %d \n", stanza);
 
     /* release stanza */
-    if (stanza->ref > 1)
-	stanza->ref--;
-    else {
-	/* release all children */
-	child = stanza->children;
-	while (child) {
-	    tchild = child;
-	    child = child->next;
-	    xmpp_stanza_release(tchild);
-	}
+    if (stanza->ref > 1) {
+        stanza->ref--;
+    } else {
+        /* release all children */
+        child = stanza->children;
+        while (child) {
+            tchild = child;
+            child = child->next;
+            if(tchild == NULL) {
+                printf("fuck null tchild\n");
+            }
+            xmpp_stanza_release(tchild);
+        }
 
-	if (stanza->attributes) hash_release(stanza->attributes);
-	if (stanza->data) free(stanza->data);
-	free(stanza);
-	released = 1;
+        if (stanza->attributes) {
+            printf("attributes relasesed \n");
+            hash_release(stanza->attributes);
+        }
+        if (stanza->data) {
+            printf("data relasesed \n");
+            free(stanza->data);
+        }
+        free(stanza);
+        released = 1;
     }
 
     return released;
@@ -311,7 +321,7 @@ static int _render_stanza_recursive(XmppStanza *stanza,
  *
  *  @ingroup Stanza
  */
-int  XmppStanzao_text(const XmppStanza *stanza,
+int xmpp_stanza_to_text(XmppStanza *stanza,
 			 char ** const buf,
 			 size_t * const buflen) {
     char *buffer, *tmp;
@@ -322,27 +332,27 @@ int  XmppStanzao_text(const XmppStanza *stanza,
     length = 1024;
     buffer = malloc(length);
     if (!buffer) {
-	*buf = NULL;
-	*buflen = 0;
-	return XMPP_EMEM;
+        *buf = NULL;
+        *buflen = 0;
+        return XMPP_EMEM;
     }
 
     ret = _render_stanza_recursive(stanza, buffer, length);
     if (ret < 0) return ret;
 
     if (ret > length - 1) {
-	tmp = realloc(buffer, ret + 1);
-	if (!tmp) {
-	    free(buffer);
-	    *buf = NULL;
-	    *buflen = 0;
-	    return XMPP_EMEM;
-	}
-	length = ret + 1;
-	buffer = tmp;
+        tmp = realloc(buffer, ret + 1);
+        if (!tmp) {
+            free(buffer);
+            *buf = NULL;
+            *buflen = 0;
+            return XMPP_EMEM;
+        }
+        length = ret + 1;
+        buffer = tmp;
 
-	ret = _render_stanza_recursive(stanza, buffer, length);
-	if (ret > length - 1) return XMPP_EMEM;
+        ret = _render_stanza_recursive(stanza, buffer, length);
+        if (ret > length - 1) return XMPP_EMEM;
     }
     
     buffer[length - 1] = 0;

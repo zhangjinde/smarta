@@ -159,9 +159,7 @@ static void _end_element(void *userdata, const XML_Char *name) {
                 xmpp_log(LOG_ERROR, "assert failure: stanza is null!\n");
             }
             xmpp_log(LOG_DEBUG, "before release parser stanza\n");
-            if(parser->stanza != NULL) {
-                xmpp_stanza_release(parser->stanza);
-            }
+            xmpp_stanza_release(parser->stanza);
             parser->stanza = NULL;
             xmpp_log(LOG_DEBUG, "release parser stanza\n");
         }

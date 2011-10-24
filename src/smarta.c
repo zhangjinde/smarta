@@ -162,6 +162,7 @@ int main(int argc, char **argv) {
 
     fd = anetTcpConnect(err, domain, 5222);
     if (fd == -1) {
+        printf("failed to connect %s\n", domain);
         exit(-1);
     }
     xmpp_log(LOG_DEBUG, "sock_connect to %s, returned %d", domain, fd);
