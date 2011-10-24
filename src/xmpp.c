@@ -142,7 +142,7 @@ static void _handle_stream_stanza(XmppStanza * const stanza, void * const userda
     if(strcmp(name, "stream:features") == 0) {
         mechanisms = xmpp_stanza_get_child_by_name(stanza, "mechanisms");
         if(mechanisms) {
-            //xmpp_stream_auth(stream, mechanisms);
+            xmpp_stream_auth(stream, mechanisms);
             xmpp_log(LOG_DEBUG, "auth sent\n");
             stream->state = XMPP_STREAM_SASL_AUTHENTICATING;
             return;
