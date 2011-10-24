@@ -41,6 +41,8 @@ XmppStanza *xmpp_stanza_new() {
     XmppStanza *stanza;
 
     stanza = malloc(sizeof(XmppStanza));
+    printf("stanza memory location: %d\n", stanza);
+
 	stanza->ref = 1;
 	stanza->type = XMPP_STANZA_UNKNOWN;
 	stanza->prev = NULL;
@@ -311,8 +313,7 @@ static int _render_stanza_recursive(XmppStanza *stanza,
  */
 int  XmppStanzao_text(const XmppStanza *stanza,
 			 char ** const buf,
-			 size_t * const buflen)
-{
+			 size_t * const buflen) {
     char *buffer, *tmp;
     size_t length;
     int ret;

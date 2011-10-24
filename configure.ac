@@ -1,4 +1,4 @@
-AC_INIT([libstrophe], [trunk], [jack@metajack.im])
+AC_INIT([smarta], [trunk], [ery.lee@gmail.com])
 AM_INIT_AUTOMAKE
 
 AC_PROG_CC
@@ -16,7 +16,7 @@ PARSER_NAME=expat
 PARSER_CFLAGS=\$\(builtin_CFLAGS\)
 PARSER_LIBS=\$\(builtin_LIBS\)
 
-AC_MSG_NOTICE([libstrophe will use the $with_parser XML parser])
+AC_MSG_NOTICE([smarta will use the $with_parser XML parser])
 AC_SEARCH_LIBS([socket], [socket])
 
 AM_CONDITIONAL([BUILD_EXPAT], [test x$with_parser = xbuiltin])

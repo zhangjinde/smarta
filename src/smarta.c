@@ -221,6 +221,7 @@ void xmpp_log(int level, const char *fmt, ...) {
     va_end(ap);
 
     strftime(buf,sizeof(buf),"%d %b %H:%M:%S",localtime(&now));
+    //FIXME: LATER
     fprintf(fp,"%s[%s] %s\n",buf,levels[level],msg);
     fflush(fp);
 

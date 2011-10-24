@@ -27,8 +27,8 @@ typedef void (*parser_start_callback)(char *name,
                                       void * const userdata);
 typedef void (*parser_end_callback)(char *name, void * const userdata);
 
-typedef void (*parser_stanza_callback)(XmppStanza * const stanza,
-                                       void * const userdata);
+typedef void (*parser_stanza_callback)(
+    XmppStanza * const stanza, void * const userdata);
 
 typedef struct _Parser {
     XML_Parser expat;
@@ -39,7 +39,6 @@ typedef struct _Parser {
     int depth;
     XmppStanza *stanza;
 } Parser;
-
 
 Parser *parser_new(parser_start_callback startcb,
                      parser_end_callback endcb,

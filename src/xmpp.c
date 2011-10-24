@@ -114,9 +114,8 @@ static void _on_stream_start(char *name, char **attrs,
 
 static void _on_stream_end(char *name, void * const userdata) {
     //XmppStream *stream = (XmppStream *)userdata;
-
     /* stream is over */
-    xmpp_log(LOG_DEBUG, "xmpp: RECV: </stream:stream>");
+    xmpp_log(LOG_DEBUG, "XMPP RECV: </stream:stream>");
     //conn_disconnect_clean(conn);
 }
 
@@ -128,18 +127,22 @@ static void _on_stream_stanza(XmppStanza * const stanza, void * const userdata) 
     XmppStanza *mechanisms, *bind, *session;
 
     if (XmppStanzao_text(stanza, &buf, &len) == 0) {
-        printf("RECV: %s\n", buf);
-        xmpp_log(LOG_DEBUG, "xmpp: RECV: %s", buf);
+        xmpp_log(LOG_DEBUG, "RECV: %s\n", buf);
+        xmpp_log(LOG_DEBUG, "XMPP RECV: %s", buf);
         free(buf);
     }
     ns = xmpp_stanza_get_ns(stanza);
     name = xmpp_stanza_get_name(stanza);
     type = xmpp_stanza_get_type(stanza);
-    printf("ns: %s, name: %s\n", ns, name);
-    if(!strcasecmp(name, "stream:features")) {
+    xmpp_log(LOG_DEBUG, "ns: %s, name: %s\n", ns, name);
+    if(strcmp(name, "stream:features") == 0) {
         mechanisms = xmpp_stanza_get_child_by_name(stanza, "mechanisms");
         if(mechanisms) {
+            printf("location1 of stream->parser:%d\n", stream->parser);
+            //printf("location1 of stream->parser->stanza: %d\n", stream->parser->stanza);
             xmpp_stanza_new();
+            printf("location2 of stream->parser:%d\n", stream->parser);
+            printf("location2 of stream->parser->stanza: %d\n", stream->parser->stanza);
             if(stream->parser->stanza == NULL) {
                 printf("stanza is null before stream_auth\n");
             }
@@ -147,7 +150,7 @@ static void _on_stream_stanza(XmppStanza * const stanza, void * const userdata) 
             if(stream->parser->stanza == NULL) {
                 printf("stanza is null after stream_auth\n");
             }
-            printf("auth sent\n");
+            xmpp_log(LOG_DEBUG, "auth sent\n");
             stream->state = XMPP_STREAM_SASL_AUTHENTICATING;
             return;
         }
@@ -169,7 +172,7 @@ static void _on_stream_stanza(XmppStanza * const stanza, void * const userdata) 
         //TODO: TLS PROCEED
 
     }else if(strcmp(name, "success") == 0) {
-        printf("sasl auth success\n");
+        xmpp_log(LOG_DEBUG, "sasl auth success\n");
         //reopen stream
         xmpp_stream_open(stream);
     }
@@ -194,21 +197,21 @@ void xmpp_send_raw_string(XmppStream *stream, char *fmt, ...) {
 	len++; /* account for trailing \0 */
 	bigbuf = malloc(len);
 	if (!bigbuf) {
-	    xmpp_log(LOG_DEBUG, "xmpp: Could not allocate memory for send_raw_string");
+	    xmpp_log(LOG_DEBUG, "XMPP: Could not allocate memory for send_raw_string");
 	    return;
 	}
 	va_start(ap, fmt);
 	xmpp_vsnprintf(bigbuf, len, fmt, ap);
 	va_end(ap);
 
-	xmpp_log(LOG_DEBUG, "xmpp: SENT: %s", bigbuf);
+	xmpp_log(LOG_DEBUG, "XMPP SENT: %s", bigbuf);
 
 	/* len - 1 so we don't send trailing \0 */
 	xmpp_send_raw(stream, bigbuf, len - 1);
 
 	free(bigbuf);
     } else {
-	xmpp_log(LOG_DEBUG, "xmpp: SENT: %s", buf);
+	xmpp_log(LOG_DEBUG, "XMPP SENT: %s", buf);
 
 	xmpp_send_raw(stream, buf, len);
     }
@@ -260,7 +263,7 @@ static void _log_open_tag(char **attrs) {
     len = xmpp_snprintf(&buf[pos], 4096 - pos, ">");
     if (len < 0) return;
 
-    xmpp_log(LOG_DEBUG, "xmpp: RECV: %s", buf);
+    xmpp_log(LOG_DEBUG, "XMPP RECV: %s", buf);
 }
 
 static void xmpp_stream_starttls(XmppStream *stream) {
@@ -284,17 +287,13 @@ static XmppStanza *_make_starttls(XmppStream *stream) {
 static void xmpp_stream_auth(XmppStream * const stream, XmppStanza *mechanisms) {
     char *str;
     XmppStanza *auth, *authdata;
-    if(stream->parser->stanza == NULL) {
-        printf("fuck null 0\n");
-
-    }
     auth = _make_sasl_auth("PLAIN");
     if(stream->parser->stanza == NULL) {
         printf("fuck null 1\n");
-
     }
 
     authdata = xmpp_stanza_new();
+
 
     str = sasl_plain(stream->jid, stream->pass);
     xmpp_stanza_set_text(authdata, str);
@@ -303,12 +302,8 @@ static void xmpp_stream_auth(XmppStream * const stream, XmppStanza *mechanisms) 
     xmpp_stanza_add_child(auth, authdata);
     xmpp_stanza_release(authdata);
 
-
     xmpp_send(stream, auth);
 
-    if(stream->parser->stanza == NULL) {
-        printf("fuck null 2\n");
-    }
 
     xmpp_stanza_release(auth);
     printf("auth stanza is released\n");

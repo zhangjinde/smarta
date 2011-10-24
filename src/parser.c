@@ -25,18 +25,19 @@ Parser *parser_new(parser_start_callback startcb,
                      void *userdata) {
     Parser *parser;
 
-    parser = malloc(sizeof(Parser));
-    if (parser != NULL) {
-        parser->expat = NULL;
-        parser->startcb = startcb;
-        parser->endcb = endcb;
-        parser->stanzacb = stanzacb;
-        parser->userdata = userdata;
-        parser->depth = 0;
-        parser->stanza = NULL;
+    printf("parser_new \n");
 
-        parser_reset(parser);
-    }
+    parser = malloc(sizeof(Parser));
+
+    parser->expat = NULL;
+    parser->startcb = startcb;
+    parser->endcb = endcb;
+    parser->stanzacb = stanzacb;
+    parser->userdata = userdata;
+    parser->depth = 0;
+    parser->stanza = NULL;
+
+    parser_reset(parser);
 
     return parser;
 }
@@ -47,14 +48,16 @@ int parser_feed(Parser *parser, char *chunk, int len) {
 
 /* shuts down and restarts XML parser.  true on success */
 int parser_reset(Parser *parser) {
-    if (parser->expat)
-	XML_ParserFree(parser->expat);
+    printf("paser_reset is called\n");
+
+    if (parser->expat) {
+        XML_ParserFree(parser->expat);
+    }
 
     if (parser->stanza) 
 	xmpp_stanza_release(parser->stanza);
 
     parser->expat = XML_ParserCreate(NULL);
-    if (!parser->expat) return 0;
 
     parser->depth = 0;
     parser->stanza = NULL;
@@ -68,8 +71,9 @@ int parser_reset(Parser *parser) {
 
 /* free a parser */
 void parser_free(Parser *parser) {
-    if (parser->expat)
+    if (parser->expat) {
         XML_ParserFree(parser->expat);
+    }
 
     free(parser);
 }
@@ -91,7 +95,7 @@ static void _start_element(void *userdata,
     Parser *parser = (Parser *)userdata;
     XmppStanza *child;
 
-    printf("start_element: %s\n", name);
+    xmpp_log(LOG_DEBUG, "start_element: %s\n", name);
 
     if (parser->depth == 0) {
         /* notify the owner */
@@ -112,9 +116,6 @@ static void _start_element(void *userdata,
 	} else {
 	    /* starting a child of parser->stanza */
 	    child = xmpp_stanza_new();
-	    if (!child) {
-		/* FIXME: can't allocate, disconnect */
-	    }
 	    xmpp_stanza_set_name(child, name);
 	    _set_attributes(child, attrs);
 
@@ -130,37 +131,40 @@ static void _start_element(void *userdata,
     }
 
     parser->depth++;
+    
 }
 
 static void _end_element(void *userdata, const XML_Char *name) {
-    Parser *parser = (Parser *)userdata;
 
-    printf("end_element: %s\n", name);
+    Parser *parser = (Parser *)userdata;
 
     parser->depth--;
 
+    xmpp_log(LOG_DEBUG, "end_element: %s, depth: %d\n", name, parser->depth);
+
     if (parser->depth == 0) {
         /* notify the owner */
-        if (parser->endcb)
+        if (parser->endcb) {
             parser->endcb((char *)name, parser->userdata);
+        }
     } else {
-	if (parser->stanza->parent) {
-	    /* we're finishing a child stanza, so set current to the parent */
-	    parser->stanza = parser->stanza->parent;
-	} else {
-        if (parser->stanzacb) {
-            parser->stanzacb(parser->stanza, parser->userdata);
+        if (parser->stanza->parent) {
+            /* we're finishing a child stanza, so set current to the parent */
+            parser->stanza = parser->stanza->parent;
+        } else {
+            if (parser->stanzacb) {
+                parser->stanzacb(parser->stanza, parser->userdata);
+            }
+            if(parser->stanza == NULL) {
+                xmpp_log(LOG_ERROR, "assert failure: stanza is null!\n");
+            }
+            xmpp_log(LOG_DEBUG, "before release parser stanza\n");
+            if(parser->stanza != NULL) {
+                xmpp_stanza_release(parser->stanza);
+            }
+            parser->stanza = NULL;
+            xmpp_log(LOG_DEBUG, "release parser stanza\n");
         }
-        if(parser->stanza == NULL) {
-            printf("assert failure: stanza is null!\n");
-        }
-        printf("before release parser stanza\n");
-        if(parser->stanza != NULL) {
-            xmpp_stanza_release(parser->stanza);
-        }
-	    parser->stanza = NULL;
-        printf("release parser stanza\n");
-	}
     }
 }
 
