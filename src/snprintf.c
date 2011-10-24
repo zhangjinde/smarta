@@ -104,9 +104,8 @@
 #define LDOUBLE double
 #endif
 
-int xmpp_snprintf (char *str, size_t count, char *fmt, ...);
-
-int xmpp_vsnprintf (char *str, size_t count, char *fmt, va_list arg);
+int xmpp_snprintf (char *str, size_t count, const char *fmt, ...);
+int xmpp_vsnprintf (char *str, size_t count, const char *fmt, va_list arg);
 
 static int dopr (char *buffer, size_t maxlen, const char *format, 
                  va_list args);
@@ -727,7 +726,7 @@ static int dopr_outch (char *buffer, size_t *currlen, size_t maxlen, char c)
 }
 
 #ifndef HAVE_VSNPRINTF
-int xmpp_vsnprintf (char *str, size_t count, char *fmt, va_list args)
+int xmpp_vsnprintf (char *str, size_t count, const char *fmt, va_list args)
 {
   if (str != NULL)
     str[0] = 0;
@@ -738,7 +737,7 @@ int xmpp_vsnprintf (char *str, size_t count, char *fmt, va_list args)
 #ifndef HAVE_SNPRINTF
 /* VARARGS3 */
 #ifdef HAVE_STDARGS
-int xmpp_snprintf (char *str,size_t count, char *fmt,...)
+int xmpp_snprintf (char *str,size_t count,const char *fmt,...)
 #else
 int xmpp_snprintf (va_alist) va_dcl
 #endif

@@ -3,6 +3,7 @@
 
 #include "adlist.h"
 #include "sds.h"
+#include "ae.h"
 
 typedef struct _Service {
     char *name;

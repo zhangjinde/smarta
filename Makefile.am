@@ -23,8 +23,8 @@ smarta_SOURCES = src/smarta.c \
 	src/hash.c src/xmpp.c src/jid.c \
     src/md5.c src/sha1.c src/sasl.c \
 	src/snprintf.c src/stanza.c src/dict.c \
-	src/util.c src/parser.c \
-    src/sds.c src/adlist.c src/ae.c src/anet.c
+	src/parser.c src/sds.c src/adlist.c \
+    src/ae.c src/anet.c src/sched.c 
 smarta_CFLAGS = $(SMARTA_FLAGS)
 smarta_LDADD = $(SMARTA_LIBS) 
 

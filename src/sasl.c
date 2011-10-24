@@ -52,14 +52,13 @@ char *sasl_plain(const char *authid, const char *password) {
     idlen = strlen(authid);
     passlen = strlen(password);
     msg = malloc(2 + idlen + passlen);
-    if (msg != NULL) {
-	msg[0] = '\0';
-	memcpy(msg+1, authid, idlen);
-	msg[1+idlen] = '\0';
-	memcpy(msg+1+idlen+1, password, passlen);
-	result = base64_encode((unsigned char *)msg, 2 + idlen + passlen);
-	free(msg);
-    }
+
+    msg[0] = '\0';
+    memcpy(msg+1, authid, idlen);
+    msg[1+idlen] = '\0';
+    memcpy(msg+1+idlen+1, password, passlen);
+    result = base64_encode((unsigned char *)msg, 2 + idlen + passlen);
+    free(msg);
 
     return result;
 }

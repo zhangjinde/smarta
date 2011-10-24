@@ -126,10 +126,13 @@ static void _on_stream_stanza(XmppStanza * const stanza, void * const userdata) 
     char *ns, *name, *type;
     XmppStanza *mechanisms, *bind, *session;
 
-    if (xmpp_stanza_to_text(stanza, &buf, &len) == 0) {
-        xmpp_log(LOG_DEBUG, "XMPP RECV: %s", buf);
-        free(buf);
-    }
+    printf("before to_text: %d\n", stanza);
+
+    //if (xmpp_stanza_to_text(stanza, &buf, &len) == 0) {
+    //    xmpp_log(LOG_DEBUG, "XMPP RECV: %s", buf);
+    //    free(buf);
+    //}
+    printf("after to_text: %d\n", stanza);
     
     ns = xmpp_stanza_get_ns(stanza);
     name = xmpp_stanza_get_name(stanza);
@@ -222,13 +225,16 @@ void xmpp_send(XmppStream *stream, XmppStanza *stanza) {
     int ret;
 
     if (stream->state == XMPP_STREAM_DISCONNECTED) return;
+
+    printf("stanza pointer before sent:%d\n", stream->parser->stanza);
     
-    //FIXME:later
 	if ((ret = xmpp_stanza_to_text(stanza, &buf, &len)) == 0) {
 	    xmpp_send_raw(stream, buf, len);
 	    xmpp_log(LOG_DEBUG, "XMPP SENT %d: %s", len, buf);
 	    free(buf);
 	}
+
+    printf("stanza pointer after sent:%d\n", stream->parser->stanza);
 }
 
 static void _log_open_tag(char **attrs) {
@@ -279,12 +285,8 @@ static void xmpp_stream_auth(XmppStream * const stream, XmppStanza *mechanisms) 
     char *str;
     XmppStanza *auth, *authdata;
     auth = _make_sasl_auth("PLAIN");
-    if(stream->parser->stanza == NULL) {
-        printf("fuck null 1\n");
-    }
 
     authdata = xmpp_stanza_new();
-
 
     str = sasl_plain(stream->jid, stream->pass);
     xmpp_stanza_set_text(authdata, str);
@@ -296,7 +298,6 @@ static void xmpp_stream_auth(XmppStream * const stream, XmppStanza *mechanisms) 
     xmpp_send(stream, auth);
 
     xmpp_stanza_release(auth);
-    printf("auth stanza is released\n");
 }
 
 static XmppStanza *_make_sasl_auth(const char *mechanism) {

@@ -153,13 +153,16 @@ static void _end_element(void *userdata, const XML_Char *name) {
             /* we're finishing a child stanza, so set current to the parent */
             parser->stanza = parser->stanza->parent;
         } else {
+            if(parser->stanza == NULL) {
+                xmpp_log(LOG_ERROR, "before stanza calback, stanza is null!\n");
+            }
             if (parser->stanzacb) {
                 parser->stanzacb(parser->stanza, parser->userdata);
             }
             if(parser->stanza == NULL) {
                 xmpp_log(LOG_ERROR, "assert failure: stanza is null!\n");
             }
-            xmpp_log(LOG_DEBUG, "before release parser stanza\n");
+            //FIXME:
             xmpp_stanza_release(parser->stanza);
             parser->stanza = NULL;
             xmpp_log(LOG_DEBUG, "release parser stanza\n");

@@ -317,14 +317,15 @@ static int _render_stanza_recursive(XmppStanza *stanza,
  *  @ingroup Stanza
  */
 int xmpp_stanza_to_text(XmppStanza *stanza,
-			 char ** const buf,
-			 size_t * const buflen) {
+    char ** const buf,
+    size_t * const buflen) {
+
     char *buffer, *tmp;
     size_t length;
     int ret;
 
     /* allocate a default sized buffer and attempt to render */
-    length = 1024;
+    length = 10240;
     buffer = malloc(length);
     if (!buffer) {
         *buf = NULL;
@@ -333,6 +334,7 @@ int xmpp_stanza_to_text(XmppStanza *stanza,
     }
 
     ret = _render_stanza_recursive(stanza, buffer, length);
+    printf("1 recursive stanza: %d, ret: %d\n", stanza, ret);
     if (ret < 0) return ret;
 
     if (ret > length - 1) {
@@ -347,6 +349,7 @@ int xmpp_stanza_to_text(XmppStanza *stanza,
         buffer = tmp;
 
         ret = _render_stanza_recursive(stanza, buffer, length);
+        printf("2 recursive stanza: %d, ret: %d\n", stanza, ret);
         if (ret > length - 1) return XMPP_EMEM;
     }
     
@@ -553,13 +556,18 @@ int xmpp_stanza_add_child(XmppStanza *stanza, XmppStanza *child)
  *  @ingroup Stanza
  */
 int xmpp_stanza_set_text(XmppStanza *stanza,
-			 const char * const text)
-{
+			 const char * const text) {
+    printf("xmpp_stanza_set_text: %d\n", stanza);
     if (stanza->type == XMPP_STANZA_TAG) return XMPP_EINVOP;
     
     stanza->type = XMPP_STANZA_TEXT;
 
-    if (stanza->data) free(stanza->data);
+    if (stanza->data) { 
+        free(stanza->data);
+    }
+
+    printf("text: %s\n", text);
+
     stanza->data = strdup(text);
 
     return XMPP_OK;

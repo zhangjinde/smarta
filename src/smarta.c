@@ -181,6 +181,8 @@ int main(int argc, char **argv) {
         exit(1);
     }
 
+    sched_run();
+
     smarta_run();
 
     return 0;
@@ -198,7 +200,6 @@ void xmpp_read(aeEventLoop *el, int fd, void *privdata, int mask) {
     if(nread <= 0) {
         //FIXME: DISCONNECTED.
         xmpp_log(LOG_DEBUG, "xmpp server is disconnected");
-        exit(1);
     }
     printf("nread: %d, data: %s\n", nread, buf);
     xmpp_stream_feed(stream, buf, nread);
@@ -223,7 +224,7 @@ void xmpp_log(int level, const char *fmt, ...) {
 
     strftime(buf,sizeof(buf),"%d %b %H:%M:%S",localtime(&now));
     //FIXME: LATER
-    fprintf(fp,"%s[%s] %s\n",buf,levels[level],msg);
+    fprintf(stdout,"%s[%s] %s\n",buf,levels[level],msg);
     fflush(fp);
 
     if (smarta.logfile) fclose(fp);
