@@ -61,3 +61,4 @@ void hash_iter_release(hash_iterator_t *iter);
 const char * hash_iter_next(hash_iterator_t *iter);
 
 #endif /* __LIBXMPPP_HASH_H__ */
+

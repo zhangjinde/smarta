@@ -25,7 +25,6 @@
 #include <stdint.h>
 
 #include "hash.h"
-#include "dict.h"
 #include "stanza.h"
 #include "parser.h"
 
@@ -84,13 +83,6 @@
  *  Success error code.
  */
 #define XMPP_OK 0
-/** @def XMPP_EMEM
- *  Memory related failure error code.
- *  
- *  This is returned on allocation errors and signals that the host may
- *  be out of memory.
- */
-#define XMPP_EMEM -1
 /** @def XMPP_EINVOP
  *  Invalid operation error code.
  *
@@ -183,7 +175,7 @@ struct _XmppStream {
     void *userdata;
 
     /* other handlers */
-    dict *iq_callbacks;
+    hash_t *iq_callbacks;
 };
 
 
