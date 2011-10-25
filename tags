@@ -159,7 +159,7 @@ __SHA1_H	src/sha1.h	/^#define __SHA1_H$/;"	d
 __SMARTA_SCHED_H__	src/sched.h	/^#define __SMARTA_SCHED_H__$/;"	d
 __failed_tests	src/sds.c	/^int __failed_tests = 0;$/;"	v
 __test_num	src/sds.c	/^int __test_num = 0;$/;"	v
-_add_key	src/sasl.c	/^static char *_add_key(hash_t *table, const char *key, $/;"	f	file:
+_add_key	src/sasl.c	/^static char *_add_key(Hash *table, const char *key, $/;"	f	file:
 _base64_charmap	src/sasl.c	/^static const char _base64_charmap[65] = {$/;"	v	file:
 _base64_invcharmap	src/sasl.c	/^static const char _base64_invcharmap[256] = {$/;"	v	file:
 _characters	src/parser.c	/^static void _characters(void *userdata, const XML_Char *s, int len) {$/;"	f	file:
@@ -177,7 +177,7 @@ _make_quoted	src/sasl.c	/^static char *_make_quoted(const char *s) {$/;"	f	file:
 _make_sasl_auth	src/xmpp.c	/^static XmppStanza *_make_sasl_auth(const char *mechanism) {$/;"	f	file:
 _make_starttls	src/xmpp.c	/^static XmppStanza *_make_starttls(XmppStream *stream) {$/;"	f	file:
 _make_string	src/sasl.c	/^static char *_make_string(const char *s, const unsigned len) {$/;"	f	file:
-_parse_digest_challenge	src/sasl.c	/^static hash_t *_parse_digest_challenge(const char *msg)$/;"	f	file:
+_parse_digest_challenge	src/sasl.c	/^static Hash *_parse_digest_challenge(const char *msg)$/;"	f	file:
 _render_stanza_recursive	src/stanza.c	/^static int _render_stanza_recursive(XmppStanza *stanza,$/;"	f	file:
 _render_update	src/stanza.c	/^static inline void _render_update(int *written, const int length,$/;"	f	file:
 _rfds	src/ae_select.c	/^    fd_set _rfds, _wfds;$/;"	m	struct:aeApiState	file:
@@ -260,7 +260,7 @@ anetWrite	src/anet.c	/^int anetWrite(int fd, char *buf, int count)$/;"	f
 aof_fsync	src/config.h	/^#define aof_fsync /;"	d
 apidata	src/ae.h	/^    void *apidata; \/* This is used for polling API specific data *\/$/;"	m	struct:aeEventLoop
 apikey	src/smarta.h	/^    char *apikey;$/;"	m	struct:_Smarta
-attributes	src/stanza.h	/^    hash_t *attributes;$/;"	m	struct:_XmppStanza
+attributes	src/stanza.h	/^    Hash *attributes;$/;"	m	struct:_XmppStanza
 authenticated	src/xmpp.h	/^    int authenticated;$/;"	m	struct:_XmppStream
 base64_decode	src/sasl.c	/^unsigned char *base64_decode(const char * const buffer, const unsigned len) {$/;"	f
 base64_decoded_len	src/sasl.c	/^int base64_decoded_len(const char * const buffer, const unsigned len) {$/;"	f
@@ -307,8 +307,8 @@ fd	src/xmpp.h	/^    int fd; \/\/socket$/;"	m	struct:_XmppStream
 finalizerProc	src/ae.h	/^    aeEventFinalizerProc *finalizerProc;$/;"	m	struct:aeTimeEvent
 fired	src/ae.h	/^    aeFiredEvent fired[AE_SETSIZE]; \/* Fired events *\/$/;"	m	struct:aeEventLoop
 free	src/adlist.h	/^    void (*free)(void *ptr);$/;"	m	struct:list
-free	src/hash.c	/^    hash_free_func free;$/;"	m	struct:_Hash	file:
 free	src/sds.h	/^    int free;$/;"	m	struct:sdshdr
+free_fun	src/hash.c	/^    hash_free_func free_fun;$/;"	m	struct:_Hash	file:
 hash_add	src/hash.c	/^int hash_add(Hash *table, const char * const key, void *data)$/;"	f
 hash_clone	src/hash.c	/^Hash *hash_clone(Hash * const table)$/;"	f
 hash_drop	src/hash.c	/^int hash_drop(Hash *table, const char *key)$/;"	f
@@ -318,7 +318,7 @@ hash_iter_new	src/hash.c	/^hash_iterator_t *hash_iter_new(Hash *table)$/;"	f
 hash_iter_next	src/hash.c	/^const char * hash_iter_next(hash_iterator_t *iter)$/;"	f
 hash_iter_release	src/hash.c	/^void hash_iter_release(hash_iterator_t *iter)$/;"	f
 hash_iterator_t	src/hash.h	/^typedef struct _hash_iterator_t hash_iterator_t;$/;"	t	typeref:struct:_hash_iterator_t
-hash_new	src/hash.c	/^Hash *hash_new(const int size, hash_free_func free)$/;"	f
+hash_new	src/hash.c	/^Hash *hash_new(const int size, hash_free_func free_fun)$/;"	f
 hash_num_keys	src/hash.c	/^int hash_num_keys(Hash *table)$/;"	f
 hash_release	src/hash.c	/^void hash_release(Hash * const table)$/;"	f
 hashentry_t	src/hash.c	/^typedef struct _hashentry_t hashentry_t;$/;"	t	typeref:struct:_hashentry_t	file:
@@ -335,7 +335,8 @@ int64_t	src/sasl.c	/^  typedef __int64                 int64_t;$/;"	t	file:
 int64_t	src/sha1.c	/^  typedef __int64                 int64_t;$/;"	t	file:
 int8_t	src/sasl.c	/^  typedef signed char             int8_t;$/;"	t	file:
 int8_t	src/sha1.c	/^  typedef signed char             int8_t;$/;"	t	file:
-iq_callbacks	src/xmpp.h	/^    hash_t *iq_callbacks;$/;"	m	struct:_XmppStream
+iq_callback	src/xmpp.c	/^typedef void (*iq_callback)(XmppStream *stream, XmppStanza *stanza);$/;"	t	file:
+iq_callbacks	src/xmpp.h	/^    Hash *iq_callbacks;$/;"	m	struct:_XmppStream
 isslave	src/smarta.h	/^    int isslave;$/;"	m	struct:_Smarta
 jid	src/xmpp.h	/^    char *jid;$/;"	m	struct:_XmppStream
 key	src/hash.c	/^    char *key;$/;"	m	struct:_hashentry_t	file:
@@ -408,6 +409,7 @@ parser_start_callback	src/parser.h	/^typedef void (*parser_start_callback)(char 
 pass	src/xmpp.h	/^    char *pass;$/;"	m	struct:_XmppStream
 period	src/smarta.h	/^    long period;$/;"	m	struct:_Service
 pidfile	src/smarta.h	/^    char *pidfile;$/;"	m	struct:_Smarta
+prepare_reset	src/xmpp.h	/^    int prepare_reset;$/;"	m	struct:_XmppStream
 prev	src/adlist.h	/^    struct listNode *prev;$/;"	m	struct:listNode	typeref:struct:listNode::listNode
 prev	src/stanza.h	/^    struct _XmppStanza *prev;$/;"	m	struct:_XmppStanza	typeref:struct:_XmppStanza::_XmppStanza
 processTimeEvents	src/ae.c	/^static int processTimeEvents(aeEventLoop *eventLoop) {$/;"	f	file:
@@ -504,6 +506,9 @@ wfds	src/ae_select.c	/^    fd_set rfds, wfds;$/;"	m	struct:aeApiState	file:
 wfileProc	src/ae.h	/^    aeFileProc *wfileProc;$/;"	m	struct:aeFileEvent
 when_ms	src/ae.h	/^    long when_ms; \/* milliseconds *\/$/;"	m	struct:aeTimeEvent
 when_sec	src/ae.h	/^    long when_sec; \/* seconds *\/$/;"	m	struct:aeTimeEvent
+xmpp_iq_add_callback	src/xmpp.c	/^void xmpp_iq_add_callback(XmppStream *stream, char *iq_id, iq_callback *callback) {$/;"	f
+xmpp_iq_callback	src/xmpp.c	/^iq_callback xmpp_iq_callback(XmppStream *stream, char *id) {$/;"	f
+xmpp_iq_remove_callback	src/xmpp.c	/^void xmpp_iq_remove_callback(XmppStream *stream, char *iq_id) {$/;"	f
 xmpp_jid_bare	src/jid.c	/^char *xmpp_jid_bare(const char *jid)$/;"	f
 xmpp_jid_domain	src/jid.c	/^char *xmpp_jid_domain(const char *jid)$/;"	f
 xmpp_jid_new	src/jid.c	/^char *xmpp_jid_new(const char *node,$/;"	f
@@ -544,12 +549,14 @@ xmpp_stanza_set_type	src/stanza.c	/^int xmpp_stanza_set_type(XmppStanza * const 
 xmpp_stanza_to_text	src/stanza.c	/^int xmpp_stanza_to_text($/;"	f
 xmpp_stream_auth	src/xmpp.c	/^static void xmpp_stream_auth(XmppStream * const stream, XmppStanza *mechanisms) {$/;"	f	file:
 xmpp_stream_bind	src/xmpp.c	/^static void xmpp_stream_bind(XmppStream *stream, XmppStanza *bind) {$/;"	f	file:
+xmpp_stream_bind_callback	src/xmpp.c	/^static void xmpp_stream_bind_callback(XmppStream *stream, XmppStanza *iq) {$/;"	f	file:
 xmpp_stream_feed	src/xmpp.c	/^int xmpp_stream_feed(XmppStream *stream, char *buffer, int len) {$/;"	f
 xmpp_stream_get_jid	src/xmpp.c	/^char *xmpp_stream_get_jid(XmppStream *stream) {$/;"	f
 xmpp_stream_get_pass	src/xmpp.c	/^char *xmpp_stream_get_pass(XmppStream *stream) {$/;"	f
 xmpp_stream_new	src/xmpp.c	/^XmppStream *xmpp_stream_new(int fd) {$/;"	f
 xmpp_stream_open	src/xmpp.c	/^int xmpp_stream_open(XmppStream *stream) {$/;"	f
 xmpp_stream_session	src/xmpp.c	/^static void xmpp_stream_session(XmppStream *stream) {$/;"	f	file:
+xmpp_stream_session_callback	src/xmpp.c	/^static void xmpp_stream_session_callback(XmppStream *stream, XmppStanza *iq) {$/;"	f	file:
 xmpp_stream_set_jid	src/xmpp.c	/^void xmpp_stream_set_jid(XmppStream *stream, const char *jid) {$/;"	f
 xmpp_stream_set_pass	src/xmpp.c	/^void xmpp_stream_set_pass(XmppStream *stream, const char *pass) {$/;"	f
 xmpp_stream_starttls	src/xmpp.c	/^static void xmpp_stream_starttls(XmppStream *stream) {$/;"	f	file:

@@ -20,6 +20,7 @@
 #include "adlist.h"
 #include "zmalloc.h"
 #include "xmpp.h"
+#include "sched.h"
 #include "smarta.h"
 
 #define CONFIGLINE_MAX 1024
@@ -233,8 +234,11 @@ void xmpp_log(int level, const char *fmt, ...) {
 }
 
 static void before_sleep(struct aeEventLoop *eventLoop) {
-    printf("sleep....\n");
-    //NOTHING
+    if(smarta.stream->prepare_reset == 1) {
+        printf("before sleep... reset parser\n");
+        parser_reset(smarta.stream->parser);
+        smarta.stream->prepare_reset = 0;
+    }
 }
 
 static int smarta_cron(struct aeEventLoop *eventLoop, long long id, void *clientData) {

@@ -11,6 +11,8 @@
 #include "util.h"
 #include "zmalloc.h"
 
+typedef void (*iq_callback)(XmppStream *stream, XmppStanza *stanza);
+
 static void xmpp_stream_starttls(XmppStream *stream);
 
 static XmppStanza *_make_starttls(XmppStream *stream);
@@ -20,6 +22,10 @@ static void xmpp_stream_auth(XmppStream *const stream, XmppStanza *mechanisms);
 static XmppStanza *_make_sasl_auth(const char *mechanism);
 
 static void xmpp_stream_bind(XmppStream *stream, XmppStanza *bind); 
+
+static void xmpp_stream_bind_callback(XmppStream *stream, XmppStanza *iq); 
+
+static void xmpp_stream_session_callback(XmppStream *stream, XmppStanza *iq);
 
 static void xmpp_stream_session(XmppStream *stream);
 
@@ -51,6 +57,10 @@ XmppStream *xmpp_stream_new(int fd) {
           stream);
     stream->stream_id = NULL;
 
+    stream->prepare_reset = 0;
+    
+    stream->iq_callbacks = hash_new(8, NULL);
+
     return stream;
 }
 
@@ -69,9 +79,21 @@ void xmpp_stream_set_pass(XmppStream *stream, const char *pass) {
     stream->pass = zstrdup(pass);
 }
 
+iq_callback xmpp_iq_callback(XmppStream *stream, char *id) {
+    return hash_get(stream->iq_callbacks, id);
+}
+
+void xmpp_iq_add_callback(XmppStream *stream, char *iq_id, iq_callback *callback) {
+    hash_add(stream->iq_callbacks, iq_id, callback);
+}
+
+void xmpp_iq_remove_callback(XmppStream *stream, char *iq_id) {
+    hash_drop(stream->iq_callbacks, iq_id);
+}
+
 int xmpp_stream_open(XmppStream *stream) {
-    
-    parser_reset(stream->parser);
+
+    stream->prepare_reset = 1;
     
     xmpp_send_raw_string(stream, 
 			 "<?xml version=\"1.0\"?>"			\
@@ -118,6 +140,7 @@ static void _handle_stream_start(char *name, char **attrs,
 static void _handle_stream_end(char *name, void * const userdata) {
     //XmppStream *stream = (XmppStream *)userdata;
     /* stream is over */
+    //parser_reset(stream->parser);
     xmpp_log(LOG_DEBUG, "XMPP RECV: </stream:stream>");
     //conn_disconnect_clean(conn);
 }
@@ -125,7 +148,9 @@ static void _handle_stream_end(char *name, void * const userdata) {
 static void _handle_stream_stanza(XmppStanza * const stanza, void * const userdata) {
     XmppStream *stream = (XmppStream *)userdata;
     char *buf;
+    char *id;
     size_t len;
+    iq_callback callback;
     char *ns, *name, *type;
     XmppStanza *mechanisms, *bind, *session;
 
@@ -158,15 +183,26 @@ static void _handle_stream_stanza(XmppStanza * const stanza, void * const userda
             xmpp_stream_session(stream);
             return;
         }
-        
+
+        xmpp_log(LOG_ERROR, "assert failure, unexpected features: %s", name);
         return;
-    } else if(strcmp(name, "proceed")) {
+    } else if(strcmp(name, "proceed") == 0) {
         //TODO: TLS PROCEED
 
     }else if(strcmp(name, "success") == 0) {
         xmpp_log(LOG_DEBUG, "sasl auth success\n");
         //reopen stream
         xmpp_stream_open(stream);
+    } else if(strcmp(name, "iq") == 0) {
+        id = xmpp_stanza_get_id(stanza);
+        callback = xmpp_iq_callback(stream, id);
+        if(callback) {
+            callback(stream, stanza);
+        }
+    } else if(strcmp(name, "message") == 0) {
+        printf("message got\n");
+    } else if(strcmp(name, "presence") == 0) {
+        printf("presence got\n");
     }
     //handle features
 
@@ -313,6 +349,9 @@ static void xmpp_stream_bind(XmppStream *stream, XmppStanza *bind) {
 	xmpp_stanza_set_type(iq, "set");
 	xmpp_stanza_set_id(iq, "_xmpp_bind1");
 
+    //FIXME LATER
+    xmpp_iq_add_callback(stream, "_xmpp_bind1", xmpp_stream_bind_callback);
+
     //bind element
 	bind = xmpp_stanza_copy(bind);
 
@@ -337,6 +376,10 @@ static void xmpp_stream_bind(XmppStream *stream, XmppStanza *bind) {
 	xmpp_stanza_release(iq);
 }
 
+static void xmpp_stream_bind_callback(XmppStream *stream, XmppStanza *iq) {
+    xmpp_stream_session(stream);
+}
+
 static void xmpp_stream_session(XmppStream *stream) {
     XmppStanza *iq, *session;
 
@@ -345,6 +388,8 @@ static void xmpp_stream_session(XmppStream *stream) {
     xmpp_stanza_set_name(iq, "iq");
     xmpp_stanza_set_type(iq, "set");
     xmpp_stanza_set_id(iq, "_xmpp_session1");
+
+    xmpp_iq_add_callback(stream, "_xmpp_session1", xmpp_stream_session_callback);
 
     session = xmpp_stanza_new();
     xmpp_stanza_set_name(session, "session");
@@ -356,6 +401,13 @@ static void xmpp_stream_session(XmppStream *stream) {
 
     xmpp_stanza_release(session);
     xmpp_stanza_release(iq);
+}
+
+static void xmpp_stream_session_callback(XmppStream *stream, XmppStanza *iq) {
+    XmppStanza *presence;
+    presence = xmpp_stanza_new();
+    xmpp_stanza_set_name(presence, "presence");
+    xmpp_send(stream, presence);
 }
 
 static char *_get_stream_attribute(char **attrs, char *name) {

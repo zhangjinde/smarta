@@ -172,6 +172,8 @@ struct _XmppStream {
     /* timeouts */
     unsigned int connect_timeout;
 
+    int prepare_reset;
+
     /* user handlers only get called after authentication */
     int authenticated;
     
