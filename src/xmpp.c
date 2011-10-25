@@ -9,6 +9,7 @@
 #include "xmpp.h"
 #include "stanza.h"
 #include "util.h"
+#include "zmalloc.h"
 
 static void xmpp_stream_starttls(XmppStream *stream);
 
@@ -40,7 +41,7 @@ static char *_get_stream_attribute(char **attrs, char *name);
 
 XmppStream *xmpp_stream_new(int fd) {
     XmppStream *stream = NULL;
-    stream = malloc(sizeof(XmppStream));
+    stream = zmalloc(sizeof(XmppStream));
 
     stream->fd = fd;
     stream->state = XMPP_STREAM_CONNECTING;
@@ -48,6 +49,7 @@ XmppStream *xmpp_stream_new(int fd) {
           _handle_stream_end,
           _handle_stream_stanza,
           stream);
+    stream->stream_id = NULL;
 
     return stream;
 }
@@ -57,17 +59,19 @@ char *xmpp_stream_get_jid(XmppStream *stream) {
 }
 
 void xmpp_stream_set_jid(XmppStream *stream, const char *jid) {
-    stream->jid = strdup(jid);
+    stream->jid = zstrdup(jid);
 }
 
 char *xmpp_stream_get_pass(XmppStream *stream) {
     return stream->pass;
 }
 void xmpp_stream_set_pass(XmppStream *stream, const char *pass) {
-    stream->pass = strdup(pass);
+    stream->pass = zstrdup(pass);
 }
 
 int xmpp_stream_open(XmppStream *stream) {
+    
+    parser_reset(stream->parser);
     
     xmpp_send_raw_string(stream, 
 			 "<?xml version=\"1.0\"?>"			\
@@ -96,18 +100,17 @@ static void _handle_stream_start(char *name, char **attrs,
     XmppStream *stream = (XmppStream *)userdata;
 
     if (strcmp(name, "stream:stream") != 0) {
-        printf("name = %s\n", name);
         xmpp_log(LOG_ERROR, "STREAM: Server did not open valid stream.");
         //TODO:fix me
         //xmpp_conn_disconnect(stream->conn);
     } else {
         _log_open_tag(attrs);
         
-        if (stream->stream_id) free(stream->stream_id);
+        if (stream->stream_id) zfree(stream->stream_id);
 
         id = _get_stream_attribute(attrs, "id");
         if (id) {
-            stream->stream_id = strdup(id);
+            stream->stream_id = zstrdup(id);
         }
     }
 }
@@ -126,18 +129,14 @@ static void _handle_stream_stanza(XmppStanza * const stanza, void * const userda
     char *ns, *name, *type;
     XmppStanza *mechanisms, *bind, *session;
 
-    printf("before to_text: %d\n", stanza);
-
     if (xmpp_stanza_to_text(stanza, &buf, &len) == 0) {
         xmpp_log(LOG_DEBUG, "XMPP RECV: %s", buf);
-        free(buf);
+        zfree(buf);
     }
-    printf("after to_text: %d\n", stanza);
     
     ns = xmpp_stanza_get_ns(stanza);
     name = xmpp_stanza_get_name(stanza);
     type = xmpp_stanza_get_type(stanza);
-    printf("ns: %s, name: %s\n", ns, name);
     xmpp_log(LOG_DEBUG, "ns: %s, name: %s\n", ns, name);
     if(strcmp(name, "stream:features") == 0) {
         mechanisms = xmpp_stanza_get_child_by_name(stanza, "mechanisms");
@@ -188,7 +187,7 @@ void xmpp_send_raw_string(XmppStream *stream, char *fmt, ...) {
 	/* we need more space for this data, so we allocate a big 
 	 * enough buffer and print to that */
 	len++; /* account for trailing \0 */
-	bigbuf = malloc(len);
+	bigbuf = zmalloc(len);
 	if (!bigbuf) {
 	    xmpp_log(LOG_DEBUG, "XMPP: Could not allocate memory for send_raw_string");
 	    return;
@@ -202,7 +201,7 @@ void xmpp_send_raw_string(XmppStream *stream, char *fmt, ...) {
 	/* len - 1 so we don't send trailing \0 */
 	xmpp_send_raw(stream, bigbuf, len - 1);
 
-	free(bigbuf);
+	zfree(bigbuf);
     } else {
 	xmpp_log(LOG_DEBUG, "XMPP SENT: %s", buf);
 
@@ -225,15 +224,12 @@ void xmpp_send(XmppStream *stream, XmppStanza *stanza) {
 
     if (stream->state == XMPP_STREAM_DISCONNECTED) return;
 
-    printf("stanza pointer before sent:%d\n", stream->parser->stanza);
-    
 	if ((ret = xmpp_stanza_to_text(stanza, &buf, &len)) == 0) {
 	    xmpp_send_raw(stream, buf, len);
 	    xmpp_log(LOG_DEBUG, "XMPP SENT %d: %s", len, buf);
-	    free(buf);
+	    zfree(buf);
 	}
 
-    printf("stanza pointer after sent:%d\n", stream->parser->stanza);
 }
 
 static void _log_open_tag(char **attrs) {
@@ -289,7 +285,7 @@ static void xmpp_stream_auth(XmppStream * const stream, XmppStanza *mechanisms) 
 
     str = sasl_plain(stream->jid, stream->pass);
     xmpp_stanza_set_text(authdata, str);
-    free(str);
+    zfree(str);
 
     xmpp_stanza_add_child(auth, authdata);
     xmpp_stanza_release(authdata);
@@ -373,3 +369,4 @@ static char *_get_stream_attribute(char **attrs, char *name) {
 
     return NULL;
 }
+

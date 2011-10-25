@@ -18,6 +18,7 @@
 #include "sds.h"
 #include "anet.h"
 #include "adlist.h"
+#include "zmalloc.h"
 #include "xmpp.h"
 #include "smarta.h"
 
@@ -108,25 +109,25 @@ void load_config(char *filename) {
             state = 0;
         } else if (!strcasecmp(argv[0],"service") && !strcasecmp(argv[1],"{") && argc == 2) {
             state = IN_SERVICE_BLOCK;
-            service = malloc(sizeof(Service));
+            service = zmalloc(sizeof(Service));
         } else if ((state == IN_SMARTA_BLOCK) && !strcasecmp(argv[0],"name") && argc == 2) {
-            smarta.name = strdup(argv[1]);
+            smarta.name = zstrdup(argv[1]);
         } else if ((state == IN_SMARTA_BLOCK) && !strcasecmp(argv[0],"server") && argc == 2) {
-            smarta.server = strdup(argv[1]);
+            smarta.server = zstrdup(argv[1]);
         } else if ((state == IN_SMARTA_BLOCK) && !strcasecmp(argv[0],"apikey") && argc == 2) {
-            smarta.apikey = strdup(argv[1]);
+            smarta.apikey = zstrdup(argv[1]);
         } else if ((state == IN_SERVICE_BLOCK) && !strcasecmp(argv[0],"name") && argc == 2) {
-            service->name = strdup(argv[1]);
+            service->name = zstrdup(argv[1]);
         } else if ((state == IN_SERVICE_BLOCK) && !strcasecmp(argv[0],"period") && argc == 2) {
             service->period = atoi(argv[1]);
         } else if ((state == IN_SERVICE_BLOCK) && !strcasecmp(argv[0],"command") && argc == 2) {
-            service->command = strdup(argv[1]);
+            service->command = zstrdup(argv[1]);
         } else {
             err = "Bad directive or wrong number of arguments"; goto loaderr;
         }
         for (j = 0; j < argc; j++)
             sdsfree(argv[j]);
-        free(argv);
+        zfree(argv);
         sdsfree(line);
     }
     fclose(fp);

@@ -27,29 +27,6 @@ ANET_H	src/anet.h	/^#define ANET_H$/;"	d
 ANET_OK	src/anet.h	/^#define ANET_OK /;"	d
 CONFIGLINE_MAX	src/smarta.c	/^#define CONFIGLINE_MAX /;"	d	file:
 Command	src/smarta.h	/^} Command;$/;"	t	typeref:struct:_Command
-DICT_ERR	src/dict.h	/^#define DICT_ERR /;"	d
-DICT_HT_INITIAL_SIZE	src/dict.h	/^#define DICT_HT_INITIAL_SIZE /;"	d
-DICT_NOTUSED	src/dict.h	/^#define DICT_NOTUSED(/;"	d
-DICT_OK	src/dict.h	/^#define DICT_OK /;"	d
-DICT_STATS_VECTLEN	src/dict.c	/^#define DICT_STATS_VECTLEN /;"	d	file:
-DP_C_LDOUBLE	src/snprintf.c	/^#define DP_C_LDOUBLE /;"	d	file:
-DP_C_LONG	src/snprintf.c	/^#define DP_C_LONG /;"	d	file:
-DP_C_SHORT	src/snprintf.c	/^#define DP_C_SHORT /;"	d	file:
-DP_F_MINUS	src/snprintf.c	/^#define DP_F_MINUS /;"	d	file:
-DP_F_NUM	src/snprintf.c	/^#define DP_F_NUM /;"	d	file:
-DP_F_PLUS	src/snprintf.c	/^#define DP_F_PLUS /;"	d	file:
-DP_F_SPACE	src/snprintf.c	/^#define DP_F_SPACE /;"	d	file:
-DP_F_UNSIGNED	src/snprintf.c	/^#define DP_F_UNSIGNED /;"	d	file:
-DP_F_UP	src/snprintf.c	/^#define DP_F_UP /;"	d	file:
-DP_F_ZERO	src/snprintf.c	/^#define DP_F_ZERO /;"	d	file:
-DP_S_CONV	src/snprintf.c	/^#define DP_S_CONV /;"	d	file:
-DP_S_DEFAULT	src/snprintf.c	/^#define DP_S_DEFAULT /;"	d	file:
-DP_S_DONE	src/snprintf.c	/^#define DP_S_DONE /;"	d	file:
-DP_S_DOT	src/snprintf.c	/^#define DP_S_DOT /;"	d	file:
-DP_S_FLAGS	src/snprintf.c	/^#define DP_S_FLAGS /;"	d	file:
-DP_S_MAX	src/snprintf.c	/^#define DP_S_MAX /;"	d	file:
-DP_S_MIN	src/snprintf.c	/^#define DP_S_MIN /;"	d	file:
-DP_S_MOD	src/snprintf.c	/^#define DP_S_MOD /;"	d	file:
 F1	src/md5.c	/^#define F1(/;"	d	file:
 F2	src/md5.c	/^#define F2(/;"	d	file:
 F3	src/md5.c	/^#define F3(/;"	d	file:
@@ -59,21 +36,15 @@ HAVE_BACKTRACE	src/config.h	/^#define HAVE_BACKTRACE /;"	d
 HAVE_EPOLL	src/config.h	/^#define HAVE_EPOLL /;"	d
 HAVE_KQUEUE	src/config.h	/^#define HAVE_KQUEUE /;"	d
 HAVE_PROCFS	src/config.h	/^#define HAVE_PROCFS /;"	d
-HAVE_STDARGS	src/snprintf.c	/^#  undef HAVE_STDARGS$/;"	d	file:
-HAVE_STDARGS	src/snprintf.c	/^# define HAVE_STDARGS /;"	d	file:
-HAVE_STDARG_H	src/snprintf.c	/^#define HAVE_STDARG_H /;"	d	file:
 HAVE_TASKINFO	src/config.h	/^#define HAVE_TASKINFO /;"	d
-HAVE_VARARGS_H	src/snprintf.c	/^#define HAVE_VARARGS_H$/;"	d	file:
+Hash	src/hash.h	/^typedef struct _Hash Hash;$/;"	t	typeref:struct:_Hash
 IN_COMMADN_BLOCK	src/smarta.c	/^#define IN_COMMADN_BLOCK /;"	d	file:
 IN_SERVICE_BLOCK	src/smarta.c	/^#define IN_SERVICE_BLOCK /;"	d	file:
 IN_SMARTA_BLOCK	src/smarta.c	/^#define IN_SMARTA_BLOCK /;"	d	file:
-LDOUBLE	src/snprintf.c	/^#define LDOUBLE /;"	d	file:
 LOG_DEBUG	src/xmpp.h	/^#define LOG_DEBUG /;"	d
 LOG_ERROR	src/xmpp.h	/^#define LOG_ERROR /;"	d
 LOG_INFO	src/xmpp.h	/^#define LOG_INFO /;"	d
 LOG_WARN	src/xmpp.h	/^#define LOG_WARN /;"	d
-LONG_STRING	src/snprintf.c	/^#define LONG_STRING /;"	d	file:
-MAX	src/snprintf.c	/^#define MAX(/;"	d	file:
 MAX_INPUT_BUFFER	src/sched.c	/^#define MAX_INPUT_BUFFER /;"	d	file:
 MAX_LOGMSG_LEN	src/xmpp.h	/^#define MAX_LOGMSG_LEN /;"	d
 MD5Context	src/md5.h	/^struct MD5Context {$/;"	s
@@ -84,7 +55,7 @@ MD5STEP	src/md5.c	/^#define MD5STEP(/;"	d	file:
 MD5Transform	src/md5.c	/^void MD5Transform(uint32_t buf[4], const unsigned char inext[64],$/;"	f
 MD5Update	src/md5.c	/^void MD5Update(struct MD5Context *ctx, unsigned char const *buf, uint32_t len) {$/;"	f
 MD5_H	src/md5.h	/^#define MD5_H$/;"	d
-MIN	src/snprintf.c	/^#define MIN(/;"	d	file:
+PREFIX_SIZE	src/zmalloc.c	/^#define PREFIX_SIZE /;"	d	file:
 PUT_32BIT_LSB_FIRST	src/md5.c	/^#define PUT_32BIT_LSB_FIRST(/;"	d	file:
 Parser	src/parser.h	/^} Parser;$/;"	t	typeref:struct:_Parser
 R0	src/sha1.c	/^#define R0(/;"	d	file:
@@ -104,14 +75,6 @@ SHA1_Update	src/sha1.c	/^void SHA1_Update(SHA1_CTX* context, const uint8_t* data
 SHAPrintContext	src/sha1.c	/^void SHAPrintContext(SHA1_CTX *context, char *msg){$/;"	f
 Service	src/smarta.h	/^} Service;$/;"	t	typeref:struct:_Service
 Smarta	src/smarta.h	/^} Smarta;$/;"	t	typeref:struct:_Smarta
-VA_END	src/snprintf.c	/^#  define VA_END /;"	d	file:
-VA_END	src/snprintf.c	/^# define VA_END /;"	d	file:
-VA_LOCAL_DECL	src/snprintf.c	/^#  define VA_LOCAL_DECL /;"	d	file:
-VA_LOCAL_DECL	src/snprintf.c	/^# define VA_LOCAL_DECL /;"	d	file:
-VA_SHIFT	src/snprintf.c	/^#  define VA_SHIFT(/;"	d	file:
-VA_SHIFT	src/snprintf.c	/^# define VA_SHIFT(/;"	d	file:
-VA_START	src/snprintf.c	/^#  define VA_START(/;"	d	file:
-VA_START	src/snprintf.c	/^# define VA_START(/;"	d	file:
 XMPP_EINT	src/xmpp.h	/^#define XMPP_EINT /;"	d
 XMPP_EINVOP	src/xmpp.h	/^#define XMPP_EINVOP /;"	d
 XMPP_EMEM	src/xmpp.h	/^#define XMPP_EMEM /;"	d
@@ -170,9 +133,9 @@ XmppStreamError	src/xmpp.h	/^typedef struct _XmppStreamError XmppStreamError;$/;
 XmppStreamState	src/xmpp.h	/^} XmppStreamState;$/;"	t	typeref:enum:__anon4
 _BSD_SOURCE	src/fmacros.h	/^#define _BSD_SOURCE$/;"	d
 _Command	src/smarta.h	/^typedef struct _Command {$/;"	s
+_Hash	src/hash.c	/^struct _Hash {$/;"	s	file:
 _POSIX_C_SOURCE	src/fmacros.h	/^#define _POSIX_C_SOURCE /;"	d
 _Parser	src/parser.h	/^typedef struct _Parser {$/;"	s
-_SMARTA_HASH_H_	src/hash.h	/^#define _SMARTA_HASH_H_$/;"	d
 _SMARTA_H_	src/smarta.h	/^#define _SMARTA_H_$/;"	d
 _SMARTA_PARSER_H_	src/parser.h	/^#define _SMARTA_PARSER_H_$/;"	d
 _SMARTA_SASL_H__	src/sasl.h	/^#define _SMARTA_SASL_H__$/;"	d
@@ -185,10 +148,11 @@ _XOPEN_SOURCE	src/fmacros.h	/^#define _XOPEN_SOURCE$/;"	d
 _XmppStanza	src/stanza.h	/^typedef struct _XmppStanza {$/;"	s
 _XmppStream	src/xmpp.h	/^struct _XmppStream {$/;"	s
 _XmppStreamError	src/xmpp.h	/^struct _XmppStreamError {$/;"	s
+_ZMALLOC_H	src/zmalloc.h	/^#define _ZMALLOC_H$/;"	d
 __ADLIST_H__	src/adlist.h	/^#define __ADLIST_H__$/;"	d
 __AE_H__	src/ae.h	/^#define __AE_H__$/;"	d
 __CONFIG_H	src/config.h	/^#define __CONFIG_H$/;"	d
-__DICT_H	src/dict.h	/^#define __DICT_H$/;"	d
+__HASH_H__	src/hash.h	/^#define __HASH_H__$/;"	d
 __HIREDIS_FMACRO_H	src/fmacros.h	/^#define __HIREDIS_FMACRO_H$/;"	d
 __SDS_H	src/sds.h	/^#define __SDS_H$/;"	d
 __SHA1_H	src/sha1.h	/^#define __SHA1_H$/;"	d
@@ -199,39 +163,27 @@ _add_key	src/sasl.c	/^static char *_add_key(hash_t *table, const char *key, $/;"
 _base64_charmap	src/sasl.c	/^static const char _base64_charmap[65] = {$/;"	v	file:
 _base64_invcharmap	src/sasl.c	/^static const char _base64_invcharmap[256] = {$/;"	v	file:
 _characters	src/parser.c	/^static void _characters(void *userdata, const XML_Char *s, int len) {$/;"	f	file:
-_dictClear	src/dict.c	/^int _dictClear(dict *d, dictht *ht)$/;"	f
-_dictExpandIfNeeded	src/dict.c	/^static int _dictExpandIfNeeded(dict *d)$/;"	f	file:
-_dictInit	src/dict.c	/^int _dictInit(dict *d, dictType *type,$/;"	f
-_dictKeyIndex	src/dict.c	/^static int _dictKeyIndex(dict *d, const void *key)$/;"	f	file:
-_dictNextPower	src/dict.c	/^static unsigned long _dictNextPower(unsigned long size)$/;"	f	file:
-_dictPrintStatsHt	src/dict.c	/^static void _dictPrintStatsHt(dictht *ht) {$/;"	f	file:
-_dictRehashStep	src/dict.c	/^static void _dictRehashStep(dict *d) {$/;"	f	file:
-_dictReset	src/dict.c	/^static void _dictReset(dictht *ht)$/;"	f	file:
 _digest_to_hex	src/sasl.c	/^static void _digest_to_hex(const char *digest, char *hex) {$/;"	f	file:
 _end_element	src/parser.c	/^static void _end_element(void *userdata, const XML_Char *name) {$/;"	f	file:
 _get_stream_attribute	src/xmpp.c	/^static char *_get_stream_attribute(char **attrs, char *name) {$/;"	f	file:
+_handle_stream_end	src/xmpp.c	/^static void _handle_stream_end(char *name, void * const userdata) {$/;"	f	file:
+_handle_stream_stanza	src/xmpp.c	/^static void _handle_stream_stanza(XmppStanza * const stanza, void * const userdata) {$/;"	f	file:
+_handle_stream_start	src/xmpp.c	/^static void _handle_stream_start(char *name, char **attrs, $/;"	f	file:
 _hash_iterator_t	src/hash.c	/^struct _hash_iterator_t {$/;"	s	file:
-_hash_key	src/hash.c	/^static int _hash_key(hash_t *table, const char *key)$/;"	f	file:
-_hash_t	src/hash.c	/^struct _hash_t {$/;"	s	file:
+_hash_key	src/hash.c	/^static int _hash_key(Hash *table, const char *key)$/;"	f	file:
 _hashentry_t	src/hash.c	/^struct _hashentry_t {$/;"	s	file:
 _log_open_tag	src/xmpp.c	/^static void _log_open_tag(char **attrs) {$/;"	f	file:
 _make_quoted	src/sasl.c	/^static char *_make_quoted(const char *s) {$/;"	f	file:
 _make_sasl_auth	src/xmpp.c	/^static XmppStanza *_make_sasl_auth(const char *mechanism) {$/;"	f	file:
 _make_starttls	src/xmpp.c	/^static XmppStanza *_make_starttls(XmppStream *stream) {$/;"	f	file:
 _make_string	src/sasl.c	/^static char *_make_string(const char *s, const unsigned len) {$/;"	f	file:
-_on_stream_end	src/xmpp.c	/^static void _on_stream_end(char *name, void * const userdata) {$/;"	f	file:
-_on_stream_stanza	src/xmpp.c	/^static void _on_stream_stanza(XmppStanza * const stanza, void * const userdata) {$/;"	f	file:
-_on_stream_start	src/xmpp.c	/^static void _on_stream_start(char *name, char **attrs, $/;"	f	file:
 _parse_digest_challenge	src/sasl.c	/^static hash_t *_parse_digest_challenge(const char *msg)$/;"	f	file:
 _render_stanza_recursive	src/stanza.c	/^static int _render_stanza_recursive(XmppStanza *stanza,$/;"	f	file:
 _render_update	src/stanza.c	/^static inline void _render_update(int *written, const int length,$/;"	f	file:
 _rfds	src/ae_select.c	/^    fd_set _rfds, _wfds;$/;"	m	struct:aeApiState	file:
 _set_attributes	src/parser.c	/^static void _set_attributes(XmppStanza *stanza, const XML_Char **attrs) {$/;"	f	file:
-_snp_pow10	src/snprintf.c	/^static LDOUBLE _snp_pow10 (int exp)$/;"	f	file:
-_snp_round	src/snprintf.c	/^static long _snp_round (LDOUBLE value)$/;"	f	file:
 _start_element	src/parser.c	/^static void _start_element(void *userdata,$/;"	f	file:
 _wfds	src/ae_select.c	/^    fd_set _rfds, _wfds;$/;"	m	struct:aeApiState	file:
-abs_val	src/snprintf.c	/^static LDOUBLE abs_val (LDOUBLE value)$/;"	f	file:
 aeAddMillisecondsToNow	src/ae.c	/^static void aeAddMillisecondsToNow(long long milliseconds, long *sec, long *ms) {$/;"	f	file:
 aeApiAddEvent	src/ae_epoll.c	/^static int aeApiAddEvent(aeEventLoop *eventLoop, int fd, int mask) {$/;"	f	file:
 aeApiAddEvent	src/ae_kqueue.c	/^static int aeApiAddEvent(aeEventLoop *eventLoop, int fd, int mask) {$/;"	f	file:
@@ -323,7 +275,6 @@ bound_jid	src/xmpp.h	/^    char *bound_jid;$/;"	m	struct:_XmppStream
 buf	src/md5.h	/^	uint32_t buf[4];$/;"	m	struct:MD5Context
 buf	src/sds.h	/^    char buf[];$/;"	m	struct:sdshdr
 buffer	src/sha1.h	/^    uint8_t  buffer[64];$/;"	m	struct:__anon1
-char_to_int	src/snprintf.c	/^#define char_to_int(/;"	d	file:
 check_service	src/sched.c	/^int check_service(struct aeEventLoop *el, long long id, void *clientdata) {$/;"	f
 children	src/stanza.h	/^    struct _XmppStanza *children;$/;"	m	struct:_XmppStanza	typeref:struct:_XmppStanza::_XmppStanza
 clientData	src/ae.h	/^    void *clientData;$/;"	m	struct:aeFileEvent
@@ -333,69 +284,17 @@ connect_timeout	src/xmpp.h	/^    unsigned int connect_timeout;$/;"	m	struct:_Xmp
 connectdomain	src/xmpp.h	/^    char *connectdomain;$/;"	m	struct:_XmppStream
 connectport	src/xmpp.h	/^    char *connectport;$/;"	m	struct:_XmppStream
 count	src/sha1.h	/^    uint32_t count[2];$/;"	m	struct:__anon1
-d	src/dict.h	/^    dict *d;$/;"	m	struct:dictIterator
 daemonize	src/smarta.h	/^    int daemonize;$/;"	m	struct:_Smarta
 data	src/stanza.h	/^    char *data;$/;"	m	struct:_XmppStanza
+decrement_used_memory	src/zmalloc.c	/^#define decrement_used_memory(/;"	d	file:
 depth	src/parser.h	/^    int depth;$/;"	m	struct:_Parser
-dict	src/dict.h	/^typedef struct dict {$/;"	s
-dict	src/dict.h	/^} dict;$/;"	t	typeref:struct:dict
-dictAdd	src/dict.c	/^int dictAdd(dict *d, void *key, void *val)$/;"	f
-dictCompareHashKeys	src/dict.h	/^#define dictCompareHashKeys(/;"	d
-dictCreate	src/dict.c	/^dict *dictCreate(dictType *type,$/;"	f
-dictDelete	src/dict.c	/^int dictDelete(dict *ht, const void *key) {$/;"	f
-dictDeleteNoFree	src/dict.c	/^int dictDeleteNoFree(dict *ht, const void *key) {$/;"	f
-dictDisableResize	src/dict.c	/^void dictDisableResize(void) {$/;"	f
-dictEmpty	src/dict.c	/^void dictEmpty(dict *d) {$/;"	f
-dictEnableResize	src/dict.c	/^void dictEnableResize(void) {$/;"	f
-dictEntry	src/dict.h	/^typedef struct dictEntry {$/;"	s
-dictEntry	src/dict.h	/^} dictEntry;$/;"	t	typeref:struct:dictEntry
-dictExpand	src/dict.c	/^int dictExpand(dict *d, unsigned long size)$/;"	f
-dictFetchValue	src/dict.c	/^void *dictFetchValue(dict *d, const void *key) {$/;"	f
-dictFind	src/dict.c	/^dictEntry *dictFind(dict *d, const void *key)$/;"	f
-dictFreeEntryKey	src/dict.h	/^#define dictFreeEntryKey(/;"	d
-dictFreeEntryVal	src/dict.h	/^#define dictFreeEntryVal(/;"	d
-dictGenCaseHashFunction	src/dict.c	/^unsigned int dictGenCaseHashFunction(const unsigned char *buf, int len) {$/;"	f
-dictGenHashFunction	src/dict.c	/^unsigned int dictGenHashFunction(const unsigned char *buf, int len) {$/;"	f
-dictGenericDelete	src/dict.c	/^static int dictGenericDelete(dict *d, const void *key, int nofree)$/;"	f	file:
-dictGetEntryKey	src/dict.h	/^#define dictGetEntryKey(/;"	d
-dictGetEntryVal	src/dict.h	/^#define dictGetEntryVal(/;"	d
-dictGetIterator	src/dict.c	/^dictIterator *dictGetIterator(dict *d)$/;"	f
-dictGetRandomKey	src/dict.c	/^dictEntry *dictGetRandomKey(dict *d)$/;"	f
-dictGetSafeIterator	src/dict.c	/^dictIterator *dictGetSafeIterator(dict *d) {$/;"	f
-dictHashKey	src/dict.h	/^#define dictHashKey(/;"	d
-dictIdentityHashFunction	src/dict.c	/^unsigned int dictIdentityHashFunction(unsigned int key)$/;"	f
-dictIntHashFunction	src/dict.c	/^unsigned int dictIntHashFunction(unsigned int key)$/;"	f
-dictIsRehashing	src/dict.h	/^#define dictIsRehashing(/;"	d
-dictIterator	src/dict.h	/^typedef struct dictIterator {$/;"	s
-dictIterator	src/dict.h	/^} dictIterator;$/;"	t	typeref:struct:dictIterator
-dictNext	src/dict.c	/^dictEntry *dictNext(dictIterator *iter)$/;"	f
-dictPrintStats	src/dict.c	/^void dictPrintStats(dict *d) {$/;"	f
-dictRehash	src/dict.c	/^int dictRehash(dict *d, int n) {$/;"	f
-dictRehashMilliseconds	src/dict.c	/^int dictRehashMilliseconds(dict *d, int ms) {$/;"	f
-dictRelease	src/dict.c	/^void dictRelease(dict *d)$/;"	f
-dictReleaseIterator	src/dict.c	/^void dictReleaseIterator(dictIterator *iter)$/;"	f
-dictReplace	src/dict.c	/^int dictReplace(dict *d, void *key, void *val)$/;"	f
-dictResize	src/dict.c	/^int dictResize(dict *d)$/;"	f
-dictSetHashKey	src/dict.h	/^#define dictSetHashKey(/;"	d
-dictSetHashVal	src/dict.h	/^#define dictSetHashVal(/;"	d
-dictSize	src/dict.h	/^#define dictSize(/;"	d
-dictSlots	src/dict.h	/^#define dictSlots(/;"	d
-dictType	src/dict.h	/^typedef struct dictType {$/;"	s
-dictType	src/dict.h	/^} dictType;$/;"	t	typeref:struct:dictType
-dict_can_resize	src/dict.c	/^static int dict_can_resize = 1;$/;"	v	file:
-dict_force_resize_ratio	src/dict.c	/^static unsigned int dict_force_resize_ratio = 5;$/;"	v	file:
-dictht	src/dict.h	/^typedef struct dictht {$/;"	s
-dictht	src/dict.h	/^} dictht;$/;"	t	typeref:struct:dictht
 digest_to_hex	src/sha1.c	/^void digest_to_hex(const uint8_t digest[SHA1_DIGEST_SIZE], char *output) {$/;"	f
 direction	src/adlist.h	/^    int direction;$/;"	m	struct:listIter
 domain	src/xmpp.h	/^    char *domain;$/;"	m	struct:_XmppStream
-dopr	src/snprintf.c	/^static int dopr (char *buffer, size_t maxlen, const char *format, va_list args)$/;"	f	file:
-dopr_outch	src/snprintf.c	/^static int dopr_outch (char *buffer, size_t *currlen, size_t maxlen, char c)$/;"	f	file:
 dup	src/adlist.h	/^    void *(*dup)(void *ptr);$/;"	m	struct:list
 el	src/smarta.h	/^    aeEventLoop *el;$/;"	m	struct:_Smarta
 endcb	src/parser.h	/^    parser_end_callback endcb;$/;"	m	struct:_Parser
-entries	src/hash.c	/^    hashentry_t **entries;$/;"	m	struct:_hash_t	file:
-entry	src/dict.h	/^    dictEntry *entry, *nextEntry;$/;"	m	struct:dictIterator
+entries	src/hash.c	/^    hashentry_t **entries;$/;"	m	struct:_Hash	file:
 entry	src/hash.c	/^    hashentry_t *entry;$/;"	m	struct:_hash_iterator_t	file:
 epfd	src/ae_epoll.c	/^    int epfd;$/;"	m	struct:aeApiState	file:
 error	src/xmpp.h	/^    int error;$/;"	m	struct:_XmppStream
@@ -407,32 +306,26 @@ fd	src/ae.h	/^    int fd;$/;"	m	struct:aeFiredEvent
 fd	src/xmpp.h	/^    int fd; \/\/socket$/;"	m	struct:_XmppStream
 finalizerProc	src/ae.h	/^    aeEventFinalizerProc *finalizerProc;$/;"	m	struct:aeTimeEvent
 fired	src/ae.h	/^    aeFiredEvent fired[AE_SETSIZE]; \/* Fired events *\/$/;"	m	struct:aeEventLoop
-fmtfp	src/snprintf.c	/^static int fmtfp (char *buffer, size_t *currlen, size_t maxlen,$/;"	f	file:
-fmtint	src/snprintf.c	/^static int fmtint (char *buffer, size_t *currlen, size_t maxlen,$/;"	f	file:
-fmtstr	src/snprintf.c	/^static int fmtstr (char *buffer, size_t *currlen, size_t maxlen,$/;"	f	file:
 free	src/adlist.h	/^    void (*free)(void *ptr);$/;"	m	struct:list
-free	src/hash.c	/^    hash_free_func free;$/;"	m	struct:_hash_t	file:
+free	src/hash.c	/^    hash_free_func free;$/;"	m	struct:_Hash	file:
 free	src/sds.h	/^    int free;$/;"	m	struct:sdshdr
-hashFunction	src/dict.h	/^    unsigned int (*hashFunction)(const void *key);$/;"	m	struct:dictType
-hash_add	src/hash.c	/^int hash_add(hash_t *table, const char * const key, void *data)$/;"	f
-hash_clone	src/hash.c	/^hash_t *hash_clone(hash_t * const table)$/;"	f
-hash_drop	src/hash.c	/^int hash_drop(hash_t *table, const char *key)$/;"	f
+hash_add	src/hash.c	/^int hash_add(Hash *table, const char * const key, void *data)$/;"	f
+hash_clone	src/hash.c	/^Hash *hash_clone(Hash * const table)$/;"	f
+hash_drop	src/hash.c	/^int hash_drop(Hash *table, const char *key)$/;"	f
 hash_free_func	src/hash.h	/^typedef void (*hash_free_func)(void *p);$/;"	t
-hash_get	src/hash.c	/^void *hash_get(hash_t *table, const char *key)$/;"	f
-hash_iter_new	src/hash.c	/^hash_iterator_t *hash_iter_new(hash_t *table)$/;"	f
+hash_get	src/hash.c	/^void *hash_get(Hash *table, const char *key)$/;"	f
+hash_iter_new	src/hash.c	/^hash_iterator_t *hash_iter_new(Hash *table)$/;"	f
 hash_iter_next	src/hash.c	/^const char * hash_iter_next(hash_iterator_t *iter)$/;"	f
 hash_iter_release	src/hash.c	/^void hash_iter_release(hash_iterator_t *iter)$/;"	f
 hash_iterator_t	src/hash.h	/^typedef struct _hash_iterator_t hash_iterator_t;$/;"	t	typeref:struct:_hash_iterator_t
-hash_new	src/hash.c	/^hash_t *hash_new(const int size, hash_free_func free)$/;"	f
-hash_num_keys	src/hash.c	/^int hash_num_keys(hash_t *table)$/;"	f
-hash_release	src/hash.c	/^void hash_release(hash_t * const table)$/;"	f
-hash_t	src/hash.h	/^typedef struct _hash_t hash_t;$/;"	t	typeref:struct:_hash_t
+hash_new	src/hash.c	/^Hash *hash_new(const int size, hash_free_func free)$/;"	f
+hash_num_keys	src/hash.c	/^int hash_num_keys(Hash *table)$/;"	f
+hash_release	src/hash.c	/^void hash_release(Hash * const table)$/;"	f
 hashentry_t	src/hash.c	/^typedef struct _hashentry_t hashentry_t;$/;"	t	typeref:struct:_hashentry_t	file:
 head	src/adlist.h	/^    listNode *head;$/;"	m	struct:list
-ht	src/dict.h	/^    dictht ht[2];$/;"	m	struct:dict
 id	src/ae.h	/^    long long id; \/* time event identifier. *\/$/;"	m	struct:aeTimeEvent
 in	src/md5.h	/^	unsigned char in[64];$/;"	m	struct:MD5Context
-index	src/dict.h	/^    int table, index, safe;$/;"	m	struct:dictIterator
+increment_used_memory	src/zmalloc.c	/^#define increment_used_memory(/;"	d	file:
 index	src/hash.c	/^    int index;$/;"	m	struct:_hash_iterator_t	file:
 int16_t	src/sasl.c	/^  typedef short int               int16_t;$/;"	t	file:
 int16_t	src/sha1.c	/^  typedef short int               int16_t;$/;"	t	file:
@@ -442,19 +335,14 @@ int64_t	src/sasl.c	/^  typedef __int64                 int64_t;$/;"	t	file:
 int64_t	src/sha1.c	/^  typedef __int64                 int64_t;$/;"	t	file:
 int8_t	src/sasl.c	/^  typedef signed char             int8_t;$/;"	t	file:
 int8_t	src/sha1.c	/^  typedef signed char             int8_t;$/;"	t	file:
-iq_callbacks	src/xmpp.h	/^    dict *iq_callbacks;$/;"	m	struct:_XmppStream
+iq_callbacks	src/xmpp.h	/^    hash_t *iq_callbacks;$/;"	m	struct:_XmppStream
 isslave	src/smarta.h	/^    int isslave;$/;"	m	struct:_Smarta
-iterators	src/dict.h	/^    int iterators; \/* number of iterators currently running *\/$/;"	m	struct:dict
 jid	src/xmpp.h	/^    char *jid;$/;"	m	struct:_XmppStream
-key	src/dict.h	/^    void *key;$/;"	m	struct:dictEntry
 key	src/hash.c	/^    char *key;$/;"	m	struct:_hashentry_t	file:
-keyCompare	src/dict.h	/^    int (*keyCompare)(void *privdata, const void *key1, const void *key2);$/;"	m	struct:dictType
-keyDestructor	src/dict.h	/^    void (*keyDestructor)(void *privdata, void *key);$/;"	m	struct:dictType
-keyDup	src/dict.h	/^    void *(*keyDup)(void *privdata, const void *key);$/;"	m	struct:dictType
 kqfd	src/ae_kqueue.c	/^    int kqfd;$/;"	m	struct:aeApiState	file:
 len	src/adlist.h	/^    unsigned int len;$/;"	m	struct:list
 len	src/sds.h	/^    int len;$/;"	m	struct:sdshdr
-length	src/hash.c	/^    int length;$/;"	m	struct:_hash_t	file:
+length	src/hash.c	/^    int length;$/;"	m	struct:_Hash	file:
 list	src/adlist.h	/^typedef struct list {$/;"	s
 list	src/adlist.h	/^} list;$/;"	t	typeref:struct:list
 listAddNodeHead	src/adlist.c	/^list *listAddNodeHead(list *list, void *value)$/;"	f
@@ -492,7 +380,6 @@ logfile	src/smarta.h	/^    char *logfile;$/;"	m	struct:_Smarta
 main	src/sds.c	/^int main(void) {$/;"	f
 main	src/sha1.c	/^int main(int argc, char** argv) {$/;"	f
 main	src/smarta.c	/^int main(int argc, char **argv) {$/;"	f
-main	src/snprintf.c	/^int main (void)$/;"	f
 mask	src/ae.h	/^    int mask; \/* one of AE_(READABLE|WRITABLE) *\/$/;"	m	struct:aeFileEvent
 mask	src/ae.h	/^    int mask;$/;"	m	struct:aeFiredEvent
 masterauth	src/smarta.h	/^    char *masterauth;$/;"	m	struct:_Smarta
@@ -506,11 +393,9 @@ name	src/smarta.h	/^    char *name;$/;"	m	struct:_Smarta
 next	src/adlist.h	/^    listNode *next;$/;"	m	struct:listIter
 next	src/adlist.h	/^    struct listNode *next;$/;"	m	struct:listNode	typeref:struct:listNode::listNode
 next	src/ae.h	/^    struct aeTimeEvent *next;$/;"	m	struct:aeTimeEvent	typeref:struct:aeTimeEvent::aeTimeEvent
-next	src/dict.h	/^    struct dictEntry *next;$/;"	m	struct:dictEntry	typeref:struct:dictEntry::dictEntry
 next	src/hash.c	/^    hashentry_t *next;$/;"	m	struct:_hashentry_t	file:
 next	src/stanza.h	/^    struct _XmppStanza *next;$/;"	m	struct:_XmppStanza	typeref:struct:_XmppStanza::_XmppStanza
-nextEntry	src/dict.h	/^    dictEntry *entry, *nextEntry;$/;"	m	struct:dictIterator
-num_keys	src/hash.c	/^    int num_keys;$/;"	m	struct:_hash_t	file:
+num_keys	src/hash.c	/^    int num_keys;$/;"	m	struct:_Hash	file:
 parent	src/stanza.h	/^    struct _XmppStanza *parent;$/;"	m	struct:_XmppStanza	typeref:struct:_XmppStanza::_XmppStanza
 parser	src/xmpp.h	/^    Parser *parser;$/;"	m	struct:_XmppStream
 parser_end_callback	src/parser.h	/^typedef void (*parser_end_callback)(char *name, void * const userdata);$/;"	t
@@ -525,18 +410,15 @@ period	src/smarta.h	/^    long period;$/;"	m	struct:_Service
 pidfile	src/smarta.h	/^    char *pidfile;$/;"	m	struct:_Smarta
 prev	src/adlist.h	/^    struct listNode *prev;$/;"	m	struct:listNode	typeref:struct:listNode::listNode
 prev	src/stanza.h	/^    struct _XmppStanza *prev;$/;"	m	struct:_XmppStanza	typeref:struct:_XmppStanza::_XmppStanza
-privdata	src/dict.h	/^    void *privdata;$/;"	m	struct:dict
 processTimeEvents	src/ae.c	/^static int processTimeEvents(aeEventLoop *eventLoop) {$/;"	f	file:
 redis_fstat	src/config.h	/^#define redis_fstat /;"	d
 redis_stat	src/config.h	/^#define redis_stat /;"	d
+ref	src/hash.c	/^    unsigned int ref;$/;"	m	struct:_Hash	file:
 ref	src/hash.c	/^    unsigned int ref;$/;"	m	struct:_hash_iterator_t	file:
-ref	src/hash.c	/^    unsigned int ref;$/;"	m	struct:_hash_t	file:
 ref	src/stanza.h	/^    int ref;$/;"	m	struct:_XmppStanza
-rehashidx	src/dict.h	/^    int rehashidx; \/* rehashing not in progress if rehashidx == -1 *\/$/;"	m	struct:dict
 rfds	src/ae_select.c	/^    fd_set rfds, wfds;$/;"	m	struct:aeApiState	file:
 rfileProc	src/ae.h	/^    aeFileProc *rfileProc;$/;"	m	struct:aeFileEvent
 rol	src/sha1.c	/^#define rol(/;"	d	file:
-safe	src/dict.h	/^    int table, index, safe;$/;"	m	struct:dictIterator
 sasl_digest_md5	src/sasl.c	/^char *sasl_digest_md5(const char *challenge,$/;"	f
 sasl_plain	src/sasl.c	/^char *sasl_plain(const char *authid, const char *password) {$/;"	f
 sasl_support	src/xmpp.h	/^    int sasl_support; \/* if true, field is a bitfield of supported mechanisms *\/ $/;"	m	struct:_XmppStream
@@ -573,8 +455,6 @@ sdsupdatelen	src/sds.c	/^void sdsupdatelen(sds s) {$/;"	f
 send_message	src/sched.c	/^void send_message(XmppStream *stream, sds result) {$/;"	f
 server	src/smarta.h	/^    char *server;$/;"	m	struct:_Smarta
 services	src/smarta.h	/^    list *services;$/;"	m	struct:_Smarta
-size	src/dict.h	/^    unsigned long size;$/;"	m	struct:dictht
-sizemask	src/dict.h	/^    unsigned long sizemask;$/;"	m	struct:dictht
 smarta	src/smarta.c	/^Smarta smarta;$/;"	v
 smarta_cron	src/smarta.c	/^static int smarta_cron(struct aeEventLoop *eventLoop, long long id, void *clientData) {$/;"	f	file:
 smarta_init	src/smarta.c	/^void smarta_init() {$/;"	f
@@ -586,11 +466,10 @@ startcb	src/parser.h	/^    parser_start_callback startcb;$/;"	m	struct:_Parser
 state	src/sha1.h	/^    uint32_t state[5];$/;"	m	struct:__anon1
 state	src/xmpp.h	/^    XmppStreamState state;$/;"	m	struct:_XmppStream
 stop	src/ae.h	/^    int stop;$/;"	m	struct:aeEventLoop
+stream	src/smarta.h	/^    XmppStream *stream;$/;"	m	struct:_Smarta
 stream_error	src/xmpp.h	/^    XmppStreamError *stream_error;$/;"	m	struct:_XmppStream
 stream_id	src/xmpp.h	/^    char *stream_id;$/;"	m	struct:_XmppStream
-table	src/dict.h	/^    dictEntry **table;$/;"	m	struct:dictht
-table	src/dict.h	/^    int table, index, safe;$/;"	m	struct:dictIterator
-table	src/hash.c	/^    hash_t *table;$/;"	m	struct:_hash_iterator_t	file:
+table	src/hash.c	/^    Hash *table;$/;"	m	struct:_hash_iterator_t	file:
 tail	src/adlist.h	/^    listNode *tail;$/;"	m	struct:list
 test_cond	src/sds.c	/^#define test_cond(/;"	d	file:
 test_data	src/sha1.c	/^static char *test_data[] = {$/;"	v	file:
@@ -599,11 +478,9 @@ test_results	src/sha1.c	/^static char *test_results[] = {$/;"	v	file:
 text	src/xmpp.h	/^    char *text;$/;"	m	struct:_XmppStreamError
 timeEventHead	src/ae.h	/^    aeTimeEvent *timeEventHead;$/;"	m	struct:aeEventLoop
 timeEventNextId	src/ae.h	/^    long long timeEventNextId;$/;"	m	struct:aeEventLoop
-timeInMilliseconds	src/dict.c	/^long long timeInMilliseconds(void) {$/;"	f
 timeProc	src/ae.h	/^    aeTimeProc *timeProc;$/;"	m	struct:aeTimeEvent
 timeout_stamp	src/xmpp.h	/^    uint64_t timeout_stamp;$/;"	m	struct:_XmppStream
 tls_support	src/xmpp.h	/^    int tls_support;$/;"	m	struct:_XmppStream
-type	src/dict.h	/^    dictType *type;$/;"	m	struct:dict
 type	src/stanza.h	/^    XmppStanzaType type;$/;"	m	struct:_XmppStanza
 type	src/xmpp.h	/^    XmppErrorType type;$/;"	m	struct:_XmppStreamError
 uint16_t	src/sasl.c	/^  typedef unsigned short int        uint16_t;$/;"	t	file:
@@ -615,12 +492,10 @@ uint8_t	src/sasl.c	/^  typedef unsigned char             uint8_t;$/;"	t	file:
 uint8_t	src/sha1.c	/^  typedef unsigned char             uint8_t;$/;"	t	file:
 usage	src/smarta.c	/^void usage() {$/;"	f
 usage	src/smarta.h	/^    char *usage;$/;"	m	struct:_Command
-used	src/dict.h	/^    unsigned long used;$/;"	m	struct:dictht
+used_memory	src/zmalloc.c	/^static size_t used_memory = 0;$/;"	v	file:
+used_memory_mutex	src/zmalloc.c	/^pthread_mutex_t used_memory_mutex = PTHREAD_MUTEX_INITIALIZER;$/;"	v
 userdata	src/parser.h	/^    void *userdata;$/;"	m	struct:_Parser
 userdata	src/xmpp.h	/^    void *userdata;$/;"	m	struct:_XmppStream
-val	src/dict.h	/^    void *val;$/;"	m	struct:dictEntry
-valDestructor	src/dict.h	/^    void (*valDestructor)(void *privdata, void *obj);$/;"	m	struct:dictType
-valDup	src/dict.h	/^    void *(*valDup)(void *privdata, const void *obj);$/;"	m	struct:dictType
 value	src/adlist.h	/^    void *value;$/;"	m	struct:listNode
 value	src/hash.c	/^    void *value;$/;"	m	struct:_hashentry_t	file:
 verbosity	src/smarta.h	/^    int verbosity;$/;"	m	struct:_Smarta
@@ -639,7 +514,6 @@ xmpp_read	src/smarta.c	/^void xmpp_read(aeEventLoop *el, int fd, void *privdata,
 xmpp_send	src/xmpp.c	/^void xmpp_send(XmppStream *stream, XmppStanza *stanza) {$/;"	f
 xmpp_send_raw	src/xmpp.c	/^void xmpp_send_raw(XmppStream *stream,$/;"	f
 xmpp_send_raw_string	src/xmpp.c	/^void xmpp_send_raw_string(XmppStream *stream, char *fmt, ...) {$/;"	f
-xmpp_snprintf	src/snprintf.c	/^int xmpp_snprintf (char *str,size_t count,const char *fmt,...)$/;"	f
 xmpp_stanza_add_child	src/stanza.c	/^int xmpp_stanza_add_child(XmppStanza *stanza, XmppStanza *child)$/;"	f
 xmpp_stanza_clone	src/stanza.c	/^XmppStanza *xmpp_stanza_clone(XmppStanza * const stanza) {$/;"	f
 xmpp_stanza_copy	src/stanza.c	/^XmppStanza *xmpp_stanza_copy(const XmppStanza * const stanza) {$/;"	f
@@ -667,7 +541,7 @@ xmpp_stanza_set_ns	src/stanza.c	/^int xmpp_stanza_set_ns(XmppStanza * const stan
 xmpp_stanza_set_text	src/stanza.c	/^int xmpp_stanza_set_text(XmppStanza *stanza,$/;"	f
 xmpp_stanza_set_text_with_size	src/stanza.c	/^int xmpp_stanza_set_text_with_size(XmppStanza *stanza,$/;"	f
 xmpp_stanza_set_type	src/stanza.c	/^int xmpp_stanza_set_type(XmppStanza * const stanza,$/;"	f
-xmpp_stanza_to_text	src/stanza.c	/^int xmpp_stanza_to_text(XmppStanza *stanza,$/;"	f
+xmpp_stanza_to_text	src/stanza.c	/^int xmpp_stanza_to_text($/;"	f
 xmpp_stream_auth	src/xmpp.c	/^static void xmpp_stream_auth(XmppStream * const stream, XmppStanza *mechanisms) {$/;"	f	file:
 xmpp_stream_bind	src/xmpp.c	/^static void xmpp_stream_bind(XmppStream *stream, XmppStanza *bind) {$/;"	f	file:
 xmpp_stream_feed	src/xmpp.c	/^int xmpp_stream_feed(XmppStream *stream, char *buffer, int len) {$/;"	f
@@ -679,5 +553,12 @@ xmpp_stream_session	src/xmpp.c	/^static void xmpp_stream_session(XmppStream *str
 xmpp_stream_set_jid	src/xmpp.c	/^void xmpp_stream_set_jid(XmppStream *stream, const char *jid) {$/;"	f
 xmpp_stream_set_pass	src/xmpp.c	/^void xmpp_stream_set_pass(XmppStream *stream, const char *pass) {$/;"	f
 xmpp_stream_starttls	src/xmpp.c	/^static void xmpp_stream_starttls(XmppStream *stream) {$/;"	f	file:
-xmpp_vsnprintf	src/snprintf.c	/^int xmpp_vsnprintf (char *str, size_t count, const char *fmt, va_list args)$/;"	f
 yesnotoi	src/smarta.c	/^int yesnotoi(char *s) {$/;"	f
+zfree	src/zmalloc.c	/^void zfree(void *ptr) {$/;"	f
+zmalloc	src/zmalloc.c	/^void *zmalloc(size_t size) {$/;"	f
+zmalloc_enable_thread_safeness	src/zmalloc.c	/^void zmalloc_enable_thread_safeness(void) {$/;"	f
+zmalloc_oom	src/zmalloc.c	/^static void zmalloc_oom(size_t size) {$/;"	f	file:
+zmalloc_thread_safe	src/zmalloc.c	/^static int zmalloc_thread_safe = 0;$/;"	v	file:
+zmalloc_used_memory	src/zmalloc.c	/^size_t zmalloc_used_memory(void) {$/;"	f
+zrealloc	src/zmalloc.c	/^void *zrealloc(void *ptr, size_t size) {$/;"	f
+zstrdup	src/zmalloc.c	/^char *zstrdup(const char *s) {$/;"	f

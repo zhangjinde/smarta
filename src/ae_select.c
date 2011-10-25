@@ -3,6 +3,7 @@
  * Released under the BSD license. See the COPYING file for more info. */
 
 #include <string.h>
+#include "zmalloc.h"
 
 typedef struct aeApiState {
     fd_set rfds, wfds;
@@ -12,7 +13,7 @@ typedef struct aeApiState {
 } aeApiState;
 
 static int aeApiCreate(aeEventLoop *eventLoop) {
-    aeApiState *state = malloc(sizeof(aeApiState));
+    aeApiState *state = zmalloc(sizeof(aeApiState));
 
     if (!state) return -1;
     FD_ZERO(&state->rfds);
@@ -22,7 +23,7 @@ static int aeApiCreate(aeEventLoop *eventLoop) {
 }
 
 static void aeApiFree(aeEventLoop *eventLoop) {
-    free(eventLoop->apidata);
+    zfree(eventLoop->apidata);
 }
 
 static int aeApiAddEvent(aeEventLoop *eventLoop, int fd, int mask) {

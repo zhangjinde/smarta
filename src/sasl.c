@@ -20,9 +20,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "jid.h"
 #include "hash.h"
 #include "md5.h"
 #include "sasl.h"
+#include "zmalloc.h"
 
 /* make sure the stdint.h types are available */
 #if defined(_MSC_VER) /* Microsoft Visual C++ */
@@ -51,14 +53,14 @@ char *sasl_plain(const char *authid, const char *password) {
 
     idlen = strlen(authid);
     passlen = strlen(password);
-    msg = malloc(2 + idlen + passlen);
+    msg = zmalloc(2 + idlen + passlen);
 
     msg[0] = '\0';
     memcpy(msg+1, authid, idlen);
     msg[1+idlen] = '\0';
     memcpy(msg+1+idlen+1, password, passlen);
     result = base64_encode((unsigned char *)msg, 2 + idlen + passlen);
-    free(msg);
+    zfree(msg);
 
     return result;
 }
@@ -69,7 +71,7 @@ char *sasl_plain(const char *authid, const char *password) {
 static char *_make_string(const char *s, const unsigned len) {
     char *result;
 
-    result = malloc(len + 1);
+    result = zmalloc(len + 1);
     if (result != NULL) {
 	memcpy(result, s, len);
 	result[len] = '\0';
@@ -82,7 +84,7 @@ static char *_make_quoted(const char *s) {
     char *result;
     int len = strlen(s);
 
-    result = malloc(len + 3);
+    result = zmalloc(len + 3);
     if (result != NULL) {
 	result[0] = '"';
 	memcpy(result+1, s, len);
@@ -93,9 +95,9 @@ static char *_make_quoted(const char *s) {
 }
 
 /* split key, value pairs into a hash */
-static hash_t *_parse_digest_challenge(const char *msg)
+static Hash *_parse_digest_challenge(const char *msg)
 {
-    hash_t *result;
+    Hash *result;
     unsigned char *text;
     char *key, *value;
     unsigned char *s, *t;
@@ -145,10 +147,10 @@ static hash_t *_parse_digest_challenge(const char *msg)
 	    /* TODO: check for collisions per spec */
 	    hash_add(result, key, value);
 	    /* hash table now owns the value, free the key */
-	    free(key);
+	    zfree(key);
 	}
     }
-    free(text);
+    zfree(text);
 
     return result;
 }
@@ -165,7 +167,7 @@ static void _digest_to_hex(const char *digest, char *hex) {
 }
 
 /** append 'key="value"' to a buffer, growing as necessary */
-static char *_add_key(hash_t *table, const char *key, 
+static char *_add_key(Hash *table, const char *key, 
 		      char *buf, int *len, int quote) {
     int olen,nlen;
     int keylen, valuelen;
@@ -174,7 +176,7 @@ static char *_add_key(hash_t *table, const char *key,
 
     /* allocate a zero-length string if necessary */
     if (buf == NULL) {
-	buf = malloc(1);
+	buf = zmalloc(1);
 	buf[0] = '\0';
     }
     if (buf == NULL) return NULL;
@@ -196,7 +198,7 @@ static char *_add_key(hash_t *table, const char *key,
     keylen = strlen(key);
     valuelen = strlen(qvalue);
     nlen = (olen ? 1 : 0) + keylen + 1 + valuelen + 1;
-    buf = realloc(buf, olen+nlen);
+    buf = zrealloc(buf, olen+nlen);
 
     if (buf != NULL) {
 	c = buf + olen;
@@ -207,7 +209,7 @@ static char *_add_key(hash_t *table, const char *key,
 	*c++ = '\0';
     }
 
-    if (quote) free((char *)qvalue);
+    if (quote) zfree((char *)qvalue);
 
     return buf;
 }
@@ -215,7 +217,7 @@ static char *_add_key(hash_t *table, const char *key,
 /** generate auth response string for the SASL DIGEST-MD5 mechanism */
 char *sasl_digest_md5(const char *challenge,
 			const char *jid, const char *password) {
-    hash_t *table;
+    Hash *table;
     char *result = NULL;
     char *node, *domain, *realm;
     char *value;
@@ -239,17 +241,17 @@ char *sasl_digest_md5(const char *challenge,
        server */
     realm = hash_get(table, "realm");
     if (realm == NULL || strlen(realm) == 0) {
-	hash_add(table, "realm", strdup(domain));
+	hash_add(table, "realm", zstrdup(domain));
 	realm = hash_get(table, "realm");
     }
 
     /* add our response fields */
-    hash_add(table, "username", strdup(node));
+    hash_add(table, "username", zstrdup(node));
     /* TODO: generate a random cnonce */
-    hash_add(table, "cnonce", strdup("00DEADBEEF00"));
-    hash_add(table, "nc", strdup("00000001"));
-    hash_add(table, "qop", strdup("auth"));
-    value = malloc(5 + strlen(domain) + 1);
+    hash_add(table, "cnonce", zstrdup("00DEADBEEF00"));
+    hash_add(table, "nc", zstrdup("00000001"));
+    hash_add(table, "qop", zstrdup("auth"));
+    value = zmalloc(5 + strlen(domain) + 1);
     memcpy(value, "xmpp/", 5);
     memcpy(value+5, domain, strlen(domain));
     value[5+strlen(domain)] = '\0';
@@ -315,7 +317,7 @@ char *sasl_digest_md5(const char *challenge,
     MD5Update(&MD5, (unsigned char *)hex, 32);
     MD5Final(digest, &MD5);
 
-    response = malloc(32+1);
+    response = zmalloc(32+1);
     _digest_to_hex((char *)digest, hex);
     memcpy(response, hex, 32);
     response[32] = '\0';
@@ -334,13 +336,13 @@ char *sasl_digest_md5(const char *challenge,
     result = _add_key(table, "response", result, &rlen, 0); 
     result = _add_key(table, "charset", result, &rlen, 0);
  
-    free(node);
-    free(domain);
+    zfree(node);
+    zfree(domain);
     hash_release(table); /* also frees value strings */
 
     /* reuse response for the base64 encode of our result */
     response = base64_encode((unsigned char *)result, strlen(result));
-    free(result);
+    zfree(result);
 
     return response;
 }
@@ -395,7 +397,7 @@ char *base64_encode(const unsigned char * const buffer, const unsigned len) {
     int i;
 
     clen = base64_encoded_len(len);
-    cbuf = malloc(clen + 1);
+    cbuf = zmalloc(clen + 1);
     if (cbuf != NULL) {
 	c = cbuf;
 	/* loop over data, turning every 3 bytes into 4 characters */
@@ -472,7 +474,7 @@ unsigned char *base64_decode(const char * const buffer, const unsigned len) {
     if (len & 0x03) return NULL;
 
     dlen = base64_decoded_len(buffer, len);
-    dbuf = malloc(dlen + 1);
+    dbuf = zmalloc(dlen + 1);
     if (dbuf != NULL) {
 	d = dbuf;
 	/* loop over each set of 4 characters, decoding 3 bytes */
@@ -536,7 +538,7 @@ unsigned char *base64_decode(const char * const buffer, const unsigned len) {
 
 _base64_decode_error:	
     /* invalid character; abort decoding! */
-    free(dbuf);
+    zfree(dbuf);
     return NULL;
 }
 

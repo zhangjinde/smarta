@@ -21,7 +21,7 @@ typedef struct _XmppStanza {
 
     char *data;
 
-    hash_t *attributes;
+    Hash *attributes;
 } XmppStanza;
 
 /** allocate an initialize a blank stanza */

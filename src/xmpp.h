@@ -83,6 +83,9 @@
  *  Success error code.
  */
 #define XMPP_OK 0
+
+#define XMPP_EMEM -1
+
 /** @def XMPP_EINVOP
  *  Invalid operation error code.
  *
@@ -175,7 +178,7 @@ struct _XmppStream {
     void *userdata;
 
     /* other handlers */
-    hash_t *iq_callbacks;
+    Hash *iq_callbacks;
 };
 
 

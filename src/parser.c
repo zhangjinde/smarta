@@ -10,6 +10,7 @@
 
 #include "xmpp.h"
 #include "parser.h"
+#include "zmalloc.h"
 
 static void _start_element(void *userdata,
     const XML_Char *name,
@@ -28,7 +29,7 @@ Parser *parser_new(parser_start_callback startcb,
                    void *userdata) {
     Parser *parser;
 
-    parser = malloc(sizeof(Parser));
+    parser = zmalloc(sizeof(Parser));
 
     parser->expat = NULL;
     parser->startcb = startcb;
@@ -75,7 +76,7 @@ void parser_free(Parser *parser) {
         XML_ParserFree(parser->expat);
     }
 
-    free(parser);
+    zfree(parser);
 }
 
 
@@ -153,19 +154,11 @@ static void _end_element(void *userdata, const XML_Char *name) {
             /* we're finishing a child stanza, so set current to the parent */
             parser->stanza = parser->stanza->parent;
         } else {
-            if(parser->stanza == NULL) {
-                xmpp_log(LOG_ERROR, "before stanza calback, stanza is null!\n");
-            }
             if (parser->stanzacb) {
                 parser->stanzacb(parser->stanza, parser->userdata);
             }
-            if(parser->stanza == NULL) {
-                xmpp_log(LOG_ERROR, "assert failure: stanza is null!\n");
-            }
-            //FIXME:
             xmpp_stanza_release(parser->stanza);
             parser->stanza = NULL;
-            xmpp_log(LOG_DEBUG, "release parser stanza\n");
         }
     }
 }
@@ -183,5 +176,4 @@ static void _characters(void *userdata, const XML_Char *s, int len) {
     xmpp_stanza_add_child(parser->stanza, stanza);
     xmpp_stanza_release(stanza);
 }
-
 
