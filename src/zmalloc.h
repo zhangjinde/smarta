@@ -28,14 +28,13 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef _ZMALLOC_H
-#define _ZMALLOC_H
+#ifndef __ZMALLOC_H
+#define __ZMALLOC_H
 
 void *zmalloc(size_t size);
 void *zrealloc(void *ptr, size_t size);
 void zfree(void *ptr);
 char *zstrdup(const char *s);
 size_t zmalloc_used_memory(void);
-void zmalloc_enable_thread_safeness(void);
 
 #endif /* _ZMALLOC_H */

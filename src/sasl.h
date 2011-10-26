@@ -16,8 +16,8 @@
  * SASL authentication helpers.
  */
 
-#ifndef _SMARTA_SASL_H__
-#define _SMARTA_SASL_H__
+#ifndef __SASL_H
+#define __SASL_H
 
 /** low-level sasl routines */
 

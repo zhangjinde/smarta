@@ -30,8 +30,8 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __AE_H__
-#define __AE_H__
+#ifndef __AE_H
+#define __AE_H
 
 #define AE_SETSIZE (1024*10)    /* Max number of fd supported */
 

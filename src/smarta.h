@@ -1,5 +1,5 @@
-#ifndef _SMARTA_H_
-#define _SMARTA_H_
+#ifndef __SMARTA_H
+#define __SMARTA_H
 
 #include "adlist.h"
 #include "xmpp.h"

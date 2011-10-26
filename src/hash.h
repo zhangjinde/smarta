@@ -1,5 +1,4 @@
-/* hash.h
-** strophe XMPP client library -- hash table interface
+/* hash.h hash table interface
 ** 
 ** Copyright (C) 2005-2009 Collecta, Inc. 
 **
@@ -16,8 +15,8 @@
  *  Hash table API.
  */
 
-#ifndef __HASH_H__
-#define __HASH_H__
+#ifndef __HASH_H
+#define __HASH_H
 
 typedef struct _Hash Hash;
 
@@ -60,4 +59,4 @@ void hash_iter_release(hash_iterator_t *iter);
     the returned key should not be freed */
 const char * hash_iter_next(hash_iterator_t *iter);
 
-#endif /* __LIBXMPPP_HASH_H__ */
+#endif /* _HASH_H__ */

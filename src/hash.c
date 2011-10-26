@@ -1,5 +1,4 @@
-/* hash.c
-** strophe XMPP client library -- hash table implementation
+/* hash.c -- hash table implementation
 ** 
 ** Copyright (C) 2005-2009 Collecta, Inc. 
 **

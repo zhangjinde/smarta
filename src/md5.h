@@ -8,8 +8,8 @@
  *  MD5 hash API.
  */
 
-#ifndef MD5_H
-#define MD5_H
+#ifndef __MD5_H
+#define __MD5_H
 
 /* we use the uint32_t type from stdint.h
  * if it is not available, add a typedef here:

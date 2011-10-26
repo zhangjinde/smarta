@@ -16,8 +16,8 @@
  *  Strophe public C API definitions.
  */
 
-#ifndef _SMARTA_XMPP_H__
-#define _SMARTA_XMPP_H__
+#ifndef __XMPP_H
+#define __XMPP_H
 
 #include <stdio.h>
 #include <stdlib.h>

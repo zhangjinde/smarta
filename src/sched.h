@@ -1,5 +1,5 @@
-#ifndef __SMARTA_SCHED_H__
-#define __SMARTA_SCHED_H__
+#ifndef __SCHED_H
+#define __SCHED_H
 
 void sched_run();
 

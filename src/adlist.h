@@ -28,8 +28,8 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __ADLIST_H__
-#define __ADLIST_H__
+#ifndef __ADLIST_H
+#define __ADLIST_H
 
 /* Node, List, and Iterator are the only data structures used currently. */
 

@@ -1,5 +1,5 @@
-#ifndef _SMARTA_STANZA_H_
-#define _SMARTA_STANZA_H_
+#ifndef __STANZA_H
+#define __STANZA_H
 
 #include "hash.h"
 

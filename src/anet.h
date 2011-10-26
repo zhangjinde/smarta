@@ -28,8 +28,8 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef ANET_H
-#define ANET_H
+#ifndef __ANET_H
+#define __ANET_H
 
 #define ANET_OK 0
 #define ANET_ERR -1

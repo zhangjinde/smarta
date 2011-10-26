@@ -16,8 +16,8 @@
  *  Internally used functions and structures.
  */
 
-#ifndef _SMARTA_PARSER_H_
-#define _SMARTA_PARSER_H_
+#ifndef __PARSER_H
+#define __PARSER_H
 
 #include <expat.h>
 #include "stanza.h"

@@ -5,15 +5,6 @@
 #include <AvailabilityMacros.h>
 #endif
 
-/* Define redis_fstat to fstat or fstat64() */
-#if defined(__APPLE__) && !defined(MAC_OS_X_VERSION_10_6)
-#define redis_fstat fstat64
-#define redis_stat stat64
-#else
-#define redis_fstat fstat
-#define redis_stat stat
-#endif
-
 /* Test for proc filesystem */
 #ifdef __linux__
 #define HAVE_PROCFS 1
