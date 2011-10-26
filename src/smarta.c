@@ -17,7 +17,6 @@
 #include "ae.h"
 #include "sds.h"
 #include "anet.h"
-#include "adlist.h"
 #include "zmalloc.h"
 #include "xmpp.h"
 #include "sched.h"
@@ -102,14 +101,8 @@ void load_config(char *filename) {
         if (!strcasecmp(argv[0],"smarta") && !strcasecmp(argv[1],"{") && argc == 2) {
             state = IN_SMARTA_BLOCK;
         } else if ((state == IN_SMARTA_BLOCK) && !strcasecmp(argv[0], "}") && argc == 1) {
-            printf("smarta.name: %s\n", smarta.name);
-            printf("smarta.server: %s\n", smarta.server);
-            printf("smarta.apikey: %s\n\n", smarta.apikey);
             state = 0;
         } else if ((state == IN_SERVICE_BLOCK) && !strcasecmp(argv[0], "}") && argc == 1) {
-            printf("service.name: %s\n", service->name);
-            printf("service.period: %d\n", (int)service->period);
-            printf("service.command: %s\n\n", service->command);
             listAddNodeTail(smarta.services, service);
             state = 0;
         } else if (!strcasecmp(argv[0],"service") && !strcasecmp(argv[1],"{") && argc == 2) {
@@ -207,7 +200,7 @@ int main(int argc, char **argv) {
         exit(1);
     }
 
-    sched_run();
+    sched_run(smarta.el, smarta.services);
 
     smarta_run();
 
@@ -240,7 +233,10 @@ static void before_sleep(struct aeEventLoop *eventLoop) {
 }
 
 static int smarta_cron(struct aeEventLoop *eventLoop, long long id, void *clientData) {
+    //TODO: check result of tasks and send xmpp message
     printf("cron called \n");
+
+    //send_message(conn, result);
     return 1000;
 }
 
@@ -250,3 +246,22 @@ static void smarta_run() {
     aeDeleteEventLoop(smarta.el);
 }
 
+void send_message(XmppStream *stream, sds result) {
+    XmppStanza *reply, *body, *text;
+    
+	reply = xmpp_stanza_new();
+	xmpp_stanza_set_name(reply, "message");
+	xmpp_stanza_set_type(reply, "chat");
+	xmpp_stanza_set_attribute(reply, "to", "erylee@nodehub.cn");
+	
+	body = xmpp_stanza_new();
+	xmpp_stanza_set_name(body, "body");
+	
+	text = xmpp_stanza_new();
+	xmpp_stanza_set_text(text, result);
+	xmpp_stanza_add_child(body, text);
+	xmpp_stanza_add_child(reply, body);
+	
+	xmpp_send(stream, reply);
+	xmpp_stanza_release(reply);
+}

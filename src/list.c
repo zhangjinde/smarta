@@ -1,4 +1,4 @@
-/* adlist.c - A generic doubly linked list implementation
+/* list.c - A generic doubly linked list implementation
  *
  * Copyright (c) 2006-2010, Salvatore Sanfilippo <antirez at gmail dot com>
  * All rights reserved.
@@ -30,7 +30,7 @@
 
 
 #include <stdlib.h>
-#include "adlist.h"
+#include "list.h"
 #include "zmalloc.h"
 
 /* Create a new list. The created list can be freed with

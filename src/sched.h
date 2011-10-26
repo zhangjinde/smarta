@@ -1,6 +1,9 @@
 #ifndef __SCHED_H
 #define __SCHED_H
 
-void sched_run();
+#include "ae.h"
+#include "list.h"
 
-#endif /* __SMARTA_SCHED_H__ */
+void sched_run(aeEventLoop *el, list *services);
+
+#endif /* __SCHED_H__ */

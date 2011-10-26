@@ -1,4 +1,4 @@
-/* adlist.h - A generic doubly linked list implementation
+/* list.h - A generic doubly linked list implementation
  *
  * Copyright (c) 2006-2010, Salvatore Sanfilippo <antirez at gmail dot com>
  * All rights reserved.

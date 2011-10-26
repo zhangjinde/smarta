@@ -1,7 +1,7 @@
 #ifndef __SMARTA_H
 #define __SMARTA_H
 
-#include "adlist.h"
+#include "list.h"
 #include "xmpp.h"
 #include "sds.h"
 #include "ae.h"
@@ -10,6 +10,7 @@ typedef struct _Service {
     char *name;
     long period;
     char *command;
+    long taskid;
 } Service;
 
 typedef struct _Command {
