@@ -21,6 +21,7 @@
 #include "zmalloc.h"
 #include "xmpp.h"
 #include "sched.h"
+#include "logger.h"
 #include "smarta.h"
 
 #define CONFIGLINE_MAX 1024
@@ -29,6 +30,10 @@
 #define IN_COMMADN_BLOCK 3
 
 Smarta smarta;
+
+extern int log_level;
+
+extern char *log_file;
 
 static void smarta_run(); 
 
@@ -49,7 +54,6 @@ void usage() {
 void smarta_init() {
     smarta.isslave = 0;
     smarta.verbosity = 0;
-    smarta.logfile = "smarta.log";
     smarta.daemonize = 0;
     smarta.services = listCreate();
     smarta.el = aeCreateEventLoop();
@@ -117,6 +121,25 @@ void load_config(char *filename) {
             smarta.server = zstrdup(argv[1]);
         } else if ((state == IN_SMARTA_BLOCK) && !strcasecmp(argv[0],"apikey") && argc == 2) {
             smarta.apikey = zstrdup(argv[1]);
+        } else if ((state == IN_SMARTA_BLOCK) && !strcasecmp(argv[0],"logfile") && argc == 2) {
+            if(strcmp(argv[1], "stdout")) {
+                log_file = zstrdup(argv[1]);
+            }
+        } else if ((state == IN_SMARTA_BLOCK) && !strcasecmp(argv[0],"loglevel") && argc == 2) {
+            if(strcasecmp(argv[1], "debug") == 0) {
+                log_level = LOG_DEBUG;
+            } else if(strcasecmp(argv[1], "info") == 0) {
+                log_level = LOG_INFO;
+            } else if(strcasecmp(argv[1], "warning") == 0) {
+                log_level = LOG_WARNING;
+            } else if(strcasecmp(argv[1], "error") == 0) {
+                log_level = LOG_ERROR;
+            } else if(strcasecmp(argv[1], "fatal") == 0) {
+                log_level = LOG_FATAL;
+            } else {
+                fprintf(stderr, "unknown loglevel:%s", argv[1]);
+                log_level = LOG_ERROR;
+            }
         } else if ((state == IN_SERVICE_BLOCK) && !strcasecmp(argv[0],"name") && argc == 2) {
             service->name = zstrdup(argv[1]);
         } else if ((state == IN_SERVICE_BLOCK) && !strcasecmp(argv[0],"period") && argc == 2) {
@@ -167,7 +190,7 @@ int main(int argc, char **argv) {
         printf("failed to connect %s\n", domain);
         exit(-1);
     }
-    xmpp_log(LOG_DEBUG, "sock_connect to %s, returned %d", domain, fd);
+    logger_debug("smarta", "sock_connect to %s, returned %d", domain, fd);
     /* create stream */
     stream = xmpp_stream_new(fd);
     xmpp_stream_set_jid(stream, smarta.name);
@@ -176,11 +199,11 @@ int main(int argc, char **argv) {
     
     aeCreateFileEvent(smarta.el, fd, AE_READABLE, xmpp_read, stream); //| AE_WRITABLE
 
-    xmpp_log(LOG_DEBUG, "attempting to connect to nodehub.cn");
+    logger_debug("smarta", "attempting to connect to nodehub.cn");
 
     /* open stream */
     if(xmpp_stream_open(stream) < 0) {
-        printf("Stream open failed");
+        fprintf(stderr, "stream open failed");
         exit(1);
     }
 
@@ -202,40 +225,15 @@ void xmpp_read(aeEventLoop *el, int fd, void *privdata, int mask) {
     nread = read(fd, buf, 4096);
     if(nread <= 0) {
         //FIXME: DISCONNECTED.
-        xmpp_log(LOG_DEBUG, "xmpp server is disconnected");
+        logger_error("smarta", "xmpp server is disconnected.");
     }
-    printf("nread: %d, data: %s\n", nread, buf);
+    logger_debug("socket", "RECEIVED: %s", buf);
     xmpp_stream_feed(stream, buf, nread);
-}
-
-void xmpp_log(int level, const char *fmt, ...) {
-    const char *levels[] = {"DEBUG", "INFO", "WARN", "ERROR"};
-    time_t now = time(NULL);
-    va_list ap;
-    FILE *fp;
-    char buf[64];
-    char msg[MAX_LOGMSG_LEN];
-
-    if (level < smarta.verbosity) return;
-
-    fp = (smarta.logfile == NULL) ? stdout : fopen(smarta.logfile,"a");
-    if (!fp) return;
-
-    va_start(ap, fmt);
-    vsnprintf(msg, sizeof(msg), fmt, ap);
-    va_end(ap);
-
-    strftime(buf,sizeof(buf),"%d %b %H:%M:%S",localtime(&now));
-    //FIXME: LATER
-    fprintf(stdout,"%s[%s] %s\n",buf,levels[level],msg);
-    fflush(fp);
-
-    if (smarta.logfile) fclose(fp);
 }
 
 static void before_sleep(struct aeEventLoop *eventLoop) {
     if(smarta.stream->prepare_reset == 1) {
-        printf("before sleep... reset parser\n");
+        logger_debug("smarta", "before sleep... reset parser");
         parser_reset(smarta.stream->parser);
         smarta.stream->prepare_reset = 0;
     }
@@ -251,3 +249,4 @@ static void smarta_run() {
     aeMain(smarta.el);
     aeDeleteEventLoop(smarta.el);
 }
+

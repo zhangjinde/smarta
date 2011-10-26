@@ -1,5 +1,4 @@
-/* jid.c
-** strophe XMPP client library -- helper functions for parsing JIDs
+/* jid.c -- helper functions for parsing JIDs
 **
 ** Copyright (C) 2005-2009 Collecta, Inc. 
 **
@@ -32,8 +31,7 @@
  */
 char *xmpp_jid_new(const char *node,
 				    const char *domain,
-				    const char *resource)
-{
+				    const char *resource) {
     char *result;
     int len,nlen,dlen,rlen;
 
@@ -53,7 +51,7 @@ char *xmpp_jid_new(const char *node,
 	    memcpy(result, node, nlen - 1);
 	    result[nlen-1] = '@';
 	}
-        memcpy(result + nlen, domain, dlen);
+    memcpy(result + nlen, domain, dlen);
 	if (resource != NULL) {
 	    result[nlen+dlen] = '/';
 	    memcpy(result+nlen+dlen+1, resource, rlen - 1);
@@ -70,8 +68,7 @@ char *xmpp_jid_new(const char *node,
  *
  *  @return an allocated string with the bare JID or NULL on an error
  */
-char *xmpp_jid_bare(const char *jid)
-{
+char *xmpp_jid_bare(const char *jid) {
     char *result;
     const char *c;
 
@@ -80,8 +77,8 @@ char *xmpp_jid_bare(const char *jid)
 
     result = zmalloc(c-jid+1);
     if (result != NULL) {
-	memcpy(result, jid, c-jid);
-	result[c-jid] = '\0';
+        memcpy(result, jid, c-jid);
+        result[c-jid] = '\0';
     }
 
     return result;
@@ -94,18 +91,15 @@ char *xmpp_jid_bare(const char *jid)
  *  @return an allocated string with the node or NULL if no node is found
  *      or an error occurs
  */
-char *xmpp_jid_node(const char *jid)
-{
+char *xmpp_jid_node(const char *jid) {
     char *result = NULL;
     const char *c;
 
     c = strchr(jid, '@');
     if (c != NULL) {
-	result = zmalloc((c-jid) + 1);
-	if (result != NULL) {
+        result = zmalloc((c-jid) + 1);
 	    memcpy(result, jid, (c-jid));
 	    result[c-jid] = '\0';
-	}
     }
 
     return result;
@@ -117,29 +111,26 @@ char *xmpp_jid_node(const char *jid)
  *
  *  @return an allocated string with the domain or NULL on an error
  */
-char *xmpp_jid_domain(const char *jid)
-{
+char *xmpp_jid_domain(const char *jid) {
     char *result = NULL;
     const char *c,*s;
 
     c = strchr(jid, '@');
     if (c == NULL) {
-	/* no node, assume domain */
-	c = jid;
+        /* no node, assume domain */
+        c = jid;
     } else {
-	/* advance past the separator */
-	c++;
+        /* advance past the separator */
+        c++;
     }
     s = strchr(c, '/');
     if (s == NULL) {
-	/* no resource */
-	s = c + strlen(c);
+        /* no resource */
+        s = c + strlen(c);
     }
     result = zmalloc((s-c) + 1);
-    if (result != NULL) {
 	memcpy(result, c, (s-c));
 	result[s-c] = '\0';
-    }
 
     return result;
 }
@@ -151,22 +142,20 @@ char *xmpp_jid_domain(const char *jid)
  *  @return an allocated string with the resource or NULL if no resource 
  *      is found or an error occurs
  */
-char *xmpp_jid_resource(const char *jid)
-{
+char *xmpp_jid_resource(const char *jid) {
     char *result = NULL;
     const char *c;
     int len;
 
     c = strchr(jid, '/');
     if (c != NULL)  {
-	c++;
-	len = strlen(c);
-	result = zmalloc(len + 1);
-	if (result != NULL) {
-	    memcpy(result, c, len);
-	    result[len] = '\0';
-	}
+        c++;
+        len = strlen(c);
+        result = zmalloc(len + 1);
+        memcpy(result, c, len);
+        result[len] = '\0';
     }
 
     return result;
 }
+

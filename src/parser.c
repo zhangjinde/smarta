@@ -1,5 +1,5 @@
-/* parser.c
-** strophe XMPP client library -- xml parser handlers and utility functions
+/*
+** parser.c -- xml parser handlers and utility functions
 */
 
 #include <stdio.h>
@@ -8,9 +8,10 @@
 
 #include <expat.h>
 
-#include "xmpp.h"
+#include "stanza.h"
 #include "parser.h"
 #include "zmalloc.h"
+#include "logger.h"
 
 static void _start_element(void *userdata,
     const XML_Char *name,
@@ -44,11 +45,6 @@ Parser *parser_new(parser_start_callback startcb,
     return parser;
 }
 
-int parser_feed(Parser *parser, char *chunk, int len) {
-    return XML_Parse(parser->expat, chunk, len, 0);
-}
-
-/* shuts down and restarts XML parser.  true on success */
 int parser_reset(Parser *parser) {
     if (parser->expat) {
         XML_ParserFree(parser->expat);
@@ -70,12 +66,14 @@ int parser_reset(Parser *parser) {
     return 1;
 }
 
-/* free a parser */
+int parser_feed(Parser *parser, char *chunk, int len) {
+    return XML_Parse(parser->expat, chunk, len, 0);
+}
+
 void parser_free(Parser *parser) {
     if (parser->expat) {
         XML_ParserFree(parser->expat);
     }
-
     zfree(parser);
 }
 
@@ -97,10 +95,7 @@ static void _start_element(void *userdata,
     Parser *parser = (Parser *)userdata;
     XmppStanza *child;
 
-    xmpp_log(LOG_DEBUG, "start_element: %s\n", name);
-
     if (parser->depth == 0) {
-        /* notify the owner */
         if (parser->startcb) {
             parser->startcb((char *)name, (char **)attrs, parser->userdata);
         }
@@ -109,7 +104,7 @@ static void _start_element(void *userdata,
         if (!parser->stanza && parser->depth != 1) {
             /* something terrible happened */
             /* FIXME: shutdown disconnect */
-            xmpp_log(LOG_ERROR, "parser: oops, where did our stanza go?");
+            logger_error("parser", "oops, where did our stanza go?");
         } else if (!parser->stanza) {
             /* starting a new toplevel stanza */
             parser->stanza = xmpp_stanza_new();
@@ -141,8 +136,6 @@ static void _end_element(void *userdata, const XML_Char *name) {
     Parser *parser = (Parser *)userdata;
 
     parser->depth--;
-
-    xmpp_log(LOG_DEBUG, "end_element: %s, depth: %d\n", name, parser->depth);
 
     if (parser->depth == 0) {
         /* notify the owner */

@@ -99,10 +99,6 @@
 #define XMPP_EINT -3
 
 #define MAX_LOGMSG_LEN    1024 /* Default maximum length of syslog messages */
-#define LOG_DEBUG 0
-#define LOG_INFO 1
-#define LOG_WARN 2
-#define LOG_ERROR 3
 
 typedef enum {
     XMPP_SE_BAD_FORMAT,
@@ -187,10 +183,6 @@ struct _XmppStream {
 #define SASL_MASK_PLAIN 0x01
 #define SASL_MASK_DIGESTMD5 0x02
 #define SASL_MASK_ANONYMOUS 0x04
-
-void xmpp_log(int level, const char *fmt, ...);
-
-int xmpp_vsnprintf (char *str, size_t count, char *fmt, va_list arg);
 
 /* connection */
 struct _XmppStreamError {

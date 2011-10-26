@@ -9,6 +9,7 @@
 #include "xmpp.h"
 #include "stanza.h"
 #include "util.h"
+#include "logger.h"
 #include "zmalloc.h"
 
 typedef void (*iq_callback)(XmppStream *stream, XmppStanza *stanza);
@@ -122,7 +123,7 @@ static void _handle_stream_start(char *name, char **attrs,
     XmppStream *stream = (XmppStream *)userdata;
 
     if (strcmp(name, "stream:stream") != 0) {
-        xmpp_log(LOG_ERROR, "STREAM: Server did not open valid stream.");
+        logger_error("xmpp", "server did not open valid stream.");
         //TODO:fix me
         //xmpp_conn_disconnect(stream->conn);
     } else {
@@ -141,7 +142,7 @@ static void _handle_stream_end(char *name, void * const userdata) {
     //XmppStream *stream = (XmppStream *)userdata;
     /* stream is over */
     //parser_reset(stream->parser);
-    xmpp_log(LOG_DEBUG, "XMPP RECV: </stream:stream>");
+    logger_debug("xmpp", "RECV: </stream:stream>");
     //conn_disconnect_clean(conn);
 }
 
@@ -155,19 +156,19 @@ static void _handle_stream_stanza(XmppStanza * const stanza, void * const userda
     XmppStanza *mechanisms, *bind, *session;
 
     if (xmpp_stanza_to_text(stanza, &buf, &len) == 0) {
-        xmpp_log(LOG_DEBUG, "XMPP RECV: %s", buf);
+        logger_debug("xmpp", "RECV: %s", buf);
         zfree(buf);
     }
     
     ns = xmpp_stanza_get_ns(stanza);
     name = xmpp_stanza_get_name(stanza);
     type = xmpp_stanza_get_type(stanza);
-    xmpp_log(LOG_DEBUG, "ns: %s, name: %s\n", ns, name);
+    logger_debug("xmpp", "stanza ns: %s, name: %s", ns, name);
     if(strcmp(name, "stream:features") == 0) {
         mechanisms = xmpp_stanza_get_child_by_name(stanza, "mechanisms");
         if(mechanisms) {
             xmpp_stream_auth(stream, mechanisms);
-            xmpp_log(LOG_DEBUG, "auth sent\n");
+            logger_debug("xmpp", "auth sent");
             stream->state = XMPP_STREAM_SASL_AUTHENTICATING;
             return;
         }
@@ -184,13 +185,13 @@ static void _handle_stream_stanza(XmppStanza * const stanza, void * const userda
             return;
         }
 
-        xmpp_log(LOG_ERROR, "assert failure, unexpected features: %s", name);
+        logger_error("xmpp", "assert failure, unexpected features: %s", name);
         return;
     } else if(strcmp(name, "proceed") == 0) {
         //TODO: TLS PROCEED
 
     }else if(strcmp(name, "success") == 0) {
-        xmpp_log(LOG_DEBUG, "sasl auth success\n");
+        logger_debug("xmpp", "sasl auth success");
         //reopen stream
         xmpp_stream_open(stream);
     } else if(strcmp(name, "iq") == 0) {
@@ -225,21 +226,21 @@ void xmpp_send_raw_string(XmppStream *stream, char *fmt, ...) {
 	len++; /* account for trailing \0 */
 	bigbuf = zmalloc(len);
 	if (!bigbuf) {
-	    xmpp_log(LOG_DEBUG, "XMPP: Could not allocate memory for send_raw_string");
+	    logger_debug("xmpp", "Could not allocate memory for send_raw_string");
 	    return;
 	}
 	va_start(ap, fmt);
 	vsnprintf(bigbuf, len, fmt, ap);
 	va_end(ap);
 
-	xmpp_log(LOG_DEBUG, "XMPP SENT: %s", bigbuf);
+	logger_debug("xmpp", "SENT: %s", bigbuf);
 
 	/* len - 1 so we don't send trailing \0 */
 	xmpp_send_raw(stream, bigbuf, len - 1);
 
 	zfree(bigbuf);
     } else {
-	xmpp_log(LOG_DEBUG, "XMPP SENT: %s", buf);
+	logger_debug("xmpp", "SENT: %s", buf);
 
 	xmpp_send_raw(stream, buf, len);
     }
@@ -262,7 +263,7 @@ void xmpp_send(XmppStream *stream, XmppStanza *stanza) {
 
 	if ((ret = xmpp_stanza_to_text(stanza, &buf, &len)) == 0) {
 	    xmpp_send_raw(stream, buf, len);
-	    xmpp_log(LOG_DEBUG, "XMPP SENT %d: %s", len, buf);
+	    logger_debug("xmpp", "SENT %d: %s", len, buf);
 	    zfree(buf);
 	}
 
@@ -291,7 +292,7 @@ static void _log_open_tag(char **attrs) {
     len = snprintf(&buf[pos], 4096 - pos, ">");
     if (len < 0) return;
 
-    xmpp_log(LOG_DEBUG, "XMPP RECV: %s", buf);
+    logger_debug("xmpp", "RECV: %s", buf);
 }
 
 static void xmpp_stream_starttls(XmppStream *stream) {
