@@ -16,13 +16,15 @@ static int check_service(struct aeEventLoop *el, long long id, void *clientdata)
 
 void sched_run(aeEventLoop *el, list *services) {
     long taskid;
+    int delay = 0;
     listNode *node;
     Service *service;
     listIter *iter = listGetIterator(services, AL_START_HEAD);
     while((node = listNext(iter)) != NULL) {
+        delay = (random() % 300) * 1000;
         service = (Service *)node->value;
-        logger_debug("sched", "schedule service: %s\n", service->name);
-        taskid = aeCreateTimeEvent(el, service->period*60*1000, 
+        logger_debug("sched", "schedule service: %s", service->name);
+        taskid = aeCreateTimeEvent(el, service->period+delay, 
             check_service, service, NULL);
         service->taskid = taskid;
     }
@@ -54,6 +56,6 @@ int check_service(struct aeEventLoop *el, long long id, void *clientdata) {
         //FIXME: later
     }
 
-    return service->period*60*1000;
+    return service->period;
 }
 

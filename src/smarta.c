@@ -18,6 +18,7 @@
 #include "sds.h"
 #include "anet.h"
 #include "zmalloc.h"
+#include "jid.h"
 #include "xmpp.h"
 #include "sched.h"
 #include "logger.h"
@@ -57,6 +58,7 @@ void smarta_init() {
     smarta.services = listCreate();
     smarta.el = aeCreateEventLoop();
     aeCreateTimeEvent(smarta.el, 100, smarta_cron, NULL, NULL);
+    srand(time(NULL)^getpid());
 }
 
 int yesnotoi(char *s) {
@@ -75,7 +77,7 @@ void load_config(char *filename) {
 
     if ((fp = fopen(filename,"r")) == NULL) {
         //redisLog(REDIS_WARNING, "Fatal error, can't open config file '%s'", filename);
-        printf("Fatal error, can't open config file '%s'", filename);
+        fprintf(stderr, "Fatal error, can't open config file '%s'", filename);
         exit(1);
     }
 
@@ -110,7 +112,11 @@ void load_config(char *filename) {
             service = zmalloc(sizeof(Service));
         } else if ((state == IN_SMARTA_BLOCK) && !strcasecmp(argv[0],"name") && argc == 2) {
             smarta.name = zstrdup(argv[1]);
+            smarta.server = xmpp_jid_domain(smarta.name);
         } else if ((state == IN_SMARTA_BLOCK) && !strcasecmp(argv[0],"server") && argc == 2) {
+            if(smarta.server) {
+                zfree(smarta.server);
+            }
             smarta.server = zstrdup(argv[1]);
         } else if ((state == IN_SMARTA_BLOCK) && !strcasecmp(argv[0],"apikey") && argc == 2) {
             smarta.apikey = zstrdup(argv[1]);
@@ -136,7 +142,7 @@ void load_config(char *filename) {
         } else if ((state == IN_SERVICE_BLOCK) && !strcasecmp(argv[0],"name") && argc == 2) {
             service->name = zstrdup(argv[1]);
         } else if ((state == IN_SERVICE_BLOCK) && !strcasecmp(argv[0],"period") && argc == 2) {
-            service->period = atoi(argv[1]);
+            service->period = atoi(argv[1]) * 60 * 1000;
         } else if ((state == IN_SERVICE_BLOCK) && !strcasecmp(argv[0],"command") && argc == 2) {
             service->command = zstrdup(argv[1]);
         } else {
@@ -176,11 +182,9 @@ int main(int argc, char **argv) {
         usage();
     } 
     
-    domain = "nodehub.cn";
-
-    fd = anetTcpConnect(err, domain, 5222);
+    fd = anetTcpConnect(err, smarta.server, 5222);
     if (fd == -1) {
-        printf("failed to connect %s\n", domain);
+        fprintf(stderr, "Failed to connect %s\n", domain);
         exit(-1);
     }
     logger_debug("smarta", "sock_connect to %s, returned %d", domain, fd);
@@ -211,8 +215,6 @@ void xmpp_read(aeEventLoop *el, int fd, void *privdata, int mask) {
     int nread;
     char buf[4096] = {0};
 
-    printf("xmpp_read is callded\n");
-
     XmppStream *stream = (XmppStream *)privdata;
 
     nread = read(fd, buf, 4096);
@@ -234,7 +236,7 @@ static void before_sleep(struct aeEventLoop *eventLoop) {
 
 static int smarta_cron(struct aeEventLoop *eventLoop, long long id, void *clientData) {
     //TODO: check result of tasks and send xmpp message
-    printf("cron called \n");
+    //printf("cron called \n");
 
     //send_message(conn, result);
     return 1000;

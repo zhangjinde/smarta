@@ -90,10 +90,12 @@ XmppStream *xmpp_stream_new(int fd)
 
 void xmpp_stream_set_state(XmppStream *stream, int state)  
 {
+    listNode *node;
+    listIter *iter;
+    conn_callback callback;
     if(stream->state != state) {
-        listNode *node;
-        conn_callback callback;
-        listIter *iter = listGetIterator(stream->conn_callbacks, AL_START_HEAD);
+        stream->state = state;
+        iter = listGetIterator(stream->conn_callbacks, AL_START_HEAD);
         while((node = listNext(iter))) {
             callback = (conn_callback)node->value;
             callback(stream, state);
@@ -283,18 +285,18 @@ static void _handle_stream_stanza(XmppStanza * const stanza, void * const userda
     xmlns = xmpp_stanza_get_ns(stanza);
     name = xmpp_stanza_get_name(stanza);
 
+    logger_debug("XMPP", "xmlns: %s, name: %s", xmlns, name);
+
     if(strequal(name, "iq")) {
         _handle_xmpp_iq(stream, stanza);
     } else if(strequal(name, "presence")) {
         _handle_xmpp_presence(stream, stanza);
     } else if(strequal(name, "message")) {
         _handle_xmpp_message(stream, stanza);
-    } else if(strequal(xmlns, XMPP_NS_STREAMS)) {
-        if(strequal(name, "stream:features")) {
+    } else if(strequal(name, "stream:features")) {
             _handle_stream_features(stream, stanza);
-        } else if(strequal(name, "stream:error")) {
+    } else if(strequal(name, "stream:error")) {
             _handle_stream_errors(stream, stanza);
-        }
     } else if(strequal(xmlns, XMPP_NS_SASL)) {
         if(stream->state != XMPP_STREAM_SASL_AUTHENTICATING) {
             logger_error("XMPP", "Ignoring suprios SASL stanza %s", name);
