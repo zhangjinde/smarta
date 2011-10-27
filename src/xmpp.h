@@ -25,6 +25,7 @@
 #include <stdint.h>
 
 #include "hash.h"
+#include "list.h"
 #include "stanza.h"
 #include "parser.h"
 
@@ -131,13 +132,16 @@ typedef enum {
 typedef struct _XmppStreamError XmppStreamError;
 
 typedef enum {
-    XMPP_STREAM_DISCONNECTED,
+    XMPP_STREAM_DISCONNECTED = 0,
     XMPP_STREAM_CONNECTING,
     XMPP_STREAM_TLS_NEGOTIATING,
     XMPP_STREAM_TSL_OPENED,
     XMPP_STREAM_SASL_AUTHENTICATING,
     XMPP_STREAM_SASL_AUTHED,
-    XMPP_STREAM_CONNECTED
+    XMPP_STREAM_BINDING,
+    XMPP_STREAM_BINDED,
+    XMPP_STREAM_SESSION_NEGOTIATING,
+    XMPP_STREAM_ESTABLISHED
 } XmppStreamState;
 
 typedef struct _XmppStream XmppStream;
@@ -146,21 +150,25 @@ struct _XmppStream {
 
     int fd; //socket
 
+    char *jid;
+
+    char *domain;
+
+    char *pass;
+
+    int port;
+
     XmppStreamState state;
 
     uint64_t timeout_stamp;
+
     int error;
+
     XmppStreamError *stream_error;
 
     int tls_support;
-    int sasl_support; /* if true, field is a bitfield of supported mechanisms */ 
+    int sasl_support; 
 
-    char *domain;
-    char *connectdomain;
-    char *connectport;
-    char *jid;
-    char *pass;
-    char *bound_jid;
     char *stream_id;
 
     Parser *parser;
@@ -175,10 +183,50 @@ struct _XmppStream {
     
     void *userdata;
 
-    /* other handlers */
-    Hash *iq_callbacks;
+    list *conn_callbacks;
+
+    list *presence_callbacks;
+
+    list *message_callbacks;
+
+    Hash *iq_id_callbacks;
+
+    Hash *iq_ns_callbacks;
 };
 
+void xmpp_stream_set_state(XmppStream *stream, int state);
+
+typedef void (*conn_callback)(XmppStream *stream, XmppStreamState state);
+
+void xmpp_add_conn_callback(XmppStream *stream, conn_callback callback); 
+
+void xmpp_remove_conn_callback(XmppStream *stream, conn_callback callback);
+
+typedef void (*message_callback)(XmppStream *stream, XmppStanza *message);
+
+void xmpp_add_message_callback(XmppStream *stream, message_callback callback);
+
+void xmpp_remove_message_callback(XmppStream *stream, message_callback callback);
+
+typedef void (*presence_callback)(XmppStream *stream, XmppStanza *presence);
+
+void xmpp_add_presence_callback(XmppStream *stream, presence_callback callback);
+
+void xmpp_remove_presence_callback(XmppStream *stream, presence_callback callback);
+
+typedef void (*iq_callback)(XmppStream *stream, XmppStanza *iq);
+
+iq_callback xmpp_get_iq_ns_callback(XmppStream *stream, char *ns);
+
+void xmpp_add_iq_ns_callback(XmppStream *stream, char *iq_ns, iq_callback callback);
+
+void xmpp_remove_iq_id_callback(XmppStream *stream, char *iq_id);
+
+iq_callback xmpp_get_iq_id_callback(XmppStream *stream, char *id);
+
+void xmpp_add_iq_id_callback(XmppStream *stream, char *iq_id, iq_callback callback); 
+
+void xmpp_remove_iq_ns_callback(XmppStream *stream, char *iq_ns);
 
 #define SASL_MASK_PLAIN 0x01
 #define SASL_MASK_DIGESTMD5 0x02
@@ -192,10 +240,13 @@ struct _XmppStreamError {
 }; 
 
 char *xmpp_stream_get_jid(XmppStream *stream);
+
 void xmpp_stream_set_jid(XmppStream *stream, const char *jid);
+
 char *xmpp_stream_get_pass(XmppStream *stream);
+
 void xmpp_stream_set_pass(XmppStream *stream, const char *pass);
-//char *xmpp_conn_get_bound_jid(XmppConn *conn);
+
 
 XmppStream *xmpp_stream_new(int fd);
 
@@ -203,10 +254,11 @@ int xmpp_stream_open(XmppStream *stream);
 
 int xmpp_stream_feed(XmppStream *stream, char *buf, int nread);
 
-void xmpp_send(XmppStream * stream, XmppStanza *stanza);
+void xmpp_send_stanza(XmppStream * stream, XmppStanza *stanza);
 
-void xmpp_send_raw_string(XmppStream *stream, char *fmt, ...);
+void xmpp_send_format(XmppStream *stream, char *fmt, ...);
 
-void xmpp_send_raw(XmppStream *stream, char *data, size_t len);
+void xmpp_send_string(XmppStream *stream, char *data, size_t len);
 
-#endif /* __SMARTA_STROPHE_H__ */
+#endif /* __XMPP_H__ */
+

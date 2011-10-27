@@ -1,5 +1,4 @@
-/* stanza.c
-** strophe XMPP client library -- XMPP stanza object and utilities
+/* stanza.c - XMPP stanza object and utilities
 **
 ** Copyright (C) 2005-2009 Collecta, Inc. 
 **
@@ -11,10 +10,6 @@
 ** terms of the license contained in the file LICENSE.txt in this
 ** distribution.
 */
-
-/*
-** @defgroup Stanza Stanza creation and manipulation
- */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -28,8 +23,6 @@
  *  This function allocates and initializes and blank stanza object.
  *  The stanza will have a reference count of one, so the caller does not
  *  need to clone it.
- *
- *  @param ctx a Strophe context object
  *
  *  @return a stanza object
  *
@@ -52,6 +45,13 @@ XmppStanza *xmpp_stanza_new() {
     return stanza; 
 }
 
+XmppStanza *xmpp_stanza_newtag(const char *name) 
+{
+    XmppStanza *stanza = xmpp_stanza_new();
+    xmpp_stanza_set_name(stanza, name);
+    return stanza;
+}
+
 /** Clone a stanza object.
  *  This function increments the reference count of the stanza object.
  *  
@@ -61,8 +61,7 @@ XmppStanza *xmpp_stanza_new() {
  *
  *  @ingroup Stanza
  */
-XmppStanza *xmpp_stanza_clone(XmppStanza * const stanza) {
-    //XmppStanza *child;
+XmppStanza *xmpp_stanza_clone(XmppStanza *  stanza) {
 
     stanza->ref++;
 
@@ -81,7 +80,7 @@ XmppStanza *xmpp_stanza_clone(XmppStanza * const stanza) {
  *
  *  @ingroup Stanza
  */
-XmppStanza *xmpp_stanza_copy(const XmppStanza * const stanza) {
+XmppStanza *xmpp_stanza_copy(XmppStanza * stanza) {
     XmppStanza *copy, *child, *copychild, *tail;
     hash_iterator_t *iter;
     const char *key;
@@ -107,16 +106,16 @@ XmppStanza *xmpp_stanza_copy(const XmppStanza * const stanza) {
 
     tail = copy->children;
     for (child = stanza->children; child; child = child->next) {
-	copychild = xmpp_stanza_copy(child);
-	copychild->parent = copy;
+        copychild = xmpp_stanza_copy(child);
+        copychild->parent = copy;
 
-	if (tail) {
-	    copychild->prev = tail;
-	    tail->next = copychild;
-	} else {
-	    copy->children = copychild;
-    }
-	tail = copychild;
+        if (tail) {
+            copychild->prev = tail;
+            tail->next = copychild;
+        } else {
+            copy->children = copychild;
+        }
+        tail = copychild;
     }
 
     return copy;
@@ -133,7 +132,7 @@ XmppStanza *xmpp_stanza_copy(const XmppStanza * const stanza) {
  *
  *  @ingroup Stanza
  */
-int xmpp_stanza_release(XmppStanza * const stanza) {
+int xmpp_stanza_release(XmppStanza *stanza) {
     int released = 0;
     XmppStanza *child, *tchild;
     
@@ -170,8 +169,7 @@ int xmpp_stanza_release(XmppStanza * const stanza) {
  * 
  *  @ingroup Stanza
  */
-int xmpp_stanza_is_text(XmppStanza * const stanza)
-{
+int xmpp_stanza_is_text(XmppStanza *stanza) {
     return (stanza && stanza->type == XMPP_STANZA_TEXT);
 }
 
@@ -183,23 +181,25 @@ int xmpp_stanza_is_text(XmppStanza * const stanza)
  * 
  *  @ingroup Stanza
  */
-int xmpp_stanza_is_tag(XmppStanza * const stanza)
-{
+int xmpp_stanza_is_tag(XmppStanza *stanza) {
     return (stanza && stanza->type == XMPP_STANZA_TAG);
 }
 
 /* small helper function */
-static inline void _render_update(int *written, const int length,
-			   const int lastwrite,
-			   size_t *left, char **ptr) {
+static inline void _render_update(
+               int *written, 
+               int length,
+			   int lastwrite,
+			   size_t *left,
+               char **ptr) {
     *written += lastwrite;
 
     if (*written > length) {
-	*left = 0;
-	*ptr = NULL;
+        *left = 0;
+        *ptr = NULL;
     } else {
-	*left -= lastwrite;
-	*ptr = &(*ptr)[lastwrite];
+        *left -= lastwrite;
+        *ptr = &(*ptr)[lastwrite];
     }
 }
 
@@ -209,7 +209,7 @@ static inline void _render_update(int *written, const int length,
  * and return values > buflen indicate buffer was not large enough
  */
 static int _render_stanza_recursive(XmppStanza *stanza,
-			     char * const buf, size_t const buflen) {
+			     char *buf, size_t buflen) {
     char *ptr = buf;
     size_t left = buflen;
     int ret, written;
@@ -222,60 +222,60 @@ static int _render_stanza_recursive(XmppStanza *stanza,
     if (stanza->type == XMPP_STANZA_UNKNOWN) return XMPP_EINVOP;
 
     if (stanza->type == XMPP_STANZA_TEXT) {
-	if (!stanza->data) return XMPP_EINVOP;
-
-	ret = snprintf(ptr, left, "%s", stanza->data);
-	if (ret < 0) return XMPP_EMEM;
-	_render_update(&written, buflen, ret, &left, &ptr);
+        if (!stanza->data) return XMPP_EINVOP;
+        ret = snprintf(ptr, left, "%s", stanza->data);
+        if (ret < 0) return XMPP_EMEM;
+        _render_update(&written, buflen, ret, &left, &ptr);
     } else { /* stanza->type == XMPP_STANZA_TAG */
-	if (!stanza->data) return XMPP_EINVOP;
+        if (!stanza->data) { 
+            return XMPP_EINVOP; 
+        }
+        /* write begining of tag and attributes */
+        ret = snprintf(ptr, left, "<%s", stanza->data);
+        if (ret < 0) return XMPP_EMEM;
+        _render_update(&written, buflen, ret, &left, &ptr);
 
-	/* write begining of tag and attributes */
-	ret = snprintf(ptr, left, "<%s", stanza->data);
-	if (ret < 0) return XMPP_EMEM;
-	_render_update(&written, buflen, ret, &left, &ptr);
+        if (stanza->attributes && hash_num_keys(stanza->attributes) > 0) {
+            iter = hash_iter_new(stanza->attributes);
+            while ((key = hash_iter_next(iter))) {
+            ret = snprintf(ptr, left, " %s=\"%s\"", key,
+                       (char *)hash_get(stanza->attributes, key));
+            if (ret < 0) return XMPP_EMEM;
+            _render_update(&written, buflen, ret, &left, &ptr);
+            }
+            hash_iter_release(iter);
+        }
 
-	if (stanza->attributes && hash_num_keys(stanza->attributes) > 0) {
-	    iter = hash_iter_new(stanza->attributes);
-	    while ((key = hash_iter_next(iter))) {
-		ret = snprintf(ptr, left, " %s=\"%s\"", key,
-			       (char *)hash_get(stanza->attributes, key));
-		if (ret < 0) return XMPP_EMEM;
-		_render_update(&written, buflen, ret, &left, &ptr);
-	    }
-	    hash_iter_release(iter);
-	}
+        if (!stanza->children) {
+            /* write end if singleton tag */
+            ret = snprintf(ptr, left, "/>");
+            if (ret < 0) return XMPP_EMEM;
+            _render_update(&written, buflen, ret, &left, &ptr);
+        } else {
+            /* this stanza has child stanzas */
 
-	if (!stanza->children) {
-	    /* write end if singleton tag */
-	    ret = snprintf(ptr, left, "/>");
-	    if (ret < 0) return XMPP_EMEM;
-	    _render_update(&written, buflen, ret, &left, &ptr);
-	} else {
-	    /* this stanza has child stanzas */
+            /* write end of start tag */
+            ret = snprintf(ptr, left, ">");
+            if (ret < 0) return XMPP_EMEM;
+            _render_update(&written, buflen, ret, &left, &ptr);
+            
+            /* iterate and recurse over child stanzas */
+            child = stanza->children;
+            while (child) {
+            ret = _render_stanza_recursive(child, ptr, left);
+            if (ret < 0) return ret;
 
-	    /* write end of start tag */
-	    ret = snprintf(ptr, left, ">");
-	    if (ret < 0) return XMPP_EMEM;
-	    _render_update(&written, buflen, ret, &left, &ptr);
-	    
-	    /* iterate and recurse over child stanzas */
-	    child = stanza->children;
-	    while (child) {
-		ret = _render_stanza_recursive(child, ptr, left);
-		if (ret < 0) return ret;
+            _render_update(&written, buflen, ret, &left, &ptr);
 
-		_render_update(&written, buflen, ret, &left, &ptr);
+            child = child->next;
+            }
 
-		child = child->next;
-	    }
-
-	    /* write end tag */
-	    ret = snprintf(ptr, left, "</%s>", stanza->data);
-	    if (ret < 0) return XMPP_EMEM;
-	    
-	    _render_update(&written, buflen, ret, &left, &ptr);
-	}
+            /* write end tag */
+            ret = snprintf(ptr, left, "</%s>", stanza->data);
+            if (ret < 0) return XMPP_EMEM;
+            
+            _render_update(&written, buflen, ret, &left, &ptr);
+        }
     }
 
     return written;
@@ -298,8 +298,8 @@ static int _render_stanza_recursive(XmppStanza *stanza,
  */
 int xmpp_stanza_to_text(
     XmppStanza * stanza,
-    char ** const buf,
-    size_t * const buflen) {
+    char **buf,
+    size_t *buflen) {
 
     char *buffer, *tmp;
     size_t length;
@@ -308,28 +308,17 @@ int xmpp_stanza_to_text(
     /* allocate a default sized buffer and attempt to render */
     length = 1024;
     buffer = zmalloc(length);
-    if (!buffer) {
-	*buf = NULL;
-	*buflen = 0;
-	return XMPP_EMEM;
-    }
 
     ret = _render_stanza_recursive(stanza, buffer, length);
     if (ret < 0) return ret;
 
     if (ret > length - 1) {
-	tmp = zrealloc(buffer, ret + 1);
-	if (!tmp) {
-	    zfree(buffer);
-	    *buf = NULL;
-	    *buflen = 0;
-	    return XMPP_EMEM;
-	}
-	length = ret + 1;
-	buffer = tmp;
+        tmp = zrealloc(buffer, ret + 1);
+        length = ret + 1;
+        buffer = tmp;
 
-	ret = _render_stanza_recursive(stanza, buffer, length);
-	if (ret > length - 1) return XMPP_EMEM;
+        ret = _render_stanza_recursive(stanza, buffer, length);
+        if (ret > length - 1) return XMPP_EMEM;
     }
     
     buffer[length - 1] = 0;
@@ -350,9 +339,7 @@ int xmpp_stanza_to_text(
  *
  *  @ingroup Stanza
  */
-int xmpp_stanza_set_name(XmppStanza *stanza, 
-			 const char * const name)
-{
+int xmpp_stanza_set_name(XmppStanza *stanza, const char *name) {
     if (stanza->type == XMPP_STANZA_TEXT) return XMPP_EINVOP;
 
     if (stanza->data) zfree(stanza->data);
@@ -373,8 +360,7 @@ int xmpp_stanza_set_name(XmppStanza *stanza,
  *
  *  @ingroup Stanza
  */
-char *xmpp_stanza_get_name(XmppStanza * const stanza)
-{
+char *xmpp_stanza_get_name(XmppStanza *stanza) {
     if (stanza->type == XMPP_STANZA_TEXT) return NULL;
     return stanza->data;
 }
@@ -387,10 +373,9 @@ char *xmpp_stanza_get_name(XmppStanza * const stanza)
  *
  *  @ingroup Stanza
  */
-int xmpp_stanza_get_attribute_count(XmppStanza * const stanza)
-{
+int xmpp_stanza_get_attribute_count(XmppStanza *stanza) {
     if (stanza->attributes == NULL) {
-	return 0;
+        return 0;
     }
 
     return hash_num_keys(stanza->attributes);
@@ -411,30 +396,29 @@ int xmpp_stanza_get_attribute_count(XmppStanza * const stanza)
  *  @ingroup Stanza
  */
 int xmpp_stanza_get_attributes(XmppStanza * const stanza,
-			       const char **attr, int attrlen)
-{
+			      const char **attr, int attrlen) {
     hash_iterator_t *iter;
     const char *key;
     int num = 0;
 
     if (stanza->attributes == NULL) {
-	return 0;
+        return 0;
     }
 
     iter = hash_iter_new(stanza->attributes);
     while ((key = hash_iter_next(iter)) != NULL && attrlen) {
-	attr[num++] = key;
-	attrlen--;
-	if (attrlen == 0) {
-	    hash_iter_release(iter);
-	    return num;
-	}
-	attr[num++] = hash_get(stanza->attributes, key);
-	attrlen--;
-	if (attrlen == 0) {
-	    hash_iter_release(iter);
-	    return num;
-	}
+        attr[num++] = key;
+        attrlen--;
+        if (attrlen == 0) {
+            hash_iter_release(iter);
+            return num;
+        }
+        attr[num++] = hash_get(stanza->attributes, key);
+        attrlen--;
+        if (attrlen == 0) {
+            hash_iter_release(iter);
+            return num;
+        }
     }
 
     hash_iter_release(iter);
@@ -451,9 +435,9 @@ int xmpp_stanza_get_attributes(XmppStanza * const stanza,
  *
  *  @ingroup Stanza
  */
-int xmpp_stanza_set_attribute(XmppStanza * const stanza,
-			      const char * const key,
-			      const char * const value) {
+int xmpp_stanza_set_attribute(XmppStanza *stanza,
+			     const char *key,
+			     const char *value) {
     char *val;
 
     if (stanza->type != XMPP_STANZA_TAG) return XMPP_EINVOP;
@@ -480,9 +464,7 @@ int xmpp_stanza_set_attribute(XmppStanza * const stanza,
  *
  *  @ingroup Stanza
  */
-int xmpp_stanza_set_ns(XmppStanza * const stanza,
-		       const char * const ns)
-{
+int xmpp_stanza_set_ns(XmppStanza *stanza, char *ns) {
     return xmpp_stanza_set_attribute(stanza, "xmlns", ns);
 }
 
@@ -497,8 +479,7 @@ int xmpp_stanza_set_ns(XmppStanza * const stanza,
  *
  *  @ingroup Stanza
  */
-int xmpp_stanza_add_child(XmppStanza *stanza, XmppStanza *child)
-{
+int xmpp_stanza_add_child(XmppStanza *stanza, XmppStanza *child) {
     XmppStanza *s;
 
     /* get a reference to the child */
@@ -506,13 +487,13 @@ int xmpp_stanza_add_child(XmppStanza *stanza, XmppStanza *child)
 
     child->parent = stanza;
 
-    if (!stanza->children)
-	stanza->children = child;
-    else {
-	s = stanza->children;
-	while (s->next) s = s->next;
-	s->next = child;
-	child->prev = s;
+    if (!stanza->children) {
+        stanza->children = child;
+    } else {
+        s = stanza->children;
+        while (s->next) s = s->next;
+        s->next = child;
+        child->prev = s;
     }
 
     return XMPP_OK;
@@ -532,7 +513,7 @@ int xmpp_stanza_add_child(XmppStanza *stanza, XmppStanza *child)
  *  @ingroup Stanza
  */
 int xmpp_stanza_set_text(XmppStanza *stanza,
-			 const char * const text) {
+			 char *text) {
     if (stanza->type == XMPP_STANZA_TAG) return XMPP_EINVOP;
     
     stanza->type = XMPP_STANZA_TEXT;
@@ -561,8 +542,8 @@ int xmpp_stanza_set_text(XmppStanza *stanza,
  *  @ingroup Stanza
  */
 int xmpp_stanza_set_text_with_size(XmppStanza *stanza,
-				   const char * const text,
-				   const size_t size)
+				  const char *text,
+				  size_t size)
 {
     if (stanza->type == XMPP_STANZA_TAG) return XMPP_EINVOP;
 
@@ -587,7 +568,7 @@ int xmpp_stanza_set_text_with_size(XmppStanza *stanza,
  *
  *  @ingroup Stanza
  */
-char *xmpp_stanza_get_id(XmppStanza * const stanza)
+char *xmpp_stanza_get_id(XmppStanza *stanza)
 {
     if (stanza->type != XMPP_STANZA_TAG)
 	return NULL;
@@ -608,7 +589,7 @@ char *xmpp_stanza_get_id(XmppStanza * const stanza)
  *
  *  @ingroup Stanza
  */
-char *xmpp_stanza_get_ns(XmppStanza * const stanza)
+char *xmpp_stanza_get_ns(XmppStanza *stanza)
 {
     if (stanza->type != XMPP_STANZA_TAG)
 	return NULL;
@@ -629,7 +610,7 @@ char *xmpp_stanza_get_ns(XmppStanza * const stanza)
  *
  *  @ingroup Stanza
  */
-char *xmpp_stanza_get_type(XmppStanza * const stanza)
+char *xmpp_stanza_get_type(XmppStanza *stanza)
 {
     if (stanza->type != XMPP_STANZA_TAG)
 	return NULL;
@@ -651,8 +632,7 @@ char *xmpp_stanza_get_type(XmppStanza * const stanza)
  *
  *  @ingroup Stanza
  */
-XmppStanza *xmpp_stanza_get_child_by_name(XmppStanza * const stanza, 
-					     const char * const name)
+XmppStanza *xmpp_stanza_get_child_by_name(XmppStanza *stanza, char *name)
 {
     XmppStanza *child;
     
@@ -677,8 +657,7 @@ XmppStanza *xmpp_stanza_get_child_by_name(XmppStanza * const stanza,
  *
  *  @ingroup Stanza
  */
-XmppStanza *xmpp_stanza_get_child_by_ns(XmppStanza * const stanza,
-					   const char * const ns)
+XmppStanza *xmpp_stanza_get_child_by_ns(XmppStanza *stanza, char *ns)
 {
     XmppStanza *child;
 
@@ -702,7 +681,7 @@ XmppStanza *xmpp_stanza_get_child_by_ns(XmppStanza * const stanza,
  *
  *  @ingroup Stanza
  */
-XmppStanza *xmpp_stanza_get_children(XmppStanza * const stanza) 
+XmppStanza *xmpp_stanza_get_children(XmppStanza *stanza) 
 {
     return stanza->children;
 }
@@ -715,7 +694,7 @@ XmppStanza *xmpp_stanza_get_children(XmppStanza * const stanza)
  *
  *  @ingroup Stanza
  */
-XmppStanza *xmpp_stanza_get_next(XmppStanza * const stanza)
+XmppStanza *xmpp_stanza_get_next(XmppStanza *stanza)
 {
     return stanza->next;
 }
@@ -731,7 +710,7 @@ XmppStanza *xmpp_stanza_get_next(XmppStanza * const stanza)
  *
  *  @ingroup Stanza
  */
-char *xmpp_stanza_get_text(XmppStanza * const stanza)
+char *xmpp_stanza_get_text(XmppStanza *stanza)
 {
     size_t len, clen;
     XmppStanza *child;
@@ -780,7 +759,7 @@ char *xmpp_stanza_get_text(XmppStanza * const stanza)
  *
  *  @ingroup Stanza
  */
-char *xmpp_stanza_get_text_ptr(XmppStanza * const stanza)
+char *xmpp_stanza_get_text_ptr(XmppStanza *stanza)
 {
     if (stanza->type == XMPP_STANZA_TEXT)
 	return stanza->data;
@@ -799,9 +778,7 @@ char *xmpp_stanza_get_text_ptr(XmppStanza * const stanza)
  *
  *  @ingroup Stanza
  */
-int xmpp_stanza_set_id(XmppStanza * const stanza,
-		       const char * const id)
-{
+int xmpp_stanza_set_id(XmppStanza *stanza, char *id) {
     return xmpp_stanza_set_attribute(stanza, "id", id);
 }
 
@@ -816,8 +793,8 @@ int xmpp_stanza_set_id(XmppStanza * const stanza,
  *
  *  @ingroup Stanza
  */
-int xmpp_stanza_set_type(XmppStanza * const stanza,
-			 const char * const type)
+int xmpp_stanza_set_type(XmppStanza *stanza,
+			char * const type)
 {
     return xmpp_stanza_set_attribute(stanza, "type", type);
 }
@@ -833,8 +810,8 @@ int xmpp_stanza_set_type(XmppStanza * const stanza,
  *
  *  @ingroup Stanza
  */
-char *xmpp_stanza_get_attribute(XmppStanza * const stanza,
-				const char * const name)
+char *xmpp_stanza_get_attribute(XmppStanza *stanza,
+				const char *name)
 {
     if (stanza->type != XMPP_STANZA_TAG)
 	return NULL;
@@ -843,4 +820,19 @@ char *xmpp_stanza_get_attribute(XmppStanza * const stanza,
 	return NULL;
 
     return hash_get(stanza->attributes, name);
+}
+
+char *xmpp_attrs_get_value(char **attrs, char *name) 
+{
+    int i;
+
+    if (!attrs) return NULL;
+
+    for (i = 0; attrs[i]; i += 2) {
+        if (strcmp(name, attrs[i]) == 0) {
+            return attrs[i+1];
+        }
+    }
+
+    return NULL;
 }

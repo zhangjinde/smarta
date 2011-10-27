@@ -220,7 +220,7 @@ void xmpp_read(aeEventLoop *el, int fd, void *privdata, int mask) {
         //FIXME: DISCONNECTED.
         logger_error("smarta", "xmpp server is disconnected.");
     }
-    logger_debug("socket", "RECEIVED: %s", buf);
+    logger_debug("socket", "RECV: %s", buf);
     xmpp_stream_feed(stream, buf, nread);
 }
 
@@ -262,6 +262,6 @@ void send_message(XmppStream *stream, sds result) {
 	xmpp_stanza_add_child(body, text);
 	xmpp_stanza_add_child(reply, body);
 	
-	xmpp_send(stream, reply);
+	xmpp_send_stanza(stream, reply);
 	xmpp_stanza_release(reply);
 }
