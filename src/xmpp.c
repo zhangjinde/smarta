@@ -610,12 +610,7 @@ static void _add_buddies_to_roster(XmppStream *stream, XmppStanza *stanza)
         return;
     }
 
-    if(stream->roster) {
-        hash_release(stream->roster);
-    }
-
 	query = xmpp_stanza_get_child_by_name(stanza, "query");
-	printf("Roster:\n");
 	for (item = xmpp_stanza_get_children(query);
         item; item = xmpp_stanza_get_next(item)) {
         buddy = buddy_new();
@@ -648,7 +643,7 @@ static void _xmpp_stream_roster_callback(XmppStream *stream, XmppStanza *stanza)
 
     presence = xmpp_stanza_newtag("presence");
     xmpp_send_stanza(stream, presence);
-    xmpp_stanza_release(stanza);
+    xmpp_stanza_release(presence);
 }
 
 static void _remove_callback_from_list(list *callbacks, void *callback) 
