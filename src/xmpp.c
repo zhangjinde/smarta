@@ -389,7 +389,9 @@ static void _handle_auth_success(XmppStream *stream, XmppStanza *stanza)
 
 static void _handle_auth_failure(XmppStream *stream, XmppStanza *stanza) 
 {
-    logger_error("XMPP", "sasl authentication failure");
+    fprintf(stderr, "authentication failure.\n");
+    fprintf(stderr, "smarta name or apikey is wrong.\n");
+    fprintf(stderr, "smarta exit!\n");
     exit(1);
 }
 

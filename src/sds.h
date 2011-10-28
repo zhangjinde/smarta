@@ -84,5 +84,6 @@ void sdstoupper(sds s);
 sds sdsfromlonglong(long long value);
 sds sdscatrepr(sds s, char *p, size_t len);
 sds *sdssplitargs(char *line, int *argc);
+sds sdsjoin(sds *tokens, int len);
 
 #endif

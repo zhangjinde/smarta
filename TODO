@@ -1,3 +1,6 @@
 1. STARTTLS
 2. Reconnect
 3. Master/Slave or Proxy
+4. Task Schedule
+5. Emit Event
+6. 

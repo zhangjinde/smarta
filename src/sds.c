@@ -502,6 +502,31 @@ err:
     return NULL;
 }
 
+sds sdsjoin(sds *tokens, int size)
+{
+    sds result;
+    char *s, *p;
+    int i = 0, len = 0, slen=0;
+    
+    for(i = 0; i < size; i++) {
+        len += sdslen(tokens[i])+1;
+    }
+    if(!len) {
+        return NULL;
+    }
+    p = s = zmalloc(len);
+    for(i = 0; i < size; i++) {
+        slen = sdslen(tokens[i]);
+        memcpy(p, tokens[i], slen);
+        p[slen] = ' ';
+        p += (slen+1);
+    }
+    
+    result = sdsnewlen(s, len-1);
+    zfree(s);
+    return result;
+}
+
 #ifdef SDS_TEST_MAIN
 #include <stdio.h>
 
@@ -603,4 +628,5 @@ int main(void) {
     }
     test_report()
 }
+
 #endif

@@ -12,7 +12,11 @@
 #include <string.h>
 #include <unistd.h>
 #include <errno.h>
+#include <ctype.h>
+#include <unistd.h>
 #include <sys/uio.h>
+#include <sys/stat.h>
+#include <fcntl.h> //open
 
 #include "ae.h"
 #include "sds.h"
@@ -35,11 +39,17 @@ extern int log_level;
 
 extern char *log_file;
 
+static void daemonize(); 
+
 static void smarta_run(); 
+
+static void conn_handler(XmppStream *stream, XmppStreamState state); 
+
+static void echo_handler(XmppStream *stream, XmppStanza *stanza); 
 
 static void xmpp_read(aeEventLoop *el, int fd, void *privdata, int mask);
 
-static int smarta_cron(struct aeEventLoop *eventLoop, long long id, void *clientData);
+static int smarta_cron(aeEventLoop *eventLoop, long long id, void *clientData);
 
 void version() {
     printf("Smart agent version 0.1\n");
@@ -55,6 +65,8 @@ void smarta_init() {
     smarta.isslave = 0;
     smarta.verbosity = 0;
     smarta.daemonize = 0;
+    smarta.daemonize = 1;
+    smarta.pidfile = "/var/run/smarta.pid";
     smarta.services = listCreate();
     smarta.el = aeCreateEventLoop();
     aeCreateTimeEvent(smarta.el, 100, smarta_cron, NULL, NULL);
@@ -105,6 +117,8 @@ void load_config(char *filename) {
         } else if ((state == IN_SMARTA_BLOCK) && !strcasecmp(argv[0], "}") && argc == 1) {
             state = 0;
         } else if ((state == IN_SERVICE_BLOCK) && !strcasecmp(argv[0], "}") && argc == 1) {
+            printf("service->name: %s\n", service->name);
+            printf("service->command: %s\n", service->command);
             listAddNodeTail(smarta.services, service);
             state = 0;
         } else if (!strcasecmp(argv[0],"service") && !strcasecmp(argv[1],"{") && argc == 2) {
@@ -120,6 +134,10 @@ void load_config(char *filename) {
             smarta.server = zstrdup(argv[1]);
         } else if ((state == IN_SMARTA_BLOCK) && !strcasecmp(argv[0],"apikey") && argc == 2) {
             smarta.apikey = zstrdup(argv[1]);
+        } else if ((state == IN_SMARTA_BLOCK) && !strcasecmp(argv[0],"daemonize") && argc == 2) {
+            if ((smarta.daemonize = yesnotoi(argv[1])) == -1) {
+                err = "argument must be 'yes' or 'no'"; goto loaderr;
+            }
         } else if ((state == IN_SMARTA_BLOCK) && !strcasecmp(argv[0],"logfile") && argc == 2) {
             if(strcmp(argv[1], "stdout")) {
                 log_file = zstrdup(argv[1]);
@@ -139,12 +157,14 @@ void load_config(char *filename) {
                 fprintf(stderr, "unknown loglevel:%s", argv[1]);
                 log_level = LOG_ERROR;
             }
-        } else if ((state == IN_SERVICE_BLOCK) && !strcasecmp(argv[0],"name") && argc == 2) {
-            service->name = zstrdup(argv[1]);
+        } else if ((state == IN_SMARTA_BLOCK) && !strcasecmp(argv[0],"pidfile") && argc == 2) {
+            smarta.pidfile = strdup(argv[1]);
+        } else if ((state == IN_SERVICE_BLOCK) && !strcasecmp(argv[0],"name") && argc >= 2) {
+            service->name = sdsjoin(argv+1, argc-1);
         } else if ((state == IN_SERVICE_BLOCK) && !strcasecmp(argv[0],"period") && argc == 2) {
             service->period = atoi(argv[1]) * 60 * 1000;
-        } else if ((state == IN_SERVICE_BLOCK) && !strcasecmp(argv[0],"command") && argc == 2) {
-            service->command = zstrdup(argv[1]);
+        } else if ((state == IN_SERVICE_BLOCK) && !strcasecmp(argv[0],"command") && argc >= 2) {
+            service->command = sdsjoin(argv+1, argc-1);
         } else {
             err = "Bad directive or wrong number of arguments"; goto loaderr;
         }
@@ -181,6 +201,8 @@ int main(int argc, char **argv) {
     } else {
         usage();
     } 
+
+    if(smarta.daemonize) daemonize();
     
     fd = anetTcpConnect(err, smarta.server, 5222);
     if (fd == -1) {
@@ -204,11 +226,89 @@ int main(int argc, char **argv) {
         exit(1);
     }
 
+    xmpp_add_conn_callback(stream, (conn_callback)conn_handler);
+    
+    xmpp_add_message_callback(stream, (message_callback)echo_handler);
+
     sched_run(smarta.el, smarta.services);
 
     smarta_run();
 
     return 0;
+}
+
+static void conn_handler(XmppStream *stream, XmppStreamState state) 
+{
+    if(state == XMPP_STREAM_CONNECTING) {
+        printf("connecting to server...\n");
+    } else if(state == XMPP_STREAM_TLS_NEGOTIATING) {
+        printf("tls negotiating...\n");
+    } else if(state == XMPP_STREAM_TSL_OPENED) {
+        printf("tls opened.\n");
+    } else if(state == XMPP_STREAM_SASL_AUTHENTICATING) {
+        printf("authenticating...\n");
+    } else if(state == XMPP_STREAM_SASL_AUTHED) {
+        printf("authenticate successfully.\n");
+    } else if(state == XMPP_STREAM_ESTABLISHED) {
+        printf("session established.\n");
+        printf("smarta is started successfully.\n");
+    } else {
+        //IGNORE
+    }
+}
+
+static void echo_handler(XmppStream *stream, XmppStanza *stanza) 
+{
+	XmppStanza *reply, *body, *text;
+	char *intext, *replytext;
+	
+	if(!xmpp_stanza_get_child_by_name(stanza, "body")) return;
+	if(!strcmp(xmpp_stanza_get_attribute(stanza, "type"), "error")) return;
+	
+	intext = xmpp_stanza_get_text(xmpp_stanza_get_child_by_name(stanza, "body"));
+	
+	reply = xmpp_stanza_newtag("message");
+	xmpp_stanza_set_type(reply, xmpp_stanza_get_type(stanza) ? xmpp_stanza_get_type(stanza) : "chat");
+	xmpp_stanza_set_attribute(reply, "to", xmpp_stanza_get_attribute(stanza, "from"));
+	
+	body = xmpp_stanza_newtag("body");
+	
+	replytext = malloc(strlen(" to you too!") + strlen(intext) + 1);
+	strcpy(replytext, intext);
+	strcat(replytext, " to you too!");
+	
+	text = xmpp_stanza_new();
+	xmpp_stanza_set_text(text, replytext);
+	xmpp_stanza_add_child(body, text);
+	xmpp_stanza_add_child(reply, body);
+	
+	xmpp_send_stanza(stream, reply);
+	xmpp_stanza_release(reply);
+	free(replytext);
+}
+
+static void daemonize(void) {
+    int fd;
+    FILE *fp;
+
+    if (fork() != 0) exit(0); /* parent exits */
+    setsid(); /* create a new session */
+
+    /* Every output goes to /dev/null. If Redis is daemonized but
+     * the 'logfile' is set to 'stdout' in the configuration file
+     * it will not log at all. */
+    if ((fd = open("/dev/null", O_RDWR, 0)) != -1) {
+        dup2(fd, STDIN_FILENO);
+        dup2(fd, STDOUT_FILENO);
+        dup2(fd, STDERR_FILENO);
+        if (fd > STDERR_FILENO) close(fd);
+    }
+    /* Try to write the pid file */
+    fp = fopen(smarta.pidfile,"w");
+    if (fp) {
+        fprintf(fp,"%d\n",getpid());
+        fclose(fp);
+    }
 }
 
 void xmpp_read(aeEventLoop *el, int fd, void *privdata, int mask) {

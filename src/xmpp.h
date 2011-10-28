@@ -1,4 +1,4 @@
-/* strophe.h
+/* xmpp.h
 ** strophe XMPP client library C API
 **
 ** Copyright (C) 2005-2009 Collecta, Inc.

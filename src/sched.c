@@ -23,9 +23,9 @@ void sched_run(aeEventLoop *el, list *services) {
     while((node = listNext(iter)) != NULL) {
         delay = (random() % 300) * 1000;
         service = (Service *)node->value;
-        logger_debug("sched", "schedule service: %s", service->name);
-        taskid = aeCreateTimeEvent(el, service->period+delay, 
-            check_service, service, NULL);
+        logger_debug("sched", "schedule service '%s' after %d seconds", 
+            service->name, delay/1000);
+        taskid = aeCreateTimeEvent(el, delay, check_service, service, NULL);
         service->taskid = taskid;
     }
 }
@@ -49,7 +49,7 @@ int check_service(struct aeEventLoop *el, long long id, void *clientdata) {
             result = sdscat(result, output_buffer);
         }
         pclose(fp);
-        logger_debug("sched", "check result:  %s\n", result);
+        logger_debug("sched", "check result:\n %s", result);
         sdsfree(result);
         exit(0);
     } else {//current
