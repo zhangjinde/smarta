@@ -117,8 +117,6 @@ void load_config(char *filename) {
         } else if ((state == IN_SMARTA_BLOCK) && !strcasecmp(argv[0], "}") && argc == 1) {
             state = 0;
         } else if ((state == IN_SERVICE_BLOCK) && !strcasecmp(argv[0], "}") && argc == 1) {
-            printf("service->name: %s\n", service->name);
-            printf("service->command: %s\n", service->command);
             listAddNodeTail(smarta.services, service);
             state = 0;
         } else if (!strcasecmp(argv[0],"service") && !strcasecmp(argv[1],"{") && argc == 2) {
@@ -159,6 +157,8 @@ void load_config(char *filename) {
             }
         } else if ((state == IN_SMARTA_BLOCK) && !strcasecmp(argv[0],"pidfile") && argc == 2) {
             smarta.pidfile = strdup(argv[1]);
+        } else if ((state == IN_SMARTA_BLOCK) && !strcasecmp(argv[0],"collectd") && argc == 2) {
+            smarta.collectd = atoi(argv[1]);
         } else if ((state == IN_SERVICE_BLOCK) && !strcasecmp(argv[0],"name") && argc >= 2) {
             service->name = sdsjoin(argv+1, argc-1);
         } else if ((state == IN_SERVICE_BLOCK) && !strcasecmp(argv[0],"period") && argc == 2) {
@@ -205,11 +205,12 @@ int main(int argc, char **argv) {
     if(smarta.daemonize) daemonize();
     
     fd = anetTcpConnect(err, smarta.server, 5222);
-    if (fd == -1) {
+    if (fd < 0) {
         fprintf(stderr, "Failed to connect %s\n", domain);
         exit(-1);
     }
-    logger_debug("smarta", "sock_connect to %s, returned %d", domain, fd);
+
+    logger_debug("SMARTA", "sock_connect to %s, returned %d", domain, fd);
     /* create stream */
     stream = xmpp_stream_new(fd);
     xmpp_stream_set_jid(stream, smarta.name);
@@ -229,6 +230,15 @@ int main(int argc, char **argv) {
     xmpp_add_conn_callback(stream, (conn_callback)conn_handler);
     
     xmpp_add_message_callback(stream, (message_callback)echo_handler);
+
+    fd = anetUdpServer(err, "127.0.0.1", smarta.collectd);
+
+    if(fd < 0) {
+        fprintf(stderr, "failed to open upd socket %d. err: %s\n", smarta.collectd, err);
+        exit(-1);
+    }
+
+    aeCreateFileEvent(smarta.el, fd, AE_READABLE, sched_check_result, stream);
 
     sched_run(smarta.el, smarta.services);
 
@@ -322,13 +332,13 @@ void xmpp_read(aeEventLoop *el, int fd, void *privdata, int mask) {
         //FIXME: DISCONNECTED.
         logger_error("smarta", "xmpp server is disconnected.");
     }
-    logger_debug("socket", "RECV: %s", buf);
+    logger_debug("SOCKET", "RECV: %s", buf);
     xmpp_stream_feed(stream, buf, nread);
 }
 
 static void before_sleep(struct aeEventLoop *eventLoop) {
     if(smarta.stream->prepare_reset == 1) {
-        logger_debug("smarta", "before sleep... reset parser");
+        logger_debug("SMARTA", "before sleep... reset parser");
         parser_reset(smarta.stream->parser);
         smarta.stream->prepare_reset = 0;
     }
@@ -337,7 +347,9 @@ static void before_sleep(struct aeEventLoop *eventLoop) {
 static int smarta_cron(struct aeEventLoop *eventLoop, long long id, void *clientData) {
     //TODO: check result of tasks and send xmpp message
     //printf("cron called \n");
-
+    //if(anetUpdSend(err, "127.0.0.1", smarta.collectd, "hello", 5) < 0) {
+    //    fprintf(stderr, "failed to send hello. err: %s\n", err);
+    //} 
     //send_message(conn, result);
     return 1000;
 }

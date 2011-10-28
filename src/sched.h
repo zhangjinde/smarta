@@ -6,4 +6,6 @@
 
 void sched_run(aeEventLoop *el, list *services);
 
+void sched_check_result(aeEventLoop *el, int fd, void *privdata, int mask);
+
 #endif /* __SCHED_H__ */

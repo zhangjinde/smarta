@@ -190,6 +190,8 @@ struct _XmppStream {
     
     void *userdata;
 
+    list *presences;
+
     list *conn_callbacks;
 
     list *presence_callbacks;

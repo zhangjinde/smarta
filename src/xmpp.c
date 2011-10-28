@@ -62,6 +62,8 @@ static void buddy_release(void *buddy);
 
 static int strequal(const char* s1, const char *s2); 
 
+static int strmatch(void *s1, void *s2);
+
 XmppStream *xmpp_stream_new(int fd) 
 {
     XmppStream *stream = NULL;
@@ -76,6 +78,10 @@ XmppStream *xmpp_stream_new(int fd)
     stream->stream_id = NULL;
 
     stream->state = XMPP_STREAM_CONNECTING;
+
+    stream->presences = listCreate();
+
+    listSetMatchMethod(stream->presences, strmatch); 
 
     stream->conn_callbacks = listCreate();
     
@@ -335,10 +341,43 @@ static void _handle_stream_stanza(XmppStanza * const stanza, void * const userda
 
 }
 
+static int is_buddy(XmppStream *stream, char *jid) 
+{
+    char *bare_jid = xmpp_jid_bare(jid);
+    if(hash_get(stream->roster, bare_jid)){
+        return 1;
+    }
+    return 0;
+}
+
 static void _handle_xmpp_presence(XmppStream *stream, XmppStanza *presence) 
 {
     listNode *node;
+    char *from, *type = NULL;
     presence_callback callback;
+
+    type = xmpp_stanza_get_type(presence);
+    from = xmpp_stanza_get_attribute(presence, "from");
+    
+    if(!is_buddy(stream, from)) {
+        logger_warning("ROSTER", "%s is not buddy", from);
+        return;
+    }
+
+    if(!type || strcmp(type, "available") ==0) { //available
+        node = listSearchKey(stream->presences, from);
+        if(!node) {
+            printf("add %s to presences\n", from);
+            listAddNodeHead(stream->presences, zstrdup(from));
+        }
+    } else if(strcmp(type, "unavailable") == 0) {
+        node = listSearchKey(stream->presences, from);
+        if(node) {
+            listDelNode(stream->presences, node);
+        }
+    }
+    
+    /* callbacks */    
     listIter *iter = listGetIterator(stream->presence_callbacks, AL_START_HEAD);
     while((node = listNext(iter))) {
         callback = (presence_callback)node->value;
@@ -660,3 +699,15 @@ static int strequal(const char* s1, const char *s2)
 {
     return !strcmp(s1, s2);
 }
+
+static int strmatch(void *s1, void *s2) 
+{
+    if(strcmp(s1, s2) == 0) {
+        return 1;
+    } else {
+        return 0;
+    }
+}
+
+
+
