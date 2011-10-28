@@ -144,6 +144,13 @@ typedef enum {
     XMPP_STREAM_ESTABLISHED
 } XmppStreamState;
 
+typedef enum {
+    SUB_BOTH,
+    SUB_TO,
+    SUB_FROM
+} Subscription;
+
+
 typedef struct _XmppStream XmppStream;
 
 struct _XmppStream {
@@ -192,7 +199,16 @@ struct _XmppStream {
     Hash *iq_id_callbacks;
 
     Hash *iq_ns_callbacks;
+    
+    Hash *roster;
+
 };
+
+typedef struct _Buddy {
+    char *jid;
+    char *name;
+    Subscription sub;
+} Buddy;
 
 void xmpp_stream_set_state(XmppStream *stream, int state);
 

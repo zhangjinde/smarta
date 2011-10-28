@@ -1,10 +1,18 @@
 #ifndef __SMARTA_H
 #define __SMARTA_H
 
+#include "ae.h"
+#include "sds.h"
 #include "list.h"
 #include "xmpp.h"
-#include "sds.h"
-#include "ae.h"
+
+typedef struct _Event {
+    char *severity;
+    char *trhead;
+    char *subject;
+    list *heads;
+    char *body;
+} Event;
 
 typedef struct _Service {
     char *name;

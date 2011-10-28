@@ -52,6 +52,14 @@ static void _handle_stream_end(char *name, void *userdata);
 
 static void _remove_callback_from_list(list *callbacks, void *callback);
 
+static void _xmpp_stream_roster(XmppStream *stream); 
+
+static void _xmpp_stream_roster_callback(XmppStream *stream, XmppStanza *stanza); 
+
+static Buddy *buddy_new();
+    
+static void buddy_release(void *buddy);
+
 static int strequal(const char* s1, const char *s2); 
 
 XmppStream *xmpp_stream_new(int fd) 
@@ -74,6 +82,8 @@ XmppStream *xmpp_stream_new(int fd)
     stream->message_callbacks = listCreate();
 
     stream->presence_callbacks = listCreate();
+
+    stream->roster = hash_new(8, buddy_release);
 
     stream->iq_ns_callbacks = hash_new(8, NULL);
 
@@ -542,11 +552,103 @@ static void _xmpp_stream_session(XmppStream *stream)
 
 static void _xmpp_stream_session_callback(XmppStream *stream, XmppStanza *iq) 
 {
+    //not sent presence but roster, OK?
+    _xmpp_stream_roster(stream);
+}
+
+static void _xmpp_stream_roster(XmppStream *stream) 
+{
+
+    char *iq_id = "roster1";
+    XmppStanza *iq, *query;
+
+	/* create iq stanza for request */
+	iq = xmpp_stanza_newtag("iq");
+	xmpp_stanza_set_type(iq, "get");
+	xmpp_stanza_set_id(iq, iq_id);
+
+	query = xmpp_stanza_newtag("query");
+	xmpp_stanza_set_ns(query, XMPP_NS_ROSTER);
+
+	xmpp_stanza_add_child(iq, query);
+	xmpp_stanza_release(query);
+
+	/* set up reply handler */
+	xmpp_add_iq_id_callback(stream, iq_id, _xmpp_stream_roster_callback);
+
+	/* send out the stanza */
+	xmpp_send_stanza(stream, iq);
+
+	/* release the stanza */
+	xmpp_stanza_release(iq);
+    
+}
+
+static Buddy *buddy_new() 
+{
+    Buddy *buddy =  zmalloc(sizeof(Buddy));
+    return buddy;
+}
+    
+static void buddy_release(void *p) 
+{
+    Buddy *buddy = (Buddy *)p;
+    if(buddy->name) zfree(buddy->name);
+    if(buddy->jid) zfree(buddy->jid);
+    zfree(buddy);
+}
+
+static void _add_buddies_to_roster(XmppStream *stream, XmppStanza *stanza) 
+{
+    Buddy *buddy;
+    char *jid, *name, *type, *sub;
+    XmppStanza *query, *item;
+    type = xmpp_stanza_get_type(stanza);
+
+    if (strcmp(type, "error") == 0) {
+        logger_error("XMPP", "roster query failed.");
+        return;
+    }
+
+    if(stream->roster) {
+        hash_release(stream->roster);
+    }
+
+	query = xmpp_stanza_get_child_by_name(stanza, "query");
+	printf("Roster:\n");
+	for (item = xmpp_stanza_get_children(query);
+        item; item = xmpp_stanza_get_next(item)) {
+        buddy = buddy_new();
+        name = xmpp_stanza_get_attribute(item, "name");
+        if(name) {
+            buddy->name = zstrdup(name);
+        }
+        jid = xmpp_stanza_get_attribute(item, "jid");
+        buddy->jid = zstrdup(jid);
+        sub = xmpp_stanza_get_attribute(item, "subscription");
+        if(strcmp(sub, "both") == 0) {
+            buddy->sub = SUB_BOTH;
+        } else if(strcmp(sub, "to") == 0) {
+            buddy->sub = SUB_TO; 
+        } else if(strcmp(sub, "from") == 0) { 
+            buddy->sub = SUB_FROM; 
+        }
+        hash_add(stream->roster, buddy->jid, buddy);
+    }
+}
+
+static void _xmpp_stream_roster_callback(XmppStream *stream, XmppStanza *stanza) 
+{
+
     XmppStanza *presence;
+
+    _add_buddies_to_roster(stream, stanza);
+
     xmpp_stream_set_state(stream, XMPP_STREAM_ESTABLISHED),
-    presence = xmpp_stanza_new();
-    xmpp_stanza_set_name(presence, "presence");
+
+    presence = xmpp_stanza_newtag("presence");
     xmpp_send_stanza(stream, presence);
+    xmpp_stanza_release(stanza);
 }
 
 static void _remove_callback_from_list(list *callbacks, void *callback) 
