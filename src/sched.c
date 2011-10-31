@@ -157,7 +157,7 @@ static int should_emit(XmppStream *stream, char *jid, Event *event)
     int yes;
     char *key, *val, *status;
     key = strcatnew(jid, event->service); 
-    val = strdup(event->status);
+    val = zstrdup(event->status);
     if((status = hash_get(stream->events, key))) {
         if(strcmp(status, event->status)) {
             yes = 1;
