@@ -7,8 +7,8 @@
 #include "xmpp.h"
 
 typedef struct _Event {
-    char *severity;
-    char *trhead;
+    char *status;
+    char *service;
     char *subject;
     list *heads;
     char *body;
