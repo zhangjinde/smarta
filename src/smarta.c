@@ -52,7 +52,7 @@ static void xmpp_read(aeEventLoop *el, int fd, void *privdata, int mask);
 static int smarta_cron(aeEventLoop *eventLoop, long long id, void *clientData);
 
 void version() {
-    printf("Smart agent version 0.1\n");
+    printf("Smart agent version 0.2.1\n");
     exit(0);
 }
 

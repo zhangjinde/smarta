@@ -27,6 +27,7 @@ void sched_run(aeEventLoop *el, list *services) {
     int delay = 0;
     listNode *node;
     Service *service;
+    signal(SIGCHLD, SIG_IGN);
     listIter *iter = listGetIterator(services, AL_START_HEAD);
     while((node = listNext(iter)) != NULL) {
         delay = (random() % 300) * 1000;
@@ -52,11 +53,17 @@ int check_service(struct aeEventLoop *el, long long id, void *clientdata) {
         sds raw_command = sdsnew("cd /opt/csmarta/plugins ; ./");
         Service *service = (Service *)clientdata;
         raw_command = sdscat(raw_command, service->command);
+        logger_debug("SCHED", "check service '%s'", service->name);
         fp = popen(raw_command, "r");
+        if(!fp) {
+            logger_error("failed to open %s", service->command);
+            exit(0);
+        }
         while(fgets(output, 1023, fp)) {
             result = sdscat(result, output);
         }
         anetUdpSend("127.0.0.1", smarta.collectd, result, sdslen(result));
+        sdsfree(raw_command);
         sdsfree(result);
         pclose(fp);
         exit(0);
