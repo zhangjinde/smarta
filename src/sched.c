@@ -22,6 +22,8 @@ static int check_service(struct aeEventLoop *el, long long id, void *clientdata)
 
 static void sched_emit_event(XmppStream *stream, char *buf);
 
+static int is_valid(char *buf);
+
 void sched_run(aeEventLoop *el, list *services) {
     long taskid;
     int delay = 0;
@@ -47,13 +49,15 @@ int check_service(struct aeEventLoop *el, long long id, void *clientdata) {
     if(pid == -1) {
         logger_error("SCHED", "fork error when check %s", service->name);
     } else if(pid == 0) { //subprocess
+        int len;
         FILE *fp = NULL;
         char output[1024] = {0};
         sds result =sdsempty();
         sds raw_command = sdsnew("cd /opt/csmarta/plugins ; ./");
         Service *service = (Service *)clientdata;
         raw_command = sdscat(raw_command, service->command);
-        logger_debug("SCHED", "check service '%s'", service->name);
+        logger_debug("SCHED", "check service: '%s'", service->name);
+        logger_debug("SCHED", "command: '%s'", raw_command);
         fp = popen(raw_command, "r");
         if(!fp) {
             logger_error("failed to open %s", service->command);
@@ -62,7 +66,9 @@ int check_service(struct aeEventLoop *el, long long id, void *clientdata) {
         while(fgets(output, 1023, fp)) {
             result = sdscat(result, output);
         }
-        anetUdpSend("127.0.0.1", smarta.collectd, result, sdslen(result));
+        if((len = sdslen(result)) > 0) {
+            anetUdpSend("127.0.0.1", smarta.collectd, result, sdslen(result));
+        }
         sdsfree(raw_command);
         sdsfree(result);
         pclose(fp);
@@ -78,12 +84,15 @@ void sched_check_result(aeEventLoop *el, int fd, void *privdata, int mask) {
     int nread;
     char buf[1024] = {0};
     nread = read(fd, buf, 1023);
+    XmppStream *stream = (XmppStream *)privdata;
     if(nread <= 0) {
-        logger_debug("UDP", "no data");
+        logger_debug("COLLECTD", "no data");
         return;
     }
-    logger_debug("UDP", "RECV: %s", buf);
-    sched_emit_event((XmppStream *)privdata, buf);
+    logger_debug("COLLECTD", "RECV: %s", buf);
+    if(is_valid(buf) && stream->state == XMPP_STREAM_ESTABLISHED) {
+        sched_emit_event((XmppStream *)privdata, buf);
+    }
 }
 
 static void sched_emit_event(XmppStream *stream, char *buf) 
@@ -95,9 +104,8 @@ static void sched_emit_event(XmppStream *stream, char *buf)
     while((node = listNext(iter)) != NULL) {
         jid = (char *)node->value;
         domain =xmpp_jid_domain(jid); 
-        printf("jid: %s, domain: %s", jid, domain);
         if(strcmp(domain, "nodehub.cn") == 0) {
-            printf("send %s to %s\n", buf, jid);
+            printf("send message to %s\n:%s", jid, buf);
             message = xmpp_stanza_newtag("message");
             xmpp_stanza_set_type(message, "chat");
             xmpp_stanza_set_attribute(message, "to", jid);
@@ -116,3 +124,12 @@ static void sched_emit_event(XmppStream *stream, char *buf)
     }
     listReleaseIterator(iter);
 }
+
+static int is_valid(char *buf) 
+{
+    if(strncmp(buf, "OK", 2) == 0) return 1;
+    if(strncmp(buf, "WARNING", 7) == 0) return 1;
+    if(strncmp(buf, "CRITICAL", 8) == 0) return 1;
+    return 0;
+}
+

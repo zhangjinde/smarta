@@ -527,6 +527,62 @@ sds sdsjoin(sds *tokens, int size)
     return result;
 }
 
+//don't handle quote
+sds *sdssplitargswithquotes(char *line, int *argc) {
+    char *p = line;
+    char *current = NULL;
+    char **vector = NULL, **_vector = NULL;
+
+    *argc = 0;
+    while(1) {
+        /* skip blanks */
+        while(*p && isspace(*p)) p++;
+        if (*p) {
+            /* get a token */
+            int done=0;
+
+            if (current == NULL) {
+                current = sdsempty();
+                if (current == NULL) goto err;
+            }
+
+            while(!done) {
+                switch(*p) {
+                case ' ':
+                case '\n':
+                case '\r':
+                case '\t':
+                case '\0':
+                    done=1;
+                    break;
+                default:
+                    current = sdscatlen(current,p,1);
+                    break;
+                }
+                if (*p) p++;
+                if (current == NULL) goto err;
+            }
+            /* add the token to the vector */
+            _vector = zrealloc(vector,((*argc)+1)*sizeof(char*));
+            if (_vector == NULL) goto err;
+
+            vector = _vector;
+            vector[*argc] = current;
+            (*argc)++;
+            current = NULL;
+        } else {
+            return vector;
+        }
+    }
+
+err:
+    while((*argc)--)
+        sdsfree(vector[*argc]);
+    if (vector != NULL) zfree(vector);
+    if (current != NULL) sdsfree(current);
+    return NULL;
+}
+
 #ifdef SDS_TEST_MAIN
 #include <stdio.h>
 

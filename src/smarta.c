@@ -10,7 +10,6 @@
 #include <time.h>
 #include <stdlib.h>
 #include <string.h>
-#include <unistd.h>
 #include <errno.h>
 #include <ctype.h>
 #include <unistd.h>
@@ -46,8 +45,6 @@ static void smarta_run();
 static void conn_handler(XmppStream *stream, XmppStreamState state); 
 
 static void echo_handler(XmppStream *stream, XmppStanza *stanza); 
-
-static void xmpp_read(aeEventLoop *el, int fd, void *privdata, int mask);
 
 static int smarta_cron(aeEventLoop *eventLoop, long long id, void *clientData);
 
@@ -108,7 +105,7 @@ void load_config(char *filename) {
         }
 
         /* Split into arguments */
-        argv = sdssplitargs(line,&argc);
+        argv = sdssplitargswithquotes(line, &argc);
         sdstolower(argv[0]);
 
         /* Execute config directives */
@@ -187,7 +184,6 @@ loaderr:
 int main(int argc, char **argv) {
     int fd;
     char err[4096];
-    char *domain; // *jid, *pass;
     XmppStream *stream;
 
     smarta_init();
@@ -204,27 +200,16 @@ int main(int argc, char **argv) {
 
     if(smarta.daemonize) daemonize();
     
-    fd = anetTcpConnect(err, smarta.server, 5222);
-    if (fd < 0) {
-        fprintf(stderr, "Failed to connect %s\n", domain);
-        exit(-1);
-    }
-
-    logger_debug("SMARTA", "sock_connect to %s, returned %d", domain, fd);
     /* create stream */
-    stream = xmpp_stream_new(fd);
+    stream = xmpp_stream_new();
     xmpp_stream_set_jid(stream, smarta.name);
     xmpp_stream_set_pass(stream, smarta.apikey);
     smarta.stream = stream;
-    
-    aeCreateFileEvent(smarta.el, fd, AE_READABLE, xmpp_read, stream); //| AE_WRITABLE
-
-    logger_debug("smarta", "attempting to connect to nodehub.cn");
 
     /* open stream */
-    if(xmpp_stream_open(stream) < 0) {
-        fprintf(stderr, "stream open failed");
-        exit(1);
+    if(xmpp_connect(smarta.el, stream) < 0) {
+        logger_error("SMARTA", "xmpp connect failed.");
+        exit(-1);
     }
 
     xmpp_add_conn_callback(stream, (conn_callback)conn_handler);
@@ -234,7 +219,7 @@ int main(int argc, char **argv) {
     fd = anetUdpServer(err, "127.0.0.1", smarta.collectd);
 
     if(fd < 0) {
-        fprintf(stderr, "failed to open upd socket %d. err: %s\n", smarta.collectd, err);
+        logger_error("SMARTA", "failed to open upd socket %d. err: %s", smarta.collectd, err);
         exit(-1);
     }
 
@@ -321,20 +306,6 @@ static void daemonize(void) {
     }
 }
 
-void xmpp_read(aeEventLoop *el, int fd, void *privdata, int mask) {
-    int nread;
-    char buf[4096] = {0};
-
-    XmppStream *stream = (XmppStream *)privdata;
-
-    nread = read(fd, buf, 4096);
-    if(nread <= 0) {
-        //FIXME: DISCONNECTED.
-        logger_error("smarta", "xmpp server is disconnected.");
-    }
-    logger_debug("SOCKET", "RECV: %s", buf);
-    xmpp_stream_feed(stream, buf, nread);
-}
 
 static void before_sleep(struct aeEventLoop *eventLoop) {
     if(smarta.stream->prepare_reset == 1) {
@@ -345,12 +316,6 @@ static void before_sleep(struct aeEventLoop *eventLoop) {
 }
 
 static int smarta_cron(struct aeEventLoop *eventLoop, long long id, void *clientData) {
-    //TODO: check result of tasks and send xmpp message
-    //printf("cron called \n");
-    //if(anetUpdSend(err, "127.0.0.1", smarta.collectd, "hello", 5) < 0) {
-    //    fprintf(stderr, "failed to send hello. err: %s\n", err);
-    //} 
-    //send_message(conn, result);
     return 1000;
 }
 
@@ -379,3 +344,4 @@ void send_message(XmppStream *stream, sds result) {
 	xmpp_send_stanza(stream, reply);
 	xmpp_stanza_release(reply);
 }
+

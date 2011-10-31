@@ -3,7 +3,12 @@
 #include <stdio.h>
 #include <stdarg.h>
 #include <string.h>
+#include <math.h>
+#include <errno.h>
+#include <ctype.h>
+#include <unistd.h>
 
+#include "ae.h"
 #include "jid.h"
 #include "anet.h"
 #include "sasl.h"
@@ -11,6 +16,10 @@
 #include "stanza.h"
 #include "logger.h"
 #include "zmalloc.h"
+
+static void xmpp_read(aeEventLoop *el, int fd, void *privdata, int mask);
+
+static int xmpp_reconnect(aeEventLoop *el, long long id, void *clientData);
 
 static void _xmpp_stream_starttls(XmppStream *stream, XmppStanza *tlsFeature);
 
@@ -64,12 +73,99 @@ static int strequal(const char* s1, const char *s2);
 
 static int strmatch(void *s1, void *s2);
 
-XmppStream *xmpp_stream_new(int fd) 
+#define MAX_RETRIES 3
+
+int xmpp_connect(aeEventLoop *el, XmppStream *stream)
+{
+    char err[1024];
+    int fd = anetTcpConnect(err, stream->domain, 5222);
+    if (fd < 0) {
+        logger_error("SOCKET", "failed to connect %s, err: %s\n", stream->domain, err);
+        return fd;
+    }
+    stream->fd = fd;
+    aeCreateFileEvent(el, fd, AE_READABLE, xmpp_read, stream); //| AE_WRITABLE
+    xmpp_stream_set_state(stream, XMPP_STREAM_CONNECTING);
+    xmpp_stream_open(stream);
+    return fd;
+}
+
+static void xmpp_read(aeEventLoop *el, int fd, void *privdata, int mask) {
+    int nread;
+    int timeout;
+    char buf[4096] = {0};
+
+    XmppStream *stream = (XmppStream *)privdata;
+
+    nread = read(fd, buf, 4096);
+    if(nread <= 0) {
+        logger_error("smarta", "xmpp server is disconnected.");
+        xmpp_disconnect(el, stream);
+        timeout = (random() % 120) * 1000,
+        logger_debug("XMPP", "reconnect after %d seconds", timeout/1000);
+        aeCreateTimeEvent(el, timeout, xmpp_reconnect, stream, NULL);
+    } else {
+        logger_debug("SOCKET", "RECV: %s", buf);
+        xmpp_stream_feed(stream, buf, nread);
+    }
+}
+
+static int xmpp_reconnect(aeEventLoop *el, long long id, void *clientData) 
+{
+    int fd;
+    int timeout;
+    XmppStream *stream = (XmppStream *)clientData;
+    fd = xmpp_connect(el, (XmppStream *)clientData);
+    if(fd < 0) {
+        if(stream->retries > MAX_RETRIES) {
+            stream->retries = 1;
+        } 
+        timeout = (pow(2, stream->retries) * 60) * 1000;
+        logger_debug("XMPP", "reconnect after %d seconds", timeout/1000);
+        aeCreateTimeEvent(el, timeout, xmpp_reconnect, stream, NULL);
+        stream->retries++;
+    } else {
+        stream->retries = 1;
+    }
+    return AE_NOMORE;
+}
+
+void xmpp_disconnect(aeEventLoop *el, XmppStream *stream) 
+{
+    logger_debug("XMPP", "xmpp is disconnected");
+    if(stream->fd > 0) {
+        aeDeleteFileEvent(el, stream->fd, AE_READABLE);
+        close(stream->fd);
+        stream->fd = -1;
+    }
+    xmpp_stream_set_state(stream, XMPP_STREAM_DISCONNECTED);
+
+    if(stream->presences) {
+        listRelease(stream->presences);
+        stream->presences = listCreate();
+        listSetMatchMethod(stream->presences, strmatch); 
+    }
+
+    if(stream->roster) {
+        hash_release(stream->roster);
+        stream->roster = hash_new(8, buddy_release);
+    }
+
+    if(stream->iq_id_callbacks) {
+        hash_release(stream->iq_id_callbacks);
+        stream->iq_id_callbacks = hash_new(8, NULL);
+    }
+    
+    stream->prepare_reset = 0;
+
+}
+
+XmppStream *xmpp_stream_new() 
 {
     XmppStream *stream = NULL;
     stream = zmalloc(sizeof(XmppStream));
 
-    stream->fd = fd;
+    stream->retries = 0;
 
     stream->jid = NULL;
 
@@ -77,7 +173,7 @@ XmppStream *xmpp_stream_new(int fd)
 
     stream->stream_id = NULL;
 
-    stream->state = XMPP_STREAM_CONNECTING;
+    stream->state = XMPP_STREAM_DISCONNECTED;
 
     stream->presences = listCreate();
 
@@ -359,6 +455,11 @@ static void _handle_xmpp_presence(XmppStream *stream, XmppStanza *presence)
     type = xmpp_stanza_get_type(presence);
     from = xmpp_stanza_get_attribute(presence, "from");
     
+    //from self
+    if(xmpp_jid_bare_compare(stream->jid, from)) {
+        return;
+    }
+    
     if(!is_buddy(stream, from)) {
         logger_warning("ROSTER", "%s is not buddy", from);
         return;
@@ -426,8 +527,8 @@ static void _handle_stream_features(XmppStream *stream, XmppStanza *stanza)
 
 static void _handle_stream_errors(XmppStream *stream, XmppStanza *stanza)
 {
-    logger_error("XMPP", "stream error, exit!");
-    exit(1);
+    logger_error("XMPP", "stream error.");
+    //exit(1);
 }
 
 static void _handle_auth_success(XmppStream *stream, XmppStanza *stanza) 

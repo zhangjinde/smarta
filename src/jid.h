@@ -13,4 +13,6 @@ char *xmpp_jid_domain(const char *jid);
 
 char *xmpp_jid_resource(const char *jid);
 
+int xmpp_jid_bare_compare(const char *jid1, const char *jid2);
+
 #endif

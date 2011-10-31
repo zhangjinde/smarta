@@ -24,6 +24,7 @@
 #include <stdarg.h>
 #include <stdint.h>
 
+#include "ae.h"
 #include "hash.h"
 #include "list.h"
 #include "stanza.h"
@@ -165,6 +166,8 @@ struct _XmppStream {
 
     int port;
 
+    int retries;
+
     XmppStreamState state;
 
     uint64_t timeout_stamp;
@@ -265,8 +268,11 @@ char *xmpp_stream_get_pass(XmppStream *stream);
 
 void xmpp_stream_set_pass(XmppStream *stream, const char *pass);
 
+int xmpp_connect(aeEventLoop *el, XmppStream *stream);
 
-XmppStream *xmpp_stream_new(int fd);
+void xmpp_disconnect(aeEventLoop *el, XmppStream *stream);
+
+XmppStream *xmpp_stream_new();
 
 int xmpp_stream_open(XmppStream *stream);
 

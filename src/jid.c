@@ -159,3 +159,10 @@ char *xmpp_jid_resource(const char *jid) {
     return result;
 }
 
+int xmpp_jid_bare_compare(const char *jid1, const char *jid2) 
+{
+    if(strcmp(xmpp_jid_bare(jid1), xmpp_jid_bare(jid2)) == 0) {
+        return 1;
+    }
+    return 0;
+}
