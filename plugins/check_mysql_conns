@@ -1,0 +1,112 @@
+#!/bin/bash
+#: Title       : check_mysql_conns
+#: Date        : 2011-10-08
+#: Author      : "Ery Lee" <ery.lee@gmail.com> from nodehub.cn
+#: Version     : 1.0 
+#: Description : check mysql connections
+
+version=1.0
+scriptname=${0##*/}
+timestamp=`date +%s`
+description="check mysql commands"
+date_of_creation=2011-10-08
+usage="$scriptname [-v -h | -H Host | -u User | -p Password | -w Warning | -c Critical]"
+author="Ery Lee <ery.lee@gmail.com>"
+
+##show global status where Variable_name in ('Connections', 'Threads_created', 'Threads_cached', 'Max_used_connections', 'Threads_running', 'Thread_connected')
+# show global variables where Variable_name in ('thread_cache_size', 'max_connections')
+query1="show global variables where Variable_name = 'thread_cache_size' or Variable_name = 'max_connections';"
+
+query2="show global status where Variable_name in ('Connections', 'Threads_created', 'Threads_cached', 'Max_used_connections', 'Threads_running', 'Threads_connected');"
+
+usage() #@ DESCRIPTION: print usage information 
+{       #@ USAGE: usage 
+        #@ REQUIRES: variable defined: $scriptname 
+  printf "%s - %s\n" "$scriptname" "$description" 
+  printf "USAGE: %s\n" "$usage" 
+} 
+ 
+version() #@ DESCRIPTION: print version information 
+{         #@ USAGE: version 
+          #@ REQUIRES: variables defined: $scriptname, $author and $version 
+  printf "%s version %s\n" "$scriptname" "$version" 
+  printf "by %s, %d\n" "$author"  "${date_of_creation%%-*}" 
+} 
+
+## parse cli options, -v, -H, -u, -p, -w, -c
+while getopts vhH:u:p:w:c: var 
+do 
+  case $var in 
+    h) usage; exit ;; 
+    v) version; exit ;; 
+    H) host_opt="-h$OPTARG" ;; 
+    u) user_opt="-u$OPTARG" ;;
+    p) pass_opt="-p$OPTARG" ;;
+    w) warn=$OPTARG ;;
+    c) critical=$OPTARG ;;
+  esac 
+done 
+shift $(( $OPTIND - 1 )) 
+
+#warning threshold
+if [ -n "$warn" ]; then
+    warn=${warn//>=/'-ge'}
+    warn=${warn//<=/'-le'}
+    warn=${warn//>/'-gt'}
+    warn=${warn//</'-lt'}
+    warn=${warn//and/'-a'}
+    warn=${warn//or/'-o'}
+fi
+
+#critical threshold
+if [ -n "$critical" ]; then
+    critical=${critical//>=/'-ge'}
+    critical=${critical//<=/'-le'}
+    critical=${critical//>/'-gt'}
+    critical=${critical//</'-lt'}
+    critical=${critical//and/'-a'}
+    critical=${critical//or/'-o'}
+fi
+
+array=(`mysql $host_opt $user_opt $pass_opt -s -e "$query1" | awk "{print $1 $2}"`)
+
+for (( i=0; i<${#array[*]}; ++i )) 
+do
+    if [ "thread_cache_size" = "${array[$i]}" ]; then
+        thread_cache_size=${array[$i+1]}
+    elif [ "max_connections" = "${array[$i]}" ]; then
+        max_connections=${array[$i+1]}
+    fi
+done
+
+array=(`mysql $host_opt $user_opt $pass_opt -s -e "$query2" | awk "{print $1 $2}"`)
+
+for (( i=0; i<${#array[*]}; ++i )) 
+do
+    if [ "Connections" = "${array[$i]}" ]; then
+        connections=${array[$i+1]}
+    elif [ "Threads_created" = "${array[$i]}" ]; then
+        threads_created=${array[$i+1]}
+    elif [ "Threads_cached" = "${array[$i]}" ]; then
+        threads_cached=${array[$i+1]}
+    elif [ "Threads_running" = "${array[$i]}" ]; then
+        threads_running=${array[$i+1]}
+    elif [ "Threads_connected" = "${array[$i]}" ]; then
+        threads_connected=${array[$i+1]}
+    elif [ "Max_used_connections" = "${array[$i]}" ]; then
+        max_used_connections=${array[$i+1]}
+    fi
+done
+
+if [ -n "$critical" ] && eval "test $critical"
+then
+    status="CRITICAL"
+elif [ -n "$warn" ] && eval "test $warn"
+then
+    status="WARNING"
+else
+    status="OK"
+fi
+echo "$status - mysql thread_cache_size: $thread_cache_size, max_connections: $max_connections; threads_connected: $threads_connected, threads_cached: $threads_cached, threads_created: $threads_created, threads_running: $threads_running" 
+
+echo ""

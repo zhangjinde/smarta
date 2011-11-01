@@ -1,0 +1,56 @@
+#!/bin/bash
+#: Title       : check_crash
+#: Date        : 2011-10-08
+#: Author      : "Ery Lee" <ery.lee@gmail.com> from nodehub.cn
+#: Version     : 1.0 
+#: Description : check erlang crash
+
+#script metadata
+version=1.0
+scriptname=${0##*/}
+timestamp=`date +%s`
+description="check erlang crash"
+date_of_creation=2011-10-08
+usage="$scriptname [-v |-h] File"
+author="Ery Lee <ery.lee@gmail.com>"
+
+usage() #@ DESCRIPTION: print usage information 
+{       #@ USAGE: usage 
+        #@ REQUIRES: variable defined: $scriptname 
+  printf "%s - %s\n" "$scriptname" "$description" 
+  printf "USAGE: %s\n" "$usage" 
+} 
+ 
+version() #@ DESCRIPTION: print version information 
+{         #@ USAGE: version 
+          #@ REQUIRES: variables defined: $scriptname, $author and $version 
+  printf "%s version %s\n" "$scriptname" "$version" 
+  printf "by %s, %d\n" "$author"  "${date_of_creation%%-*}" 
+} 
+
+## parse cli options, -v
+while getopts vh var 
+do 
+  case $var in 
+    h) usage; exit ;; 
+    v) version; exit ;; 
+  esac 
+done 
+shift $(( $OPTIND - 1 )) 
+
+if [ -z $1 ]; then
+    usage
+    exit -1
+fi
+
+logfile=$1
+crashes=$((`grep crash $logfile | wc -l`))
+
+if [ $crashes -gt 3 ]; then
+    echo "CRITICAL - $crashes crashes in file $logfile"
+elif [ $crashes -gt 0 ]; then
+    echo "WARNING - $crashes crashes in file $logfile"
+else
+    echo "OK - no crashes"
+fi
+

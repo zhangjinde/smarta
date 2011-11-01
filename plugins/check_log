@@ -1,0 +1,74 @@
+#!/usr/bin/env python
+
+"""
+check_log
+"""
+import os, re, sys, getopt
+
+def run(args):
+  file = args['file']
+  if not os.path.exists(file):
+    print "CRITICAL - File not existed."
+    return
+  data = {}
+  data['size'] = str(os.path.getsize(file))
+  data['atime'] = str(int(os.path.getatime(file)))
+  data['mtime'] = str(int(os.path.getmtime(file)))
+  data['ctime'] = str(int(os.path.getmtime(file)))
+  threshold = []
+  if ("critical" in args) and (args['critical'] != ""):
+    threshold = ['CRITICAL', args['critical']]
+  elif ("warning" in args) and (args['warning'] != ""):
+    threshod = ['WARNING', args['warning']]
+  else:
+    pass
+  if len(threshold) > 0:
+    pipe = os.popen('grep -c "' + threshold[1] + '" ' + file)
+    output = pipe.read()
+    pipe.close
+    matches = int(output.strip('\n'))
+    if matches > 0:
+      summary = "found = " + "'" + threshold[1] + "', " + "times = " +  str(matches)
+      print threshold[0], '-', summary + "\n"
+      return
+  print 'OK - file size =', data['size'] + '(bytes)\n'
+
+  for name, val in data.iteritems():
+    print "metric:",name,": ",val
+
+def usage():
+    print "Usage: check_log --file=File --warning=Warning --critical=Critical"
+
+if __name__ == "__main__":
+    try:
+        opts, args = getopt.getopt(sys.argv[1:], "h", ["help", "file=", "warning=", "critical="])
+    except getopt.GetoptError, err:
+    # print help information and exit:
+        print "UNKNOWN -", str(err)
+        sys.exit(2)
+    cmd_args = {}
+    for o, a in opts:
+      if o in ("-h", "--help"):
+        usage(),
+        sys.exit(0)
+      elif o in ("--file"):
+        cmd_args['file'] = a
+      elif o in ("--warning"):
+        cmd_args['warning'] = a
+      elif o in ("--critical"):
+        cmd_args['critical'] = a
+      else:
+        print "UNKNOWN - error argument:" + o
+        usage()
+        sys.exit(2)
+    if not ('file' in cmd_args):
+      print "UNKNOWN - no 'file' argument"
+      usage()
+      sys.exit(2)
+    try:
+      run(cmd_args)
+    except:
+      print "UNKNOWN -", sys.exc_info()[0]
+      sys.exit(2)
+
+

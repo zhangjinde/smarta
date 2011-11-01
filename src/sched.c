@@ -69,7 +69,7 @@ int check_service(struct aeEventLoop *el, long long id, void *clientdata) {
         FILE *fp = NULL;
         char output[1024] = {0};
         sds result =sdsempty();
-        sds raw_command = sdsnew("cd /opt/csmarta/plugins ; ./");
+        sds raw_command = sdsnew("cd plugins ; ./");
         Service *service = (Service *)clientdata;
         raw_command = sdscat(raw_command, service->command);
         logger_debug("SCHED", "check service: '%s'", service->name);

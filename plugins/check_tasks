@@ -1,0 +1,53 @@
+#!/usr/bin/env lua
+
+-- check linux task number
+-- author: ery.lee@gmail.com from monit.cn
+
+require("plugin")
+
+function check(opts) 
+  local warn = opts["W"]
+  local crit = opts["C"]
+  output = os.cmd('top -b -n 1')
+  metrics = {string.match(output, "Tasks:%s+([0-9]+)%s+total,%s+([0-9]+)%s+running,%s+([0-9]+)%s+sleeping")}
+  if #metrics < 3 then
+    print("UNKNOWN - unknown command output\n")
+    print(output)
+    return
+  end
+  total = tonumber(metrics[1])
+  local status = "OK"
+  if crit and eval("return "..crit) then
+    status = "CRITICAL"
+  elseif warn and eval("return "..warn) then
+    status = "WARNING"
+  end
+  print(status.." - Total: "..total)
+  print("metric:total: "..metrics[1])
+  print("metric:running: "..metrics[2])
+  print("metric:sleeping: "..metrics[3])
+end
+
+function usage()
+  print("Usage: check_tasks [-h | -W warn | -C crit]")
+end
+
+-- parse arguments
+local long_opts = {
+   help = "h",
+   crit = "C",
+   warn = "W"
+}
+
+local opts,optind = getopts(arg, "hC:W:", long_opts)
+if opts["h"] then
+  usage()
+  return
+end
+
+ok, err = pcall(check, opts)
+if not ok then
+  print("UNKNOWN - plugin internal error\n")
+  print(err)
+end
+

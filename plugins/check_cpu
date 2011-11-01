@@ -1,0 +1,56 @@
+#!/usr/bin/env lua
+
+-- check linux cpu by "top -b -n 1" 
+-- author: ery.lee@gmail.com from nodehub.cn
+
+require("plugin")
+
+function check(opts) 
+  local warn = opts["W"]
+  local crit = opts["C"]
+  output = os.cmd("top -b -n 1")
+  names = {"user","system","nice","idle","iowait"} 
+  values = {string.match(output, "%s+([0-9]+.[0-9]+)%%us,%s+([0-9]+.[0-9]+)%%sy,%s+([0-9]+.[0-9]+)%%ni,%s+([0-9]+.[0-9]+)%%id,%s+([0-9]+.[0-9]+)%%wa")}
+  if #values ~= 5 then
+    print "UNKNOWN - unknown command output\n"
+    return
+  end
+  metrics = table.zip(names, values)
+  usage = 100 - tonumber(metrics["idle"])
+  local status = "OK"
+  if crit and eval("return "..crit) then
+    status = "CRITICAL"
+  elseif warn and eval("return "..warn) then
+    status = "WARNING"
+  end
+  summary = string.join(table.map2(metrics, function(k,v) return k..": "..v end), ", ")
+  print(string.format("%s - usage: %s%%, %s", status, usage, summary))
+  print("metric:usage: "..usage.."%")
+  for k,v in pairs(metrics) do
+    print(string.format("metric:%s: %s%%", k, v))
+  end
+end
+
+function usage()
+  print("Usage: check_cpu [-h | -W warn | -C crit]")
+end
+
+-- parse arguments
+local long_opts = {
+   help = "h",
+   crit = "C",
+   warn = "W"
+}
+
+local opts,optind = getopts(arg, "hC:W:", long_opts)
+if opts["h"] then
+  usage()
+  return
+end
+
+ok, err = pcall(check, opts)
+if not ok then
+  print("UNKNOWN - plugin internal error\n")
+  print(err)
+end
+

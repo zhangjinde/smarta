@@ -1,0 +1,69 @@
+#!/bin/bash
+#: Title       : check_cpulevel
+#: Date        : 2011-10-02
+#: Author      : "Ery Lee" <ery.lee@gmail.com> from nodehub.cn
+#: Version     : 1.0 
+#: Description : check cpu level
+
+#this script is copied from "Mike Weber" check_memlevel
+
+scriptname=${0##*/}
+version=1.0.0
+timestamp=`date +%s`
+description="check cpu level"
+date_of_creation=2011-10-08
+usage="$scriptname [-vh | -w warning level | -c critical level]"
+author="Ery Lee <ery.lee@gmail.com>"
+
+usage() #@ DESCRIPTION: print usage information 
+{       #@ USAGE: usage 
+        #@ REQUIRES: variable defined: $scriptname 
+  printf "%s - %s\n" "$scriptname" "$description" 
+  printf "USAGE: %s\n" "$usage" 
+} 
+ 
+version() #@ DESCRIPTION: print version information 
+{         #@ USAGE: version 
+          #@ REQUIRES: variables defined: $scriptname, $author and $version 
+  printf "%s version %s\n" "$scriptname" "$version" 
+  printf "by %s, %d\n" "$author"  "${date_of_creation%%-*}" 
+} 
+
+## parse cli options, -v, -H, -u, -p, -w, -c
+while getopts vhw:c: var 
+do 
+  case $var in 
+    h) usage; exit ;; 
+    v) version; exit ;; 
+    w) warn=$OPTARG ;;
+    c) crit=$OPTARG ;;
+  esac 
+done 
+shift $(( $OPTIND - 1 )) 
+
+if [ -z "$crit" ]; then
+    crit=50
+fi
+if [ -z "$warn" ]; then
+    warn=10
+fi
+
+crit_output=`ps aux | awk -v C="$crit" '$3 > C'`
+crit_level=$(printf "$crit_output" | wc -l)
+if (( $crit_level > 0 )); then
+    echo "CRITICAL - ${crit_level}个进程占用CPU超过$crit%!"
+    echo ""
+    echo $crit_output
+    exit 2
+fi
+warn_output=`ps aux | awk -v B="$warn" '$3 > B'`
+warn_level=$(printf "$warn_output" | wc -l)
+if (( $warn_level > 0 )); then
+    echo "WARNING - ${warn_level}个进程占用CPU超过$warn%!"
+    echo ""
+    echo $warn_output
+    exit 1
+fi
+
+echo "OK - 所有进程占用CPU少于$warn%!"
+

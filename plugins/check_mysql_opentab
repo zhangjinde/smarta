@@ -1,0 +1,67 @@
+#!/bin/bash
+#: Title       : check_mysql_opentab
+#: Date        : 2011-10-08
+#: Author      : "Ery Lee" <ery.lee@gmail.com> from nodehub.cn
+#: Version     : 1.0 
+#: Description : check mysql opentab
+
+version=1.0
+scriptname=${0##*/}
+timestamp=`date +%s`
+description="check mysql opentab"
+date_of_creation=2011-10-08
+usage="$scriptname [-v | -h Host | -u User | -p Password | -w Warning | -c Critical]"
+author="Ery Lee <ery.lee@gmail.com>"
+
+usage() #@ DESCRIPTION: print usage information 
+{       #@ USAGE: usage 
+        #@ REQUIRES: variable defined: $scriptname 
+  printf "%s - %s\n" "$scriptname" "$description" 
+  printf "USAGE: %s\n" "$usage" 
+} 
+ 
+version() #@ DESCRIPTION: print version information 
+{         #@ USAGE: version 
+          #@ REQUIRES: variables defined: $scriptname, $author and $version 
+  printf "%s version %s\n" "$scriptname" "$version" 
+  printf "by %s, %d\n" "$author"  "${date_of_creation%%-*}" 
+} 
+
+## parse cli options, -v, -H, -u, -p, -w, -c
+while getopts vhH:u:p:w:c: var 
+do 
+  case $var in 
+    h) usage; exit ;; 
+    v) version; exit ;; 
+    H) host_opt="-h$OPTARG" ;; 
+    u) user_opt="-u$OPTARG" ;;
+    p) pass_opt="-p$OPTARG" ;;
+    w) warn=$OPTARG ;;
+    c) critical=$OPTARG ;;
+  esac 
+done 
+shift $(( $OPTIND - 1 )) 
+
+# retrieve status
+array=(`mysql $host_opt $user_opt $pass_opt -s -e "show global variables where Variable_name in ('table_open_cache');" | awk "{print $1 $2}" `)
+
+for (( i=0; i<${#array[*]}; ++i )) 
+do
+    if [ "table_open_cache" = "${array[$i]}" ]; then
+        table_open_cache=${array[$i+1]}
+    fi
+done
+
+array=(`mysql $host_opt $user_opt $pass_opt -s -e "show global status where Variable_name in ('Open_tables', 'Opened_tables');" | awk "{print $1 $2}" `)
+
+for (( i=0; i<${#array[*]}; ++i )) 
+do
+    if [ "Open_tables" = "${array[$i]}" ]; then
+        open_tables=${array[$i+1]}
+    elif [ "Opened_tables" = "${array[$i]}" ]; then
+        opened_tables=${array[$i+1]}
+    fi
+done
+
+echo "OK - MySQL打开文件缓存: $table_open_cache, 当前打开文件: $open_tables, 打开文件总次数: $opened_tables"
+echo ""

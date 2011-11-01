@@ -1,0 +1,80 @@
+#!/usr/bin/env lua
+
+-- check ping
+
+-- author: ery.lee@gmail.com from nodehub.cn
+
+require("plugin")
+
+-- do check
+function check(opts) 
+  local host = opts["H"]
+  local packets = opts["t"]
+  local timeout = opts["t"]
+  uname = os.uname()
+  if uname == "Darwin" then
+    cmd = "ping".." -c "..packets.." -t "..timeout.." "..host 
+  elseif uname == "HP-UX" then
+    cmd = "ping "..host.." -n 4 -m 8"
+  elseif uname == "SunOS" then
+    cmd = "ping -s -n "..host.." 56 4"; 
+  elseif uname == "AIX" then
+    cmd = "ping -c 4 -w 8 "..host
+  else
+    -- linux default
+    cmd = "ping".." -c "..packets.." -w "..timeout.." "..host
+  end
+  output = os.cmd(cmd)
+  pl = string.match(output, "%s(%d+)%% packet loss")
+  if not pl then
+    print("UNKNOWN - ping error\n")
+    print(output)
+    return
+  end
+  if pl == "100" then
+    print("CRITICAL - packet loss = "..pl.."%\n")
+    return
+  end
+  rtmin,rta,rtmax=string.match(output, "([0-9]+.[0-9]+)/([0-9]+.[0-9]+)/([0-9]+.[0-9]+)/([0-9]+.[0-9]+) ms")
+  if pl == "0" then
+    print(string.format("OK - 丢包率: %s%%, 平均往返时延: %sms",  pl, rta))
+  else
+    print(string.format("WARNING - 丢包率: %s%%, 平均往返时延: %sms",  pl, rta))
+  end
+  print("metric:pl: "..pl.."%")
+  print("metric:rta: "..rta.."ms")
+  print("metric:rtmin: "..rtmin.."ms")
+  print("metric:rtmax: "..rtmax.."ms")
+end
+
+-- usage
+function usage() 
+  print("Usage: check_ping [-vh -p packets -t timeout] -H host")
+end
+
+-- parse arguments
+local long_opts = {
+   help    = "h",
+   host    = "H",
+   packets = "p",
+   timeout  = "t"
+}
+
+local opts,optind = getopts(arg, "hH:p:t:", long_opts)
+opts["p"] = opts["t"] or "4"
+opts["t"] = opts["t"] or "8"
+if opts["h"] then
+  usage()
+  return
+end
+if not opts["H"] then
+  print("UNKNOWN - miss argument = 'host'\n")
+  usage()
+  return
+end
+
+ok, err = pcall(check, opts)
+if not ok then
+  print("UNKNOWN - plugin internal error\n")
+  print(err)
+end

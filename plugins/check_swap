@@ -1,0 +1,61 @@
+#!/usr/bin/env lua
+
+-- check linux swap
+-- author: ery.lee@gmail.com from monit.cn
+
+require("plugin")
+
+-- do check
+function check() 
+  local warn = opts["W"]
+  local crit = opts["C"]
+  local output = os.cmd("free -m o")
+  local headers = {"total", "used", "free"}
+  local metrics = {string.match(output, "Swap:%s+(%d+)%s+(%d+)%s+(%d+)")}
+  if #metrics < 3 then 
+    print("UNKNOWN - no swap data\n") 
+    return  
+  end
+  local metrics = table.map(metrics, function(v) return tonumber(v) end)
+  local swaptab = table.zip(headers, metrics)
+  usage = swaptab["used"] * 100 / swaptab["total"]
+  swaptab["usage"] = string.format("%.2f%%", usage)
+  local status = "OK"
+  if crit and eval("return "..crit) then
+    status = "CRITICAL"
+  elseif warn and eval("return "..warn) then
+    status = "WARNING"
+  end
+  print(string.format("%s - 总交换分区大小: %s(MB) 交换分区使用率: %s", 
+    status, swaptab["total"], swaptab["usage"]))
+  for k,v in pairs(swaptab) do
+    print(string.format("metric:%s: %s", k, v))
+  end
+end
+
+-- usage
+function usage() 
+  print("Usage: check_swap [ -W warning | -C critical ]")
+end
+
+-- parse arguments
+local long_opts = {
+   help    = "h",
+   warning = "W",
+   critical = "C"
+}
+
+opts,optind = getopts(arg, "hW:C:", long_opts)
+
+if opts["h"] then
+  usage()
+  return
+end
+
+-- parse arguments
+ok, err = pcall(check, opts)
+if not ok then
+  print("UNKNOWN - plugin internal error\n")
+  print(err)
+end
+
