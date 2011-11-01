@@ -120,7 +120,7 @@ static int xmpp_reconnect(aeEventLoop *el, long long id, void *clientData)
         if(stream->retries > MAX_RETRIES) {
             stream->retries = 1;
         } 
-        timeout = (pow(2, stream->retries) * 60) * 1000;
+        timeout = ((2 * stream->retries) * 60) * 1000;
         logger_debug("XMPP", "reconnect after %d seconds", timeout/1000);
         aeCreateTimeEvent(el, timeout, xmpp_reconnect, stream, NULL);
         stream->retries++;
@@ -554,9 +554,9 @@ static void _handle_auth_success(XmppStream *stream, XmppStanza *stanza)
 
 static void _handle_auth_failure(XmppStream *stream, XmppStanza *stanza) 
 {
-    fprintf(stderr, "authentication failure.\n");
-    fprintf(stderr, "smarta name or apikey is wrong.\n");
-    fprintf(stderr, "smarta exit!\n");
+    logger_error("SMARTA", "authentication failure.\n");
+    logger_error("SMARTA", "smarta name or apikey is wrong.\n");
+    logger_error("SMARTA", "smarta exit!\n");
     exit(1);
 }
 
