@@ -36,12 +36,20 @@ typedef struct _Smarta {
     int daemonize;
     char *masterhost;
     char *masterauth;
-    int masterport;
     list *services;
+    list *slaves;
     aeEventLoop *el;
     char *logfile;
     int verbosity;
     XmppStream *stream;
+    char neterr[1024];
+    
+    //master/slave
+    char *slaveip;
+    int slaveport;
+    int masterport;
+    //stats
+    int stat_slaves;
 } Smarta;
 
 #endif

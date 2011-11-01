@@ -78,9 +78,9 @@ static int strmatch(void *s1, void *s2);
 int xmpp_connect(aeEventLoop *el, XmppStream *stream)
 {
     char err[1024];
-    int fd = anetTcpConnect(err, stream->domain, 5222);
+    int fd = anetTcpConnect(err, stream->server, stream->port);
     if (fd < 0) {
-        logger_error("SOCKET", "failed to connect %s, err: %s\n", stream->domain, err);
+        logger_error("SOCKET", "failed to connect %s: %s\n", stream->server, err);
         return fd;
     }
     stream->fd = fd;
@@ -169,7 +169,9 @@ XmppStream *xmpp_stream_new()
 
     stream->jid = NULL;
 
-    stream->domain = NULL;
+    stream->server = NULL;
+
+    stream->port = 5222;
 
     stream->stream_id = NULL;
 
@@ -227,6 +229,17 @@ void xmpp_stream_set_jid(XmppStream *stream, const char *jid)
 {
     stream->jid = zstrdup(jid);
     stream->domain = xmpp_jid_domain(jid);
+    if(!stream->server) stream->server = xmpp_jid_domain(jid);
+}
+
+void xmpp_stream_set_server(XmppStream *stream, const char *server) 
+{ 
+    if(stream->server) zfree(stream->server);
+    stream->server = zstrdup(server);
+}
+
+void xmpp_stream_set_port(XmppStream *stream, int port) {
+    stream->port = port;
 }
 
 char *xmpp_stream_get_pass(XmppStream *stream) {

@@ -161,6 +161,8 @@ struct _XmppStream {
     char *jid;
 
     char *domain;
+    
+    char *server;
 
     char *pass;
 
@@ -265,6 +267,10 @@ struct _XmppStreamError {
 char *xmpp_stream_get_jid(XmppStream *stream);
 
 void xmpp_stream_set_jid(XmppStream *stream, const char *jid);
+
+void xmpp_stream_set_server(XmppStream *stream, const char *server);
+
+void xmpp_stream_set_port(XmppStream *stream, int port);
 
 char *xmpp_stream_get_pass(XmppStream *stream);
 

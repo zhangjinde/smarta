@@ -24,6 +24,7 @@
 #include "jid.h"
 #include "xmpp.h"
 #include "sched.h"
+#include "slave.h"
 #include "logger.h"
 #include "smarta.h"
 
@@ -65,6 +66,7 @@ void smarta_init() {
     smarta.daemonize = 1;
     smarta.pidfile = "/var/run/smarta.pid";
     smarta.services = listCreate();
+    smarta.slaves = listCreate();
     smarta.el = aeCreateEventLoop();
     aeCreateTimeEvent(smarta.el, 100, smarta_cron, NULL, NULL);
     srand(time(NULL)^getpid());
@@ -156,6 +158,11 @@ void load_config(char *filename) {
             smarta.pidfile = strdup(argv[1]);
         } else if ((state == IN_SMARTA_BLOCK) && !strcasecmp(argv[0],"collectd") && argc == 2) {
             smarta.collectd = atoi(argv[1]);
+        } else if ((state == IN_SMARTA_BLOCK) && !strcasecmp(argv[0],"masterport") && argc == 2) {
+            smarta.masterport = atoi(argv[1]);
+        } else if ((state == IN_SMARTA_BLOCK) && !strcasecmp(argv[0],"slaveof") && argc == 3) {
+            smarta.slaveip= strdup(argv[1]);
+            smarta.slaveport = atoi(argv[2]);
         } else if ((state == IN_SERVICE_BLOCK) && !strcasecmp(argv[0],"name") && argc >= 2) {
             service->name = sdsjoin(argv+1, argc-1);
         } else if ((state == IN_SERVICE_BLOCK) && !strcasecmp(argv[0],"period") && argc == 2) {
@@ -206,6 +213,11 @@ int main(int argc, char **argv) {
     xmpp_stream_set_pass(stream, smarta.apikey);
     smarta.stream = stream;
 
+    if(smarta.slaveip) {
+        xmpp_stream_set_server(stream, smarta.slaveip);
+        xmpp_stream_set_port(stream, smarta.slaveport);
+    }
+
     /* open stream */
     if(xmpp_connect(smarta.el, stream) < 0) {
         logger_error("SMARTA", "xmpp connect failed.");
@@ -224,6 +236,15 @@ int main(int argc, char **argv) {
     }
 
     aeCreateFileEvent(smarta.el, fd, AE_READABLE, sched_check_result, stream);
+
+    if(smarta.masterport) {
+        fd = anetTcpServer(err, smarta.masterport, NULL);
+        if(fd < 0) {
+            logger_error("SMARTA", "failed to open master socket %d. err: %s", smarta.masterport, err);
+            exit(-1);
+        }
+        aeCreateFileEvent(smarta.el, fd, AE_READABLE, slave_accept_handler, NULL);
+    }
 
     sched_run(smarta.el, smarta.services);
 

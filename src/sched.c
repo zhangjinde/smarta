@@ -166,9 +166,9 @@ static int should_emit(XmppStream *stream, char *jid, Event *event)
         }
     } else {
         if(strcmp(val, "OK"))  { 
-            yes = 1; //FIXME
+            yes = 1; 
         } else {
-            yes = 1;
+            yes = 0;
         }
     }
     hash_add(stream->events, key, val);
