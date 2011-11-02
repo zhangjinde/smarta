@@ -27,6 +27,7 @@ typedef struct _Smarta {
     char *pidfile;
     int collectd;
     int daemonize;
+    int heartbeat;
     char *masterhost;
     char *masterauth;
     list *services;

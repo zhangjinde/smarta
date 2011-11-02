@@ -34,6 +34,8 @@
 #define IN_SERVICE_BLOCK 2
 #define IN_COMMAND_BLOCK 3
 
+#define HEARTBEAT_TIMEOUT 800000
+
 Smarta smarta;
 
 extern int log_level;
@@ -49,6 +51,8 @@ static void conn_handler(XmppStream *stream, XmppStreamState state);
 static void command_handler(XmppStream *stream, XmppStanza *stanza); 
 
 static int smarta_cron(aeEventLoop *eventLoop, long long id, void *clientData);
+
+static int smarta_heartbeat(aeEventLoop *el, long long id, void *clientData); 
 
 void version() {
     printf("Smart agent version 0.2.1\n");
@@ -270,22 +274,35 @@ int main(int argc, char **argv) {
 
 static void conn_handler(XmppStream *stream, XmppStreamState state) 
 {
-    if(state == XMPP_STREAM_CONNECTING) {
-        printf("connecting to server...\n");
+    if(state == XMPP_STREAM_DISCONNECTED) {
+        if(smarta.heartbeat) aeDeleteTimeEvent(smarta.el, smarta.heartbeat);
+        logger_error("SMARTA", "disconnected from server.");
+    } else if(state == XMPP_STREAM_CONNECTING) {
+        logger_info("SMARTA", "connecting to server...");
     } else if(state == XMPP_STREAM_TLS_NEGOTIATING) {
-        printf("tls negotiating...\n");
+        logger_info("SMARTA", "tls negotiating...");
     } else if(state == XMPP_STREAM_TSL_OPENED) {
-        printf("tls opened.\n");
+        logger_info("SMARTA", "tls opened.");
     } else if(state == XMPP_STREAM_SASL_AUTHENTICATING) {
-        printf("authenticating...\n");
+        logger_info("SMARTA", "authenticating...");
     } else if(state == XMPP_STREAM_SASL_AUTHED) {
-        printf("authenticate successfully.\n");
+        logger_info("SMARTA", "authenticate successfully.");
     } else if(state == XMPP_STREAM_ESTABLISHED) {
-        printf("session established.\n");
-        printf("smarta is started successfully.\n");
+        smarta.heartbeat = aeCreateTimeEvent(smarta.el, HEARTBEAT_TIMEOUT, smarta_heartbeat, stream, NULL);
+        logger_info("SMARTA", "session established.");
+        logger_info("SMARTA", "smarta is started successfully.");
     } else {
         //IGNORE
     }
+}
+
+static int smarta_heartbeat(aeEventLoop *el, long long id, void *clientData) 
+{
+    XmppStream *stream = (XmppStream *)clientData;
+    XmppStanza *presence = xmpp_stanza_newtag("presence");
+    xmpp_send_stanza(stream, presence);
+    xmpp_stanza_release(presence);
+    return HEARTBEAT_TIMEOUT;
 }
 
 static Command *find_command(char *usage)
