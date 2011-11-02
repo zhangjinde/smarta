@@ -18,7 +18,6 @@ Makefile
 Makefile.in
 config.status
 smarta
-configure
 smarta.log
 src/.deps/*
 aclocal.m4

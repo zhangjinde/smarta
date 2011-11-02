@@ -385,7 +385,6 @@ static void _handle_stream_start(char *name, char **attrs, void *userdata)
 
     if (strcmp(name, "stream:stream") != 0) {
         logger_fatal("xmpp", "server did not open valid stream.");
-        //TODO:fix me later
         exit(1);
     }
     if (stream->stream_id) {

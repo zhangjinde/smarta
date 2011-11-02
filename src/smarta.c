@@ -23,6 +23,7 @@
 #include "zmalloc.h"
 #include "jid.h"
 #include "xmpp.h"
+#include "event.h"
 #include "sched.h"
 #include "slave.h"
 #include "logger.h"
@@ -45,7 +46,7 @@ static void smarta_run();
 
 static void conn_handler(XmppStream *stream, XmppStreamState state); 
 
-static void echo_handler(XmppStream *stream, XmppStanza *stanza); 
+static void command_handler(XmppStream *stream, XmppStanza *stanza); 
 
 static int smarta_cron(aeEventLoop *eventLoop, long long id, void *clientData);
 
@@ -65,6 +66,7 @@ void smarta_init() {
     smarta.daemonize = 0;
     smarta.daemonize = 1;
     smarta.pidfile = "/var/run/smarta.pid";
+    smarta.events = hash_new(8, event_free);
     smarta.services = listCreate();
     smarta.slaves = listCreate();
     smarta.el = aeCreateEventLoop();
@@ -226,7 +228,7 @@ int main(int argc, char **argv) {
 
     xmpp_add_conn_callback(stream, (conn_callback)conn_handler);
     
-    xmpp_add_message_callback(stream, (message_callback)echo_handler);
+    xmpp_add_message_callback(stream, (message_callback)command_handler);
 
     fd = anetUdpServer(err, "127.0.0.1", smarta.collectd);
 
@@ -273,15 +275,49 @@ static void conn_handler(XmppStream *stream, XmppStreamState state)
     }
 }
 
-static void echo_handler(XmppStream *stream, XmppStanza *stanza) 
+static sds execute(char *incmd)
+{
+    char buf[1024];
+    sds output = sdsempty();    
+    if(strcmp(incmd, "show events") == 0) {
+        char *key;
+        Event *event;
+        const hash_iterator_t *iter = hash_iter_new(smarta.events);
+        while((key = hash_iter_next(iter))) {
+            event = hash_get(smarta.events, key);
+            sdscatprintf(output, "%s %s - %s\n", 
+                key, event->status, event->subject);
+        }
+        hash_iter_release(iter);
+    } else if(strcmp(incmd, "show uptime") == 0) {
+        FILE *fp = popen("uptime", "r");
+        if(!fp) {
+            sdsfree(output);
+            return NULL;
+        }
+        while(fgets(buf, 1023, fp)) {
+            output = sdscat(output, buf);
+        }
+        pclose(fp);
+    } else {
+        sdscat(output, "Smarta 0.3.1, available commands:\n"
+            "show events\n"
+            "show uptime\n");
+    }
+    return output;
+}
+
+static void command_handler(XmppStream *stream, XmppStanza *stanza) 
 {
 	XmppStanza *reply, *body, *text;
-	char *intext, *replytext;
+	char *incmd, *output;
 	
 	if(!xmpp_stanza_get_child_by_name(stanza, "body")) return;
 	if(!strcmp(xmpp_stanza_get_attribute(stanza, "type"), "error")) return;
 	
-	intext = xmpp_stanza_get_text(xmpp_stanza_get_child_by_name(stanza, "body"));
+	incmd = xmpp_stanza_get_text(xmpp_stanza_get_child_by_name(stanza, "body"));
+
+    output = execute(incmd);
 	
 	reply = xmpp_stanza_newtag("message");
 	xmpp_stanza_set_type(reply, xmpp_stanza_get_type(stanza) ? xmpp_stanza_get_type(stanza) : "chat");
@@ -289,18 +325,14 @@ static void echo_handler(XmppStream *stream, XmppStanza *stanza)
 	
 	body = xmpp_stanza_newtag("body");
 	
-	replytext = malloc(strlen(" to you too!") + strlen(intext) + 1);
-	strcpy(replytext, intext);
-	strcat(replytext, " to you too!");
-	
 	text = xmpp_stanza_new();
-	xmpp_stanza_set_text(text, replytext);
+	xmpp_stanza_set_text(text, output);
 	xmpp_stanza_add_child(body, text);
 	xmpp_stanza_add_child(reply, body);
 	
 	xmpp_send_stanza(stream, reply);
 	xmpp_stanza_release(reply);
-	free(replytext);
+	zfree(output);
 }
 
 static void daemonize(void) {

@@ -4,15 +4,8 @@
 #include "ae.h"
 #include "sds.h"
 #include "list.h"
+#include "hash.h"
 #include "xmpp.h"
-
-typedef struct _Event {
-    char *status;
-    char *service;
-    char *subject;
-    list *heads;
-    char *body;
-} Event;
 
 typedef struct _Service {
     char *name;
@@ -43,6 +36,10 @@ typedef struct _Smarta {
     int verbosity;
     XmppStream *stream;
     char neterr[1024];
+
+    //events cache
+    Hash *events;
+    
     
     //master/slave
     char *slaveip;
