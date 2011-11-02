@@ -110,10 +110,11 @@ void sched_check_result(aeEventLoop *el, int fd, void *privdata, int mask) {
     if(stream->state == XMPP_STREAM_ESTABLISHED) {
         event = event_parse(buf);
         if(is_valid_event(event)) {
+            //Old event will be released by hash_add
             hash_add(smarta.events, event->service, event);
             sched_emit_event(stream, event);
         }
-        event_free(event);
+        //event_free(event);
     }
 }
 

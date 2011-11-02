@@ -280,12 +280,12 @@ static sds execute(char *incmd)
     char buf[1024];
     sds output = sdsempty();    
     if(strcmp(incmd, "show events") == 0) {
-        char *key;
+        const char *key;
         Event *event;
-        const hash_iterator_t *iter = hash_iter_new(smarta.events);
+        hash_iterator_t *iter = hash_iter_new(smarta.events);
         while((key = hash_iter_next(iter))) {
             event = hash_get(smarta.events, key);
-            sdscatprintf(output, "%s %s - %s\n", 
+            output = sdscatprintf(output, "%s %s - %s\n", 
                 key, event->status, event->subject);
         }
         hash_iter_release(iter);
@@ -300,7 +300,7 @@ static sds execute(char *incmd)
         }
         pclose(fp);
     } else {
-        sdscat(output, "Smarta 0.3.1, available commands:\n"
+        output = sdscat(output, "Smarta 0.3.1, available commands:\n"
             "show events\n"
             "show uptime\n");
     }
@@ -310,14 +310,24 @@ static sds execute(char *incmd)
 static void command_handler(XmppStream *stream, XmppStanza *stanza) 
 {
 	XmppStanza *reply, *body, *text;
-	char *incmd, *output;
+	char *incmd;
+    sds output;
 	
 	if(!xmpp_stanza_get_child_by_name(stanza, "body")) return;
 	if(!strcmp(xmpp_stanza_get_attribute(stanza, "type"), "error")) return;
 	
 	incmd = xmpp_stanza_get_text(xmpp_stanza_get_child_by_name(stanza, "body"));
 
+    if(!strlen(incmd)) return;
+
     output = execute(incmd);
+
+    if(!output) return;
+
+    if(!sdslen(output)) {
+        sdsfree(output);
+        return;
+    }
 	
 	reply = xmpp_stanza_newtag("message");
 	xmpp_stanza_set_type(reply, xmpp_stanza_get_type(stanza) ? xmpp_stanza_get_type(stanza) : "chat");
@@ -332,7 +342,7 @@ static void command_handler(XmppStream *stream, XmppStanza *stanza)
 	
 	xmpp_send_stanza(stream, reply);
 	xmpp_stanza_release(reply);
-	zfree(output);
+	sdsfree(output);
 }
 
 static void daemonize(void) {
