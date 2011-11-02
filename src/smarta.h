@@ -15,8 +15,8 @@ typedef struct _Service {
 } Service;
 
 typedef struct _Command {
-    char *name;
     char *usage;
+    char *shell;
 } Command;
 
 typedef struct _Smarta {
@@ -30,6 +30,8 @@ typedef struct _Smarta {
     char *masterhost;
     char *masterauth;
     list *services;
+    list *commands;
+    char *cmdusage;
     list *slaves;
     aeEventLoop *el;
     char *logfile;

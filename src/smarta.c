@@ -32,7 +32,7 @@
 #define CONFIGLINE_MAX 1024
 #define IN_SMARTA_BLOCK 1
 #define IN_SERVICE_BLOCK 2
-#define IN_COMMADN_BLOCK 3
+#define IN_COMMAND_BLOCK 3
 
 Smarta smarta;
 
@@ -68,6 +68,8 @@ void smarta_init() {
     smarta.pidfile = "/var/run/smarta.pid";
     smarta.events = hash_new(8, event_free);
     smarta.services = listCreate();
+    smarta.commands = listCreate();
+    smarta.cmdusage = NULL;
     smarta.slaves = listCreate();
     smarta.el = aeCreateEventLoop();
     aeCreateTimeEvent(smarta.el, 100, smarta_cron, NULL, NULL);
@@ -87,6 +89,7 @@ void load_config(char *filename) {
     sds line = NULL;
     int state = 0;
     Service *service;
+    Command *command;
 
     if ((fp = fopen(filename,"r")) == NULL) {
         //redisLog(REDIS_WARNING, "Fatal error, can't open config file '%s'", filename);
@@ -120,9 +123,15 @@ void load_config(char *filename) {
         } else if ((state == IN_SERVICE_BLOCK) && !strcasecmp(argv[0], "}") && argc == 1) {
             listAddNodeTail(smarta.services, service);
             state = 0;
+        } else if ((state == IN_COMMAND_BLOCK) && !strcasecmp(argv[0], "}") && argc == 1) {
+            listAddNodeTail(smarta.commands, command);
+            state = 0;
         } else if (!strcasecmp(argv[0],"service") && !strcasecmp(argv[1],"{") && argc == 2) {
             state = IN_SERVICE_BLOCK;
             service = zmalloc(sizeof(Service));
+        } else if (!strcasecmp(argv[0],"command") && !strcasecmp(argv[1],"{") && argc == 2) {
+            state = IN_COMMAND_BLOCK;
+            command = zmalloc(sizeof(Command));
         } else if ((state == IN_SMARTA_BLOCK) && !strcasecmp(argv[0],"name") && argc == 2) {
             smarta.name = zstrdup(argv[1]);
             smarta.server = xmpp_jid_domain(smarta.name);
@@ -171,6 +180,10 @@ void load_config(char *filename) {
             service->period = atoi(argv[1]) * 60 * 1000;
         } else if ((state == IN_SERVICE_BLOCK) && !strcasecmp(argv[0],"command") && argc >= 2) {
             service->command = sdsjoin(argv+1, argc-1);
+        } else if ((state == IN_COMMAND_BLOCK) && !strcasecmp(argv[0],"usage") && argc >= 2) {
+            command->usage = sdsjoin(argv+1, argc-1);
+        } else if ((state == IN_COMMAND_BLOCK) && !strcasecmp(argv[0],"shell") && argc >= 2) {
+            command->shell = sdsjoin(argv+1, argc-1);
         } else {
             err = "Bad directive or wrong number of arguments"; goto loaderr;
         }
@@ -275,10 +288,25 @@ static void conn_handler(XmppStream *stream, XmppStreamState state)
     }
 }
 
+static Command *find_command(char *usage)
+{
+    listNode *node;
+    listIter *iter = listGetIterator(smarta.commands, AL_START_HEAD);
+    while((node = listNext(iter)) != NULL) {
+        Command *command = (Command *)node->value;
+        if(!strcmp(command->usage, usage)) {
+            return command;
+        }
+    }
+    listReleaseIterator(iter);
+    return NULL;
+}
+
 static sds execute(char *incmd)
 {
     char buf[1024];
-    sds output = sdsempty();    
+    Command *command;
+    sds output = sdsempty();
     if(strcmp(incmd, "show events") == 0) {
         const char *key;
         Event *event;
@@ -289,8 +317,8 @@ static sds execute(char *incmd)
                 key, event->status, event->subject);
         }
         hash_iter_release(iter);
-    } else if(strcmp(incmd, "show uptime") == 0) {
-        FILE *fp = popen("uptime", "r");
+    } else if( (command = find_command(incmd) )) {
+        FILE *fp = popen(command->shell, "r");
         if(!fp) {
             sdsfree(output);
             return NULL;
@@ -300,9 +328,19 @@ static sds execute(char *incmd)
         }
         pclose(fp);
     } else {
-        output = sdscat(output, "Smarta 0.3.1, available commands:\n"
-            "show events\n"
-            "show uptime\n");
+        if(smarta.cmdusage) {
+            output = sdscat(output, smarta.cmdusage);
+        } else {
+            listNode *node;
+            output = sdscat(output, "Smarta 0.3.1, available commands:\nshow events\n");
+            listIter *iter = listGetIterator(smarta.commands, AL_START_HEAD);
+            while((node = listNext(iter)) != NULL) {
+                command = (Command *)node->value;
+                output = sdscatprintf(output, "%s\n", command->usage);
+            }
+            listReleaseIterator(iter);
+            smarta.cmdusage = sdsdup(output);
+        }
     }
     return output;
 }
