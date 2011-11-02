@@ -21,10 +21,11 @@ function check(opts)
   end
   local metrics = table.map(metrics, function(v) return tonumber(v) end)
   local memtab = table.zip(headers, metrics)
-  usage = memtab["used"] * 100 / memtab["total"]
   memtab["usage"] = string.format("%.2f%%", (memtab["used"] * 100 / memtab["total"]))
   memtab["appused"] = memtab["used"] - memtab["buffers"] - memtab["cached"]
   memtab["appusage"] = string.format("%.2f%%", (memtab["appused"] * 100/ memtab["total"]))
+  usage = memtab["used"] * 100 / memtab["total"]
+  appusage = memtab["appused"] * 100/ memtab["total"]
   status = "OK"
   if crit and eval("return "..crit) then
     status = "CRITICAL"
