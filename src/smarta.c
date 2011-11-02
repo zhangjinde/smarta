@@ -28,6 +28,7 @@
 #include "slave.h"
 #include "logger.h"
 #include "smarta.h"
+#include "version.h"
 
 #define CONFIGLINE_MAX 1024
 #define IN_SMARTA_BLOCK 1
@@ -55,7 +56,7 @@ static int smarta_cron(aeEventLoop *eventLoop, long long id, void *clientData);
 static int smarta_heartbeat(aeEventLoop *el, long long id, void *clientData); 
 
 void version() {
-    printf("Smart agent version 0.2.1\n");
+    printf("Smart agent version %s\n", SMARTA_VERSION);
     exit(0);
 }
 
@@ -349,7 +350,7 @@ static sds execute(char *incmd)
             output = sdscat(output, smarta.cmdusage);
         } else {
             listNode *node;
-            output = sdscat(output, "Smarta 0.3.1, available commands:\nshow events\n");
+            output = sdscatprintf(output, "Smarta %s, available commands:\nshow events\n", SMARTA_VERSION);
             listIter *iter = listGetIterator(smarta.commands, AL_START_HEAD);
             while((node = listNext(iter)) != NULL) {
                 command = (Command *)node->value;
