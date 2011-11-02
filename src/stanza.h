@@ -4,9 +4,10 @@
 #include "hash.h"
 
 typedef enum {
-    XMPP_STANZA_UNKNOWN,
+    XMPP_STANZA_UNKNOWN = -1,
+    XMPP_STANZA_TAG,
     XMPP_STANZA_TEXT,
-    XMPP_STANZA_TAG
+    XMPP_STANZA_CDATA,
 } XmppStanzaType;
 
 typedef struct _XmppStanza {
@@ -29,10 +30,20 @@ typedef struct _XmppStanza {
 */
 XmppStanza *xmpp_stanza_new();
 
+
 /*
 **create a tag stanza
 */
-XmppStanza *xmpp_stanza_newtag(const char *name);
+XmppStanza *xmpp_stanza_tag(const char *name);
+/*
+** create a text stanza
+*/
+XmppStanza *xmpp_stanza_text(const char *data);
+
+/*
+** create a cdata stanza
+*/
+XmppStanza *xmpp_stanza_cdata(const char *data);
 
 /** clone a stanza */
 XmppStanza *xmpp_stanza_clone(XmppStanza * stanza);

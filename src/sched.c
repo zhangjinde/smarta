@@ -181,13 +181,12 @@ static void sched_emit_event(XmppStream *stream, Event *event)
             && should_emit(stream, jid, event)) {
             buf = event_to_string(event);
             printf("send message to %s: %s", jid, buf); 
-            message = xmpp_stanza_newtag("message");
+            message = xmpp_stanza_tag("message");
             xmpp_stanza_set_type(message, "chat");
             xmpp_stanza_set_attribute(message, "to", jid);
 
-            body = xmpp_stanza_newtag("body");
-            text = xmpp_stanza_new();
-            xmpp_stanza_set_text(text, buf);
+            body = xmpp_stanza_tag("body");
+            text = xmpp_stanza_cdata(buf);
             xmpp_stanza_add_child(body, text);
 
             xmpp_stanza_add_child(message, body);

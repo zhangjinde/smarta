@@ -601,7 +601,7 @@ static void _xmpp_stream_starttls(XmppStream *stream, XmppStanza *tlsFeature)
 
 static XmppStanza *_make_starttls(XmppStream *stream) 
 {
-    XmppStanza *starttls = xmpp_stanza_newtag("starttls");
+    XmppStanza *starttls = xmpp_stanza_tag("starttls");
     xmpp_stanza_set_ns(starttls, XMPP_NS_TLS);
     return starttls;
 }
@@ -612,10 +612,9 @@ static void _xmpp_stream_auth(XmppStream * const stream, XmppStanza *mechanisms)
     XmppStanza *auth, *authdata;
     auth = _make_sasl_auth("PLAIN");
 
-    authdata = xmpp_stanza_new();
-
     str = sasl_plain(stream->jid, stream->pass);
-    xmpp_stanza_set_text(authdata, str);
+    authdata = xmpp_stanza_text(str);
+
     zfree(str);
 
     xmpp_stanza_add_child(auth, authdata);
@@ -643,7 +642,7 @@ static void _xmpp_stream_bind(XmppStream *stream, XmppStanza *bind)
     XmppStanza *iq, *res, *text;
 
     //iq element
-	iq = xmpp_stanza_newtag("iq");
+	iq = xmpp_stanza_tag("iq");
 	xmpp_stanza_set_type(iq, "set");
 	xmpp_stanza_set_id(iq, bind_id);
 
@@ -653,11 +652,10 @@ static void _xmpp_stream_bind(XmppStream *stream, XmppStanza *bind)
 	bind = xmpp_stanza_copy(bind);
 
     //res element
-    res = xmpp_stanza_newtag("resource");
+    res = xmpp_stanza_tag("resource");
 
     //res text
-    text = xmpp_stanza_new();
-    xmpp_stanza_set_text(text, "smarta");
+    text = xmpp_stanza_text("smarta");
 
     xmpp_stanza_add_child(res, text);
     xmpp_stanza_add_child(bind, res);
@@ -717,11 +715,11 @@ static void _xmpp_stream_roster(XmppStream *stream)
     XmppStanza *iq, *query;
 
 	/* create iq stanza for request */
-	iq = xmpp_stanza_newtag("iq");
+	iq = xmpp_stanza_tag("iq");
 	xmpp_stanza_set_type(iq, "get");
 	xmpp_stanza_set_id(iq, iq_id);
 
-	query = xmpp_stanza_newtag("query");
+	query = xmpp_stanza_tag("query");
 	xmpp_stanza_set_ns(query, XMPP_NS_ROSTER);
 
 	xmpp_stanza_add_child(iq, query);
@@ -795,7 +793,7 @@ static void _xmpp_stream_roster_callback(XmppStream *stream, XmppStanza *stanza)
 
     xmpp_stream_set_state(stream, XMPP_STREAM_ESTABLISHED),
 
-    presence = xmpp_stanza_newtag("presence");
+    presence = xmpp_stanza_tag("presence");
     xmpp_send_stanza(stream, presence);
     xmpp_stanza_release(presence);
 }

@@ -17,6 +17,7 @@
 
 #include "xmpp.h"
 #include "hash.h"
+#include "logger.h"
 #include "zmalloc.h"
 
 /** Create a stanza object.
@@ -45,10 +46,27 @@ XmppStanza *xmpp_stanza_new() {
     return stanza; 
 }
 
-XmppStanza *xmpp_stanza_newtag(const char *name) 
+XmppStanza *xmpp_stanza_tag(const char *name) 
 {
     XmppStanza *stanza = xmpp_stanza_new();
-    xmpp_stanza_set_name(stanza, name);
+    stanza->type = XMPP_STANZA_TAG;
+    stanza->data = zstrdup(name);
+    return stanza;
+}
+
+XmppStanza *xmpp_stanza_text(const char *text) 
+{
+    XmppStanza *stanza = xmpp_stanza_new();
+    stanza->type = XMPP_STANZA_TEXT;
+    stanza->data = zstrdup(text);
+    return stanza;
+}
+
+XmppStanza *xmpp_stanza_cdata(const char *data) 
+{
+    XmppStanza *stanza = xmpp_stanza_new();
+    stanza->type = XMPP_STANZA_CDATA;
+    stanza->data = zstrdup(data);
     return stanza;
 }
 
@@ -226,7 +244,12 @@ static int _render_stanza_recursive(XmppStanza *stanza,
         ret = snprintf(ptr, left, "%s", stanza->data);
         if (ret < 0) return XMPP_EMEM;
         _render_update(&written, buflen, ret, &left, &ptr);
-    } else { /* stanza->type == XMPP_STANZA_TAG */
+    } else if (stanza->type == XMPP_STANZA_CDATA) {
+        if (!stanza->data) return XMPP_EINVOP;
+        ret = snprintf(ptr, left, "<![CDATA[%s]]>", stanza->data);
+        if (ret < 0) return XMPP_EMEM;
+        _render_update(&written, buflen, ret, &left, &ptr);
+    } else if (stanza->type == XMPP_STANZA_TAG) {
         if (!stanza->data) { 
             return XMPP_EINVOP; 
         }
@@ -276,6 +299,9 @@ static int _render_stanza_recursive(XmppStanza *stanza,
             
             _render_update(&written, buflen, ret, &left, &ptr);
         }
+    } else { /* stanza->type == XMPP_STANZA_UNKNOWN*/
+        logger_fatal("STANZA", "unknown xml stanza");
+        return XMPP_EINT;
     }
 
     return written;
@@ -340,11 +366,11 @@ int xmpp_stanza_to_text(
  *  @ingroup Stanza
  */
 int xmpp_stanza_set_name(XmppStanza *stanza, const char *name) {
-    if (stanza->type == XMPP_STANZA_TEXT) return XMPP_EINVOP;
+    if (stanza->type == XMPP_STANZA_UNKNOWN) stanza->type = XMPP_STANZA_TAG;
+    if (stanza->type != XMPP_STANZA_TAG) return XMPP_EINVOP;
 
     if (stanza->data) zfree(stanza->data);
 
-    stanza->type = XMPP_STANZA_TAG;
     stanza->data = zstrdup(name);
 
     return XMPP_OK;
@@ -512,11 +538,10 @@ int xmpp_stanza_add_child(XmppStanza *stanza, XmppStanza *child) {
  *
  *  @ingroup Stanza
  */
-int xmpp_stanza_set_text(XmppStanza *stanza,
-			 char *text) {
-    if (stanza->type == XMPP_STANZA_TAG) return XMPP_EINVOP;
+int xmpp_stanza_set_text(XmppStanza *stanza, char *text) {
     
-    stanza->type = XMPP_STANZA_TEXT;
+    if(stanza->type == XMPP_STANZA_UNKNOWN) stanza->type = XMPP_STANZA_TEXT;
+    if (stanza->type != XMPP_STANZA_TEXT) return XMPP_EINVOP;
 
     if (stanza->data) { 
         zfree(stanza->data);
@@ -545,9 +570,8 @@ int xmpp_stanza_set_text_with_size(XmppStanza *stanza,
 				  const char *text,
 				  size_t size)
 {
-    if (stanza->type == XMPP_STANZA_TAG) return XMPP_EINVOP;
-
-    stanza->type = XMPP_STANZA_TEXT;
+    if(stanza->type == XMPP_STANZA_UNKNOWN) stanza->type = XMPP_STANZA_TEXT;
+    if (stanza->type != XMPP_STANZA_TEXT) return XMPP_EINVOP;
 
     if (stanza->data) zfree(stanza->data);
     stanza->data = zmalloc(size + 1);

@@ -300,7 +300,7 @@ static void conn_handler(XmppStream *stream, XmppStreamState state)
 static int smarta_heartbeat(aeEventLoop *el, long long id, void *clientData) 
 {
     XmppStream *stream = (XmppStream *)clientData;
-    XmppStanza *presence = xmpp_stanza_newtag("presence");
+    XmppStanza *presence = xmpp_stanza_tag("presence");
     xmpp_send_stanza(stream, presence);
     xmpp_stanza_release(presence);
     return HEARTBEAT_TIMEOUT;
@@ -385,14 +385,13 @@ static void command_handler(XmppStream *stream, XmppStanza *stanza)
         return;
     }
 	
-	reply = xmpp_stanza_newtag("message");
+	reply = xmpp_stanza_tag("message");
 	xmpp_stanza_set_type(reply, xmpp_stanza_get_type(stanza) ? xmpp_stanza_get_type(stanza) : "chat");
 	xmpp_stanza_set_attribute(reply, "to", xmpp_stanza_get_attribute(stanza, "from"));
 	
-	body = xmpp_stanza_newtag("body");
+	body = xmpp_stanza_tag("body");
 	
-	text = xmpp_stanza_new();
-	xmpp_stanza_set_text(text, output);
+	text = xmpp_stanza_cdata(output);
 	xmpp_stanza_add_child(body, text);
 	xmpp_stanza_add_child(reply, body);
 	
@@ -455,8 +454,7 @@ void send_message(XmppStream *stream, sds result) {
 	body = xmpp_stanza_new();
 	xmpp_stanza_set_name(body, "body");
 	
-	text = xmpp_stanza_new();
-	xmpp_stanza_set_text(text, result);
+	text = xmpp_stanza_new(result);
 	xmpp_stanza_add_child(body, text);
 	xmpp_stanza_add_child(reply, body);
 	
