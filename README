@@ -1,4 +1,4 @@
-This is smart agent based on xmpp protocal and libstrophe library.
+This is smart agent based on xmpp protocal, libstrophe library, redis event library.
 
 == xmpp connection process
 

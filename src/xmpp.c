@@ -99,6 +99,7 @@ static void xmpp_read(aeEventLoop *el, int fd, void *privdata, int mask) {
 
     nread = read(fd, buf, 4096);
     if(nread <= 0) {
+        if (errno == EAGAIN) return;
         logger_error("smarta", "xmpp server is disconnected.");
         xmpp_disconnect(el, stream);
         timeout = (random() % 120) * 1000,
@@ -468,7 +469,7 @@ static void _handle_xmpp_presence(XmppStream *stream, XmppStanza *presence)
 
     type = xmpp_stanza_get_type(presence);
     from = xmpp_stanza_get_attribute(presence, "from");
-    
+
     //from self
     if(xmpp_jid_bare_compare(stream->jid, from)) {
         return;
@@ -482,7 +483,7 @@ static void _handle_xmpp_presence(XmppStream *stream, XmppStanza *presence)
     if(!type || strcmp(type, "available") ==0) { //available
         node = listSearchKey(stream->presences, from);
         if(!node) {
-            printf("add %s to presences\n", from);
+            logger_info("ROSTER", "%s is available", from);
             listAddNodeHead(stream->presences, zstrdup(from));
         }
     } else if(strcmp(type, "unavailable") == 0) {

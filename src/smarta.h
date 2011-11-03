@@ -25,11 +25,10 @@ typedef struct _Smarta {
     char *apikey;
     int isslave;
     char *pidfile;
-    int collport;
-    int collfd;
+    int collectd;
+    int collectd_port;
     int daemonize;
     int heartbeat;
-    int masterfd;
     char *masterhost;
     char *masterauth;
     list *services;
@@ -47,9 +46,10 @@ typedef struct _Smarta {
     
     
     //master/slave
+    int masterfd;
+    int masterport;
     char *slaveip;
     int slaveport;
-    int masterport;
     //stats
     int stat_slaves;
 } Smarta;

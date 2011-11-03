@@ -304,9 +304,14 @@ int anetUdpServer(char *err, char *bindaddr, int port)
     memset(&sa, 0, sizeof(sa));
 
     sa.sin_family = AF_INET;
-    //TODO: FIXME LATER 
     sa.sin_addr.s_addr=htonl(INADDR_ANY);
-    sa.sin_port=htons(port);
+    sa.sin_port= htons(port);
+
+    if (bindaddr && inet_aton(bindaddr, &sa.sin_addr) == 0) {
+        anetSetError(err, "invalid bind address");
+        close(sockfd);
+        return ANET_ERR;
+    }
 
     if (anetNonBlock(err, sockfd) != ANET_OK) {
         return ANET_ERR;
@@ -316,7 +321,7 @@ int anetUdpServer(char *err, char *bindaddr, int port)
         close(sockfd);
         return ANET_ERR;
     }
-
+    
     return sockfd;
 }
 

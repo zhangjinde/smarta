@@ -29,8 +29,40 @@ Event *event_new()
     event->subject = NULL;
     event->heads = listCreate();
     listSetFreeMethod(event->heads, strfree);
-    event->body = NULL;
+    event->body = sdsempty();
     return event;
+}
+
+int event_has_heads(Event *event) 
+{
+    return listLength(event->heads);       
+}
+
+sds event_heads_to_string(Event *event)
+{
+    sds buf = sdsempty();
+    listNode *node;
+    listIter *iter = listGetIterator(event->heads, AL_START_HEAD);
+    while((node = listNext(iter)) != NULL) {
+        buf = sdscat(buf, (char *)node->value);   
+    }
+    listReleaseIterator(iter);
+    return buf;
+}
+
+sds event_metrics_to_string(Event *event)
+{
+    sds buf = sdsempty();
+    listNode *node;
+    listIter *iter = listGetIterator(event->heads, AL_START_HEAD);
+    while((node = listNext(iter)) != NULL) {
+        //start with
+        if(strncmp(node->value, "metric:", 7) == 0) {
+            buf = sdscat(buf, (char *)(node->value + 7));   
+        }
+    }
+    listReleaseIterator(iter);
+    return buf;
 }
 
 void event_free(Event *event) 
@@ -115,7 +147,7 @@ static char *parse_head_lines(Event *event, char *buf)
     while(p && *p) {
         if(*p == '\n') {
             if(in_eof) return ++p;
-            line = sdsnewlen(buf, p-buf);
+            line = sdsnewlen(buf, (p-buf)+1); //contain \n
             listAddNodeHead(event->heads, line);
             buf = ++p;
             in_eof = 1;

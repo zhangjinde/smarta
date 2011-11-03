@@ -31,17 +31,19 @@ void slave_accept_handler(aeEventLoop *el, int listenfd, void *privdata, int mas
         logger_warning("SLAVE","Accepting client connection: %s", smarta.neterr);
         return;
     }
-    logger_debug("SLAVE", "Accepted %s:%d", ip, port);
+    logger_info("SLAVE", "slave %s:%d is connected.", ip, port);
 
     xmppfd = anetTcpConnect(smarta.neterr, smarta.server, 5222);
     if(xmppfd < 0) {
-        logger_warning("SLAVE", "Failed to Connect %s:%d,", smarta.server, 5222);
+        logger_warning("SLAVE", "failed to connect %s:%d,", smarta.server, 5222);
         close(fd);
         return;
     }
     logger_debug("SLAVE", "connect xmpp server for slave %s:%d", ip, port);
     Slave *slave = slave_create(fd, xmppfd);
     if(slave) {
+        slave->port = port;
+        slave->ip = zstrdup(ip);
         listAddNodeTail(smarta.slaves, slave);
     }
 }
@@ -71,32 +73,36 @@ static Slave *slave_create(int fd, int xmppfd) {
     return slave;
 }
 
-static void read_from_slave(aeEventLoop *el, int fd, void *privdata, int mask) { 
-    int len;
+static void read_from_slave(aeEventLoop *el, int fd, void *privdata, int mask) 
+{ 
+    int nread;
     char buf[4096] = {0};
     Slave *slave = (Slave *)privdata;
-    len = read(fd, buf, 4095);
-    if(len <= 0) {
-        logger_debug("SLAVE", "slave is disconnected");
+    nread = read(fd, buf, 4095);
+    if(nread <= 0) {
+        if(errno == EAGAIN) return;
+        logger_info("SLAVE", "slave %s:%d is disconnected.", slave->ip, slave->port);
         slave_release(slave);
         return;
     }
-    logger_debug("SLAVE", "%d data from slave: %s", len, buf);
-    anetWrite(slave->xmppfd, buf, len);
+    logger_debug("SLAVE", "%d data from slave: %s", nread, buf);
+    anetWrite(slave->xmppfd, buf, nread);
 }
 
-static void read_from_xmpp(aeEventLoop *el, int fd, void *privdata, int mask) { 
-    int len;
+static void read_from_xmpp(aeEventLoop *el, int fd, void *privdata, int mask) 
+{ 
+    int nread;
     char buf[4096] = {0};
     Slave *slave = (Slave *)privdata;
-    len = read(fd, buf, 4095);
-    if(len <= 0) {
+    nread = read(fd, buf, 4095);
+    if(nread <= 0) {
+        if(errno == EAGAIN) return;
         logger_debug("SLAVE", "xmpp server is disconnected.");
         slave_release(slave);
         return;
     }
-    logger_debug("SLAVE", "%d data from xmpp server: %s", len, buf);
-    anetWrite(slave->fd, buf, len);
+    logger_debug("SLAVE", "%d data from xmpp server: %s", nread, buf);
+    anetWrite(slave->fd, buf, nread);
 }
 
 static void slave_release(Slave *slave) 
@@ -112,9 +118,11 @@ static void slave_release(Slave *slave)
         close(slave->fd);
         slave->fd = -1;
     }
+    if(slave->ip) {
+        zfree(slave->ip);
+    }
     node = listSearchKey(smarta.slaves, slave);
     if(node) listDelNode(smarta.slaves, node);
     zfree(slave);
 }
-
 

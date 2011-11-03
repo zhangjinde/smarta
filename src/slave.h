@@ -2,6 +2,8 @@
 #define __SLAVE_H
 
 typedef struct _Slave {
+    char *ip;
+    int port;
     int fd;
     int xmppfd;
 } Slave;

@@ -13,6 +13,12 @@ typedef struct _Event {
 
 Event *event_new();
 
+int event_has_heads(Event *event);
+
+sds event_heads_to_string(Event *event);
+
+sds event_metrics_to_string(Event *event);
+
 void event_free(Event *event);
 
 Event *event_parse(char *buf);
