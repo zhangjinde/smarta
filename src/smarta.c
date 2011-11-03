@@ -1,5 +1,5 @@
 /* 
-** libstrophe XMPP client library -- basic usage example
+** Smarta agent.
 **
 ** Copyright (C) 2011 nodehub.cn
 **
@@ -12,6 +12,7 @@
 #include <string.h>
 #include <errno.h>
 #include <ctype.h>
+#include <signal.h>
 #include <unistd.h>
 #include <sys/uio.h>
 #include <sys/stat.h>
@@ -20,14 +21,13 @@
 #include "ae.h"
 #include "sds.h"
 #include "anet.h"
-#include "zmalloc.h"
 #include "jid.h"
 #include "xmpp.h"
 #include "event.h"
-#include "sched.h"
 #include "slave.h"
 #include "logger.h"
 #include "smarta.h"
+#include "zmalloc.h"
 #include "version.h"
 
 #define CONFIGLINE_MAX 1024
@@ -43,51 +43,84 @@ extern int log_level;
 
 extern char *log_file;
 
-static void daemonize(); 
+static void daemonize(void); 
 
-static void smarta_run(); 
+static void smarta_run(void); 
 
-static void conn_handler(XmppStream *stream, XmppStreamState state); 
+static void sched_checks(void);
 
-static void command_handler(XmppStream *stream, XmppStanza *stanza); 
+static int smarta_cron(aeEventLoop *eventLoop, 
+    long long id, void *clientData);
 
-static int smarta_cron(aeEventLoop *eventLoop, long long id, void *clientData);
+static int smarta_heartbeat(aeEventLoop *el, 
+    long long id, void *clientData); 
 
-static int smarta_heartbeat(aeEventLoop *el, long long id, void *clientData); 
+static void conn_handler(XmppStream *stream, 
+    XmppStreamState state); 
 
-void version() {
+static void command_handler(XmppStream *stream, 
+    XmppStanza *stanza); 
+
+static void handle_check_result(aeEventLoop *el,
+    int fd, void *privdata, int mask);
+
+static int check_service(struct aeEventLoop *el,
+    long long id, void *clientdata);
+
+static void sched_emit_event(XmppStream *stream,
+     Event *event);
+
+static sds execute(char *incmd);
+
+static void create_pid_file(void);
+
+static int is_valid(const char *buf);
+
+static int yesnotoi(char *s); 
+
+static void version() 
+{
     printf("Smart agent version %s\n", SMARTA_VERSION);
     exit(0);
 }
 
-void usage() {
+static void usage() 
+{
     fprintf(stderr,"Usage: ./smarta [/path/to/smarta.conf]\n");
     exit(1);
 }
 
-void smarta_init() {
+/*
+** call in parent process
+*/
+static void smarta_prepare() 
+{
     smarta.isslave = 0;
     smarta.verbosity = 0;
-    smarta.daemonize = 0;
     smarta.daemonize = 1;
     smarta.pidfile = "/var/run/smarta.pid";
-    smarta.events = hash_new(8, event_free);
     smarta.services = listCreate();
     smarta.commands = listCreate();
     smarta.cmdusage = NULL;
+}
+
+/*
+** call in fork process
+*/
+
+static void smarta_init() 
+{
+    signal(SIGCHLD, SIG_IGN);
+    signal(SIGPIPE, SIG_IGN);
+    smarta.events = hash_new(8, event_free);
     smarta.slaves = listCreate();
     smarta.el = aeCreateEventLoop();
     aeCreateTimeEvent(smarta.el, 100, smarta_cron, NULL, NULL);
     srand(time(NULL)^getpid());
 }
 
-int yesnotoi(char *s) {
-    if (!strcasecmp(s,"yes")) return 1;
-    else if (!strcasecmp(s,"no")) return 0;
-    else return -1;
-}
 
-void load_config(char *filename) {
+static void smarta_config(char *filename) {
     FILE *fp;
     char buf[CONFIGLINE_MAX+1], *err = NULL;
     int linenum = 0;
@@ -97,7 +130,6 @@ void load_config(char *filename) {
     Command *command;
 
     if ((fp = fopen(filename,"r")) == NULL) {
-        //redisLog(REDIS_WARNING, "Fatal error, can't open config file '%s'", filename);
         fprintf(stderr, "Fatal error, can't open config file '%s'", filename);
         exit(1);
     }
@@ -173,7 +205,7 @@ void load_config(char *filename) {
         } else if ((state == IN_SMARTA_BLOCK) && !strcasecmp(argv[0],"pidfile") && argc == 2) {
             smarta.pidfile = strdup(argv[1]);
         } else if ((state == IN_SMARTA_BLOCK) && !strcasecmp(argv[0],"collectd") && argc == 2) {
-            smarta.collectd = atoi(argv[1]);
+            smarta.collport = atoi(argv[1]);
         } else if ((state == IN_SMARTA_BLOCK) && !strcasecmp(argv[0],"masterport") && argc == 2) {
             smarta.masterport = atoi(argv[1]);
         } else if ((state == IN_SMARTA_BLOCK) && !strcasecmp(argv[0],"slaveof") && argc == 3) {
@@ -209,68 +241,81 @@ loaderr:
 }
 
 int main(int argc, char **argv) {
-    int fd;
-    char err[4096];
-    XmppStream *stream;
 
-    smarta_init();
+    smarta_prepare();
 
     if (argc == 2) {
         if (strcmp(argv[1], "-v") == 0 ||
             strcmp(argv[1], "--version") == 0) version();
         if (strcmp(argv[1], "-h") == 0 ||
             strcmp(argv[1], "--help") == 0) usage();
-        load_config(argv[1]);
+        smarta_config(argv[1]);
     } else {
         usage();
     } 
 
     if(smarta.daemonize) daemonize();
+
+    smarta_init();
+
+    if(smarta.daemonize) create_pid_file();
     
     /* create stream */
-    stream = xmpp_stream_new();
-    xmpp_stream_set_jid(stream, smarta.name);
-    xmpp_stream_set_pass(stream, smarta.apikey);
-    smarta.stream = stream;
+    smarta.stream = xmpp_stream_new();
+    xmpp_stream_set_jid(smarta.stream, smarta.name);
+    xmpp_stream_set_pass(smarta.stream, smarta.apikey);
+    if(smarta.server) {
+        xmpp_stream_set_server(smarta.stream, smarta.server);
+    }
 
     if(smarta.slaveip) {
-        xmpp_stream_set_server(stream, smarta.slaveip);
-        xmpp_stream_set_port(stream, smarta.slaveport);
+        xmpp_stream_set_server(smarta.stream, smarta.slaveip);
+        xmpp_stream_set_port(smarta.stream, smarta.slaveport);
     }
 
     /* open stream */
-    if(xmpp_connect(smarta.el, stream) < 0) {
+    if(xmpp_connect(smarta.el, smarta.stream) < 0) {
         logger_error("SMARTA", "xmpp connect failed.");
         exit(-1);
     }
 
-    xmpp_add_conn_callback(stream, (conn_callback)conn_handler);
+    xmpp_add_conn_callback(smarta.stream, (conn_callback)conn_handler);
     
-    xmpp_add_message_callback(stream, (message_callback)command_handler);
+    xmpp_add_message_callback(smarta.stream, (message_callback)command_handler);
 
-    fd = anetUdpServer(err, "127.0.0.1", smarta.collectd);
+    smarta.collfd = anetUdpServer(smarta.neterr, "127.0.0.1", smarta.collport);
 
-    if(fd < 0) {
-        logger_error("SMARTA", "failed to open upd socket %d. err: %s", smarta.collectd, err);
+    if(smarta.collfd < 0) {
+        logger_error("SMARTA", "failed to open collectd socket %d. err: %s", smarta.collport, smarta.neterr);
         exit(-1);
     }
 
-    aeCreateFileEvent(smarta.el, fd, AE_READABLE, sched_check_result, stream);
+    aeCreateFileEvent(smarta.el, smarta.collfd, AE_READABLE, handle_check_result, smarta.stream);
 
     if(smarta.masterport) {
-        fd = anetTcpServer(err, smarta.masterport, NULL);
-        if(fd < 0) {
-            logger_error("SMARTA", "failed to open master socket %d. err: %s", smarta.masterport, err);
+        smarta.masterfd = anetTcpServer(smarta.neterr, smarta.masterport, NULL);
+        if(smarta.masterfd < 0) {
+            logger_error("SMARTA", "failed to open master socket %d. err: %s",
+                smarta.masterport, smarta.neterr);
             exit(-1);
         }
-        aeCreateFileEvent(smarta.el, fd, AE_READABLE, slave_accept_handler, NULL);
+        aeCreateFileEvent(smarta.el, smarta.masterfd, AE_READABLE, slave_accept_handler, NULL);
     }
 
-    sched_run(smarta.el, smarta.services);
+    sched_checks();
 
     smarta_run();
 
     return 0;
+}
+
+static int smarta_heartbeat(aeEventLoop *el, long long id, void *clientData) 
+{
+    XmppStream *stream = (XmppStream *)clientData;
+    XmppStanza *presence = xmpp_stanza_tag("presence");
+    xmpp_send_stanza(stream, presence);
+    xmpp_stanza_release(presence);
+    return HEARTBEAT_TIMEOUT;
 }
 
 static void conn_handler(XmppStream *stream, XmppStreamState state) 
@@ -297,13 +342,41 @@ static void conn_handler(XmppStream *stream, XmppStreamState state)
     }
 }
 
-static int smarta_heartbeat(aeEventLoop *el, long long id, void *clientData) 
+static void command_handler(XmppStream *stream, XmppStanza *stanza) 
 {
-    XmppStream *stream = (XmppStream *)clientData;
-    XmppStanza *presence = xmpp_stanza_tag("presence");
-    xmpp_send_stanza(stream, presence);
-    xmpp_stanza_release(presence);
-    return HEARTBEAT_TIMEOUT;
+	XmppStanza *reply, *body, *text;
+	char *incmd;
+    sds output;
+	
+	if(!xmpp_stanza_get_child_by_name(stanza, "body")) return;
+	if(!strcmp(xmpp_stanza_get_attribute(stanza, "type"), "error")) return;
+	
+	incmd = xmpp_stanza_get_text(xmpp_stanza_get_child_by_name(stanza, "body"));
+
+    if(!strlen(incmd)) return;
+
+    output = execute(incmd);
+
+    if(!output) return;
+
+    if(!sdslen(output)) {
+        sdsfree(output);
+        return;
+    }
+	
+	reply = xmpp_stanza_tag("message");
+	xmpp_stanza_set_type(reply, xmpp_stanza_get_type(stanza) ? xmpp_stanza_get_type(stanza) : "chat");
+	xmpp_stanza_set_attribute(reply, "to", xmpp_stanza_get_attribute(stanza, "from"));
+	
+	body = xmpp_stanza_tag("body");
+	
+	text = xmpp_stanza_cdata(output);
+	xmpp_stanza_add_child(body, text);
+	xmpp_stanza_add_child(reply, body);
+	
+	xmpp_send_stanza(stream, reply);
+	xmpp_stanza_release(reply);
+	sdsfree(output);
 }
 
 static Command *find_command(char *usage)
@@ -363,43 +436,6 @@ static sds execute(char *incmd)
     return output;
 }
 
-static void command_handler(XmppStream *stream, XmppStanza *stanza) 
-{
-	XmppStanza *reply, *body, *text;
-	char *incmd;
-    sds output;
-	
-	if(!xmpp_stanza_get_child_by_name(stanza, "body")) return;
-	if(!strcmp(xmpp_stanza_get_attribute(stanza, "type"), "error")) return;
-	
-	incmd = xmpp_stanza_get_text(xmpp_stanza_get_child_by_name(stanza, "body"));
-
-    if(!strlen(incmd)) return;
-
-    output = execute(incmd);
-
-    if(!output) return;
-
-    if(!sdslen(output)) {
-        sdsfree(output);
-        return;
-    }
-	
-	reply = xmpp_stanza_tag("message");
-	xmpp_stanza_set_type(reply, xmpp_stanza_get_type(stanza) ? xmpp_stanza_get_type(stanza) : "chat");
-	xmpp_stanza_set_attribute(reply, "to", xmpp_stanza_get_attribute(stanza, "from"));
-	
-	body = xmpp_stanza_tag("body");
-	
-	text = xmpp_stanza_cdata(output);
-	xmpp_stanza_add_child(body, text);
-	xmpp_stanza_add_child(reply, body);
-	
-	xmpp_send_stanza(stream, reply);
-	xmpp_stanza_release(reply);
-	sdsfree(output);
-}
-
 static void daemonize(void) {
     int fd;
     FILE *fp;
@@ -433,32 +469,207 @@ static void before_sleep(struct aeEventLoop *eventLoop) {
     }
 }
 
-static int smarta_cron(struct aeEventLoop *eventLoop, long long id, void *clientData) {
-    return 1000;
-}
-
 static void smarta_run() {
     aeSetBeforeSleepProc(smarta.el, before_sleep);
     aeMain(smarta.el);
     aeDeleteEventLoop(smarta.el);
 }
 
-void send_message(XmppStream *stream, sds result) {
-    XmppStanza *reply, *body, *text;
-    
-	reply = xmpp_stanza_new();
-	xmpp_stanza_set_name(reply, "message");
-	xmpp_stanza_set_type(reply, "chat");
-	xmpp_stanza_set_attribute(reply, "to", "erylee@nodehub.cn");
-	
-	body = xmpp_stanza_new();
-	xmpp_stanza_set_name(body, "body");
-	
-	text = xmpp_stanza_new(result);
-	xmpp_stanza_add_child(body, text);
-	xmpp_stanza_add_child(reply, body);
-	
-	xmpp_send_stanza(stream, reply);
-	xmpp_stanza_release(reply);
+static int smarta_cron(struct aeEventLoop *eventLoop,
+    long long id, void *clientData) {
+    return 1000;
+}
+
+static void sched_checks() {
+    long taskid;
+    int delay = 0;
+    listNode *node;
+    Service *service;
+    listIter *iter = listGetIterator(smarta.services, AL_START_HEAD);
+    while((node = listNext(iter)) != NULL) {
+        delay = (random() % 300) * 1000;
+        service = (Service *)node->value;
+        logger_debug("sched", "schedule service '%s' after %d seconds", 
+            service->name, delay/1000);
+        taskid = aeCreateTimeEvent(smarta.el, delay, check_service, service, NULL);
+        service->taskid = taskid;
+    }
+    listReleaseIterator(iter);
+}
+
+int check_service(struct aeEventLoop *el, long long id, void *clientdata) {
+    Service *service = (Service *)clientdata;
+    pid_t pid = 0;
+    pid = fork();
+    if(pid == -1) {
+        logger_error("SCHED", "fork error when check %s", service->name);
+    } else if(pid == 0) { //subprocess
+        int len;
+        FILE *fp = NULL;
+        char output[1024] = {0};
+        sds result =sdsempty();
+        sds raw_command = sdsnew("cd plugins ; ./");
+        Service *service = (Service *)clientdata;
+        raw_command = sdscat(raw_command, service->command);
+        logger_debug("SCHED", "check service: '%s'", service->name);
+        logger_debug("SCHED", "command: '%s'", raw_command);
+        fp = popen(raw_command, "r");
+        if(!fp) {
+            logger_error("failed to open %s", service->command);
+            exit(0);
+        }
+        while(fgets(output, 1023, fp)) {
+            result = sdscat(result, output);
+        }
+        if((len = sdslen(result) && is_valid(result)) > 0) {
+            sds data = sdscat(service->name, " ");
+            data = sdscat(data, result);
+            anetUdpSend("127.0.0.1", smarta.collport, data, sdslen(data));
+            sdsfree(data);
+        }
+        sdsfree(raw_command);
+        sdsfree(result);
+        pclose(fp);
+        exit(0);
+    } else {
+        //FIXME: later
+    }
+
+    return service->period;
+}
+
+static int is_valid_event(Event *event) {
+
+    if(!event) return 0;
+    if(!event->status) return 0;
+    if(!event->service) return 0;
+    if(!event->subject) return 0;
+    return 1;
+}
+
+void handle_check_result(aeEventLoop *el, int fd, void *privdata, int mask) {
+    int nread;
+    Event *event;
+    char buf[1024] = {0};
+    nread = read(fd, buf, 1023);
+    XmppStream *stream = (XmppStream *)privdata;
+    if(nread <= 0) {
+        logger_debug("COLLECTD", "no data");
+        return;
+    }
+    logger_debug("COLLECTD", "RECV: %s", buf);
+    if(stream->state == XMPP_STREAM_ESTABLISHED) {
+        event = event_parse(buf);
+        if(is_valid_event(event)) {
+            //Old event will be released by hash_add
+            hash_add(smarta.events, event->service, event);
+            sched_emit_event(stream, event);
+        }
+        //event_free(event);
+    }
+}
+
+static char *event_to_string(Event *event) 
+{
+    sds s = sdsempty();
+    s = sdscatlen(s, event->service, sdslen(event->service));
+    s = sdscat(s, " ");
+    s = sdscatlen(s, event->status, sdslen(event->status));
+    s = sdscat(s, " - ");
+    s = sdscatlen(s, event->subject, sdslen(event->subject));
+    if(event->body) {
+        s = sdscat(s, "\n\n");
+        s = sdscatlen(s, event->body, sdslen(event->body));
+    }
+    return s;
+}
+
+static char *strcatnew(char *s1, char *s2) 
+{
+    int len1 = strlen(s1);
+    int len2 = strlen(s2);
+    char *key = zmalloc(len1 + len2 +1);
+    memcpy(key, s1, len1);
+    memcpy(key+len1, s2, len2); 
+    *(key+len1+len2) = '\0'; 
+    return key;
+}
+
+static int should_emit(XmppStream *stream, char *jid, Event *event) 
+{
+    int yes;
+    char *key, *val, *status;
+    key = strcatnew(jid, event->service); 
+    val = zstrdup(event->status);
+    if((status = hash_get(stream->events, key))) {
+        if(strcmp(status, event->status)) {
+            yes = 1;
+        } else {
+            yes = 0;
+        }
+    } else {
+        if(strcmp(val, "OK"))  { 
+            yes = 1; 
+        } else {
+            yes = 0;
+        }
+    }
+    hash_add(stream->events, key, val);
+    return yes;
+}
+
+static void sched_emit_event(XmppStream *stream, Event *event) 
+{
+    char *buf;
+    listNode *node;
+    char *jid, *domain;
+    XmppStanza *message, *body, *text;
+    listIter *iter = listGetIterator(stream->presences, AL_START_HEAD);
+    while((node = listNext(iter)) != NULL) {
+        jid = (char *)node->value;
+        domain =xmpp_jid_domain(jid); 
+        if(!strcmp(domain, "nodehub.cn") 
+            && should_emit(stream, jid, event)) {
+            buf = event_to_string(event);
+            printf("send message to %s: %s", jid, buf); 
+            message = xmpp_stanza_tag("message");
+            xmpp_stanza_set_type(message, "chat");
+            xmpp_stanza_set_attribute(message, "to", jid);
+
+            body = xmpp_stanza_tag("body");
+            text = xmpp_stanza_cdata(buf);
+            xmpp_stanza_add_child(body, text);
+
+            xmpp_stanza_add_child(message, body);
+
+            xmpp_send_stanza(stream, message);
+            xmpp_stanza_release(message);
+            sdsfree(buf);
+        }
+        zfree(domain);
+    }
+    listReleaseIterator(iter);
+}
+
+static int is_valid(const char *buf) 
+{
+    if(strncmp(buf, "OK", 2) == 0) return 1;
+    if(strncmp(buf, "WARNING", 7) == 0) return 1;
+    if(strncmp(buf, "CRITICAL", 8) == 0) return 1;
+    return 0;
+}
+
+static void create_pid_file(void) {
+    FILE *fp = fopen(smarta.pidfile,"w");
+    if (fp) {
+        fprintf(fp,"%d\n",(int)getpid());
+        fclose(fp);
+    }
+}
+
+static int yesnotoi(char *s) {
+    if (!strcasecmp(s,"yes")) return 1;
+    else if (!strcasecmp(s,"no")) return 0;
+    else return -1;
 }
 

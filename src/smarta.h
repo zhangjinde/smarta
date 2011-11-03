@@ -25,9 +25,11 @@ typedef struct _Smarta {
     char *apikey;
     int isslave;
     char *pidfile;
-    int collectd;
+    int collport;
+    int collfd;
     int daemonize;
     int heartbeat;
+    int masterfd;
     char *masterhost;
     char *masterauth;
     list *services;
