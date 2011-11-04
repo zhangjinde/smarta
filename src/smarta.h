@@ -40,6 +40,8 @@ typedef struct _Smarta {
     int verbosity;
     XmppStream *stream;
     char neterr[1024];
+    //global buddies
+    list *buddies;
 
     //events cache
     Hash *events;

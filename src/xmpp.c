@@ -161,6 +161,23 @@ void xmpp_disconnect(aeEventLoop *el, XmppStream *stream)
 
 }
 
+void xmpp_send_message(XmppStream *stream, const char *to, const char *data)
+{
+    XmppStanza *message, *body, *text; 
+
+	message = xmpp_stanza_tag("message");
+	xmpp_stanza_set_type(message, "chat");
+	xmpp_stanza_set_attribute(message, "to", to);
+	
+	body = xmpp_stanza_tag("body");
+	text = xmpp_stanza_cdata(zstrdup(data));
+	xmpp_stanza_add_child(body, text);
+	xmpp_stanza_add_child(message, body);
+	
+	xmpp_send_stanza(stream, message);
+	xmpp_stanza_release(message);
+}
+
 XmppStream *xmpp_stream_new() 
 {
     XmppStream *stream = NULL;

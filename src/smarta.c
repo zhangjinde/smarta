@@ -30,6 +30,7 @@
 #include "event.h"
 #include "slave.h"
 #include "logger.h"
+#include "pqsort.h"
 #include "smarta.h"
 #include "zmalloc.h"
 #include "version.h"
@@ -62,11 +63,14 @@ static void sched_checks(void);
 static int smarta_cron(aeEventLoop *eventLoop, 
     long long id, void *clientData);
 
-static int smarta_heartbeat(aeEventLoop *el, 
-    long long id, void *clientData); 
+//static int smarta_heartbeat(aeEventLoop *el, 
+//    long long id, void *clientData); 
 
 static void conn_handler(XmppStream *stream, 
     XmppStreamState state); 
+
+static void presence_handler(XmppStream *stream,
+    XmppStanza *presence);
 
 static void command_handler(XmppStream *stream, 
     XmppStanza *stanza); 
@@ -87,6 +91,8 @@ static void create_pid_file(void);
 static int is_valid(const char *buf);
 
 static int yesnotoi(char *s); 
+
+static int strcompare(const void *s1, const void *s2); 
 
 static void version() 
 {
@@ -308,6 +314,8 @@ static void smarta_xmpp_connect(void)
 
     xmpp_add_conn_callback(smarta.stream, (conn_callback)conn_handler);
     
+    xmpp_add_presence_callback(smarta.stream, (presence_callback)presence_handler);
+    
     xmpp_add_message_callback(smarta.stream, (message_callback)command_handler);
 }
 
@@ -350,14 +358,14 @@ static void smarta_masterd_start(void)
     aeCreateFileEvent(smarta.el, smarta.masterfd, AE_READABLE, slave_accept_handler, NULL);
 }
 
-static int smarta_heartbeat(aeEventLoop *el, long long id, void *clientData) 
-{
-    XmppStream *stream = (XmppStream *)clientData;
-    XmppStanza *presence = xmpp_stanza_tag("presence");
-    xmpp_send_stanza(stream, presence);
-    xmpp_stanza_release(presence);
-    return HEARTBEAT_TIMEOUT;
-}
+//static int smarta_heartbeat(aeEventLoop *el, long long id, void *clientData) 
+//{
+//    XmppStream *stream = (XmppStream *)clientData;
+//    XmppStanza *presence = xmpp_stanza_tag("presence");
+//    xmpp_send_stanza(stream, presence);
+//    xmpp_stanza_release(presence);
+//    return HEARTBEAT_TIMEOUT;
+//}
 
 static void conn_handler(XmppStream *stream, XmppStreamState state) 
 {
@@ -383,9 +391,58 @@ static void conn_handler(XmppStream *stream, XmppStreamState state)
     }
 }
 
+static void presence_handler(XmppStream *stream, XmppStanza *presence) 
+{
+    sds output;
+    char *type, *from;
+    type = xmpp_stanza_get_type(presence);
+    from = xmpp_stanza_get_attribute(presence, "from");
+    if(strcmp(from, "nodehub.cn")) { //not a buddy from nodehub.cn
+        return;
+    }
+    
+    if(!type || strcmp(type, "available") ==0) { //available
+        //send events
+        int i = 0;
+        const char *key;
+        Event *event;
+        char **vector, **ptr;
+        int vectorlen = hash_num_keys(smarta.events);
+        if(vectorlen == 0) {
+            return; 
+        }
+        ptr = vector = zmalloc(sizeof(char *) * vectorlen);
+        vectorlen = 0; //reset
+        hash_iterator_t *iter = hash_iter_new(smarta.events);
+        while((key = hash_iter_next(iter))) {
+            event = hash_get(smarta.events, key);
+            if(strcmp(event->status, "OK")) {
+                *(ptr++) = sdscatprintf(sdsempty(), "%s %s - %s\n", 
+                        key, event->status, event->subject);
+                vectorlen++;
+            }
+        }
+        hash_iter_release(iter);
+        if(vectorlen == 0) {
+            zfree(vector);
+            return;
+        }
+        qsort(vector, vectorlen, sizeof(char *), strcompare);
+        for(i = 0; i < vectorlen; i++) {
+            output = sdscat(output, vector[i]);
+            sdsfree(vector[i]);
+        }
+        zfree(vector);
+
+        xmpp_send_message(smarta.stream, from, output);
+        
+        sdsfree(output);
+    }
+
+}
+
 static void command_handler(XmppStream *stream, XmppStanza *stanza) 
 {
-	XmppStanza *reply, *body, *text;
 	char *incmd;
     sds output;
 	
@@ -404,19 +461,9 @@ static void command_handler(XmppStream *stream, XmppStanza *stanza)
         sdsfree(output);
         return;
     }
+
+    xmpp_send_message(smarta.stream, xmpp_stanza_get_attribute(stanza, "from"), output);
 	
-	reply = xmpp_stanza_tag("message");
-	xmpp_stanza_set_type(reply, xmpp_stanza_get_type(stanza) ? xmpp_stanza_get_type(stanza) : "chat");
-	xmpp_stanza_set_attribute(reply, "to", xmpp_stanza_get_attribute(stanza, "from"));
-	
-	body = xmpp_stanza_tag("body");
-	
-	text = xmpp_stanza_cdata(output);
-	xmpp_stanza_add_child(body, text);
-	xmpp_stanza_add_child(reply, body);
-	
-	xmpp_send_stanza(stream, reply);
-	xmpp_stanza_release(reply);
 	sdsfree(output);
 }
 
@@ -434,24 +481,41 @@ static Command *find_command(char *usage)
     return NULL;
 }
 
+static int strcompare(const void *s1, const void *s2) 
+{
+    printf("compare: %s vs %s", (char *)s1, (char *)s2);
+    return strcmp(s1, s2);
+}
+
 static sds execute(char *incmd)
 {
     char buf[1024];
     Command *command;
     sds output = sdsempty();
     if(strcmp(incmd, "show events") == 0) {
+        int i = 0;
         const char *key;
         Event *event;
+        char **vector, **ptr;
+        int vectorlen = hash_num_keys(smarta.events);
+        if(vectorlen == 0) {
+            output = sdscat(output, "no events");
+            return output;
+        }
+        ptr = vector = zmalloc(sizeof(char *) * vectorlen);
         hash_iterator_t *iter = hash_iter_new(smarta.events);
         while((key = hash_iter_next(iter))) {
             event = hash_get(smarta.events, key);
-            output = sdscatprintf(output, "%s %s - %s\n", 
-                key, event->status, event->subject);
-        }
-        if(!sdslen(output)) {
-            output = sdscat(output, "no events");
+            *(ptr++) = sdscatprintf(sdsempty(), "%s %s - %s\n", 
+                    key, event->status, event->subject);
         }
         hash_iter_release(iter);
+        qsort(vector, vectorlen, sizeof(char *), strcompare);
+        for(i = 0; i < vectorlen; i++) {
+            output = sdscat(output, vector[i]);
+            sdsfree(vector[i]);
+        }
+        zfree(vector);
     } else if( (command = find_command(incmd) )) {
         FILE *fp = popen(command->shell, "r");
         if(!fp) {
@@ -615,15 +679,10 @@ void handle_check_result(aeEventLoop *el, int fd, void *privdata, int mask) {
 
 static char *event_to_string(Event *event) 
 {
-    sds s = sdsempty();
-    s = sdscatlen(s, event->service, sdslen(event->service));
-    s = sdscat(s, " ");
-    s = sdscatlen(s, event->status, sdslen(event->status));
-    s = sdscat(s, " - ");
-    s = sdscatlen(s, event->subject, sdslen(event->subject));
+    sds s = sdscatprintf(sdsempty(), "%s %s - %s",
+        event->service, event->status, event->subject);
     if(event->body) {
-        s = sdscat(s, "\n\n");
-        s = sdscatlen(s, event->body, sdslen(event->body));
+        s = sdscatprintf(s, "%s\n", event->body);
     }
     return s;
 }
@@ -675,7 +734,6 @@ static void smarta_emit_event(XmppStream *stream, Event *event)
         if( !strcmp(domain, "nodehub.cn") 
             && should_emit(stream, jid, event) ) {
             buf = event_to_string(event);
-            printf("send message to %s: %s", jid, buf); 
             message = xmpp_stanza_tag("message");
             xmpp_stanza_set_type(message, "chat");
             xmpp_stanza_set_attribute(message, "to", jid);
@@ -724,7 +782,6 @@ static void smarta_emit_event(XmppStream *stream, Event *event)
         } else if(!strcmp(domain, "metric.nodehub.cn")
             && event_has_heads(event)) {
             buf = event_metrics_to_string(event);
-            printf("emit metrics: %s\n", buf);
             if(buf && sdslen(buf) > 0) {
                 message = xmpp_stanza_tag("message");
                 xmpp_stanza_set_type(message, "normal");

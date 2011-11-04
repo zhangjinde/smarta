@@ -219,6 +219,8 @@ typedef struct _Buddy {
     Subscription sub;
 } Buddy;
 
+void xmpp_send_message(XmppStream *stream, const char *to, const char *data);
+
 void xmpp_stream_set_state(XmppStream *stream, int state);
 
 typedef void (*conn_callback)(XmppStream *stream, XmppStreamState state);

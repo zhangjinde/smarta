@@ -25,7 +25,7 @@ smarta_SOURCES = src/smarta.c \
 	src/stanza.c src/zmalloc.c src/logger.c \
 	src/parser.c src/sds.c src/list.c \
     src/ae.c src/anet.c src/slave.c \
-    src/event.c
+    src/event.c src/pqsort.c 
 smarta_CFLAGS = $(SMARTA_FLAGS)
 smarta_LDADD = $(SMARTA_LIBS) 
 
