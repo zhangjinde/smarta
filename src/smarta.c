@@ -488,7 +488,7 @@ static Command *find_command(char *usage)
 
 static int strcompare(const void *s1, const void *s2) 
 {
-    return strcmp(*(char **)s1, *(char **)s2);
+    return sdscmp(*(char **)s1, *(char **)s2);
 }
 
 static void sortlines(void *lines, unsigned int len)
