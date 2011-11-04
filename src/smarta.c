@@ -30,7 +30,6 @@
 #include "event.h"
 #include "slave.h"
 #include "logger.h"
-#include "pqsort.h"
 #include "smarta.h"
 #include "zmalloc.h"
 #include "version.h"
@@ -93,6 +92,8 @@ static int is_valid(const char *buf);
 static int yesnotoi(char *s); 
 
 static int strcompare(const void *s1, const void *s2); 
+
+static void sortlines(void *array, unsigned int len);
 
 static void version() 
 {
@@ -393,17 +394,21 @@ static void conn_handler(XmppStream *stream, XmppStreamState state)
 
 static void presence_handler(XmppStream *stream, XmppStanza *presence) 
 {
-    sds output;
-    char *type, *from;
+    char *type, *from, *domain;
     type = xmpp_stanza_get_type(presence);
     from = xmpp_stanza_get_attribute(presence, "from");
-    if(strcmp(from, "nodehub.cn")) { //not a buddy from nodehub.cn
+
+    printf("presence from: %s\n", from);
+    domain = xmpp_jid_domain(from);
+    if(strcmp(domain, "nodehub.cn")) { //not a buddy from nodehub.cn
         return;
     }
+    zfree(domain);
     
     if(!type || strcmp(type, "available") ==0) { //available
         //send events
         int i = 0;
+        sds output = sdsempty();
         const char *key;
         Event *event;
         char **vector, **ptr;
@@ -427,7 +432,7 @@ static void presence_handler(XmppStream *stream, XmppStanza *presence)
             zfree(vector);
             return;
         }
-        qsort(vector, vectorlen, sizeof(char *), strcompare);
+        sortlines(vector, vectorlen);
         for(i = 0; i < vectorlen; i++) {
             output = sdscat(output, vector[i]);
             sdsfree(vector[i]);
@@ -483,8 +488,12 @@ static Command *find_command(char *usage)
 
 static int strcompare(const void *s1, const void *s2) 
 {
-    printf("compare: %s vs %s", (char *)s1, (char *)s2);
-    return strcmp(s1, s2);
+    return strcmp(*(char **)s1, *(char **)s2);
+}
+
+static void sortlines(void *lines, unsigned int len)
+{
+    qsort(lines, len, sizeof(char *), strcompare);
 }
 
 static sds execute(char *incmd)
@@ -510,7 +519,7 @@ static sds execute(char *incmd)
                     key, event->status, event->subject);
         }
         hash_iter_release(iter);
-        qsort(vector, vectorlen, sizeof(char *), strcompare);
+        sortlines(vector, vectorlen);
         for(i = 0; i < vectorlen; i++) {
             output = sdscat(output, vector[i]);
             sdsfree(vector[i]);
@@ -681,7 +690,7 @@ static char *event_to_string(Event *event)
 {
     sds s = sdscatprintf(sdsempty(), "%s %s - %s",
         event->service, event->status, event->subject);
-    if(event->body) {
+    if(event->body && sdslen(event->body) > 0) {
         s = sdscatprintf(s, "%s\n", event->body);
     }
     return s;

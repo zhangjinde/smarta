@@ -27,7 +27,7 @@ ANET_OK	src/anet.h	/^#define ANET_OK /;"	d
 Buddy	src/xmpp.h	/^} Buddy;$/;"	t	typeref:struct:_Buddy
 CONFIGLINE_MAX	src/smarta.c	/^#define CONFIGLINE_MAX /;"	d	file:
 Command	src/smarta.h	/^} Command;$/;"	t	typeref:struct:_Command
-Event	src/smarta.h	/^} Event;$/;"	t	typeref:struct:_Event
+Event	src/event.h	/^} Event;$/;"	t	typeref:struct:_Event
 F1	src/md5.c	/^#define F1(/;"	d	file:
 F2	src/md5.c	/^#define F2(/;"	d	file:
 F3	src/md5.c	/^#define F3(/;"	d	file:
@@ -38,8 +38,9 @@ HAVE_EPOLL	src/config.h	/^#define HAVE_EPOLL /;"	d
 HAVE_KQUEUE	src/config.h	/^#define HAVE_KQUEUE /;"	d
 HAVE_PROCFS	src/config.h	/^#define HAVE_PROCFS /;"	d
 HAVE_TASKINFO	src/config.h	/^#define HAVE_TASKINFO /;"	d
+HEARTBEAT_TIMEOUT	src/smarta.c	/^#define HEARTBEAT_TIMEOUT /;"	d	file:
 Hash	src/hash.h	/^typedef struct _Hash Hash;$/;"	t	typeref:struct:_Hash
-IN_COMMADN_BLOCK	src/smarta.c	/^#define IN_COMMADN_BLOCK /;"	d	file:
+IN_COMMAND_BLOCK	src/smarta.c	/^#define IN_COMMAND_BLOCK /;"	d	file:
 IN_SERVICE_BLOCK	src/smarta.c	/^#define IN_SERVICE_BLOCK /;"	d	file:
 IN_SMARTA_BLOCK	src/smarta.c	/^#define IN_SMARTA_BLOCK /;"	d	file:
 LOG_DEBUG	src/logger.h	/^    LOG_DEBUG = 0,  \/**< Debug levels.              *\/$/;"	e	enum:__anon1
@@ -48,7 +49,6 @@ LOG_FATAL	src/logger.h	/^    LOG_FATAL \/**< Fatal errors.                  *\/$
 LOG_INFO	src/logger.h	/^    LOG_INFO,     \/**< General operation Information. *\/$/;"	e	enum:__anon1
 LOG_WARNING	src/logger.h	/^    LOG_WARNING,  \/**< Warnings.                      *\/$/;"	e	enum:__anon1
 LogLevel	src/logger.h	/^} LogLevel;$/;"	t	typeref:enum:__anon1
-MAX_INPUT_BUFFER	src/sched.c	/^#define MAX_INPUT_BUFFER /;"	d	file:
 MAX_LOGMSG_LEN	src/xmpp.h	/^#define MAX_LOGMSG_LEN /;"	d
 MAX_RETRIES	src/xmpp.c	/^#define MAX_RETRIES /;"	d	file:
 MD5Context	src/md5.h	/^struct MD5Context {$/;"	s
@@ -76,10 +76,12 @@ SHA1_Init	src/sha1.c	/^void SHA1_Init(SHA1_CTX* context) {$/;"	f
 SHA1_Transform	src/sha1.c	/^void SHA1_Transform(uint32_t state[5], const uint8_t buffer[64]) {$/;"	f
 SHA1_Update	src/sha1.c	/^void SHA1_Update(SHA1_CTX* context, const uint8_t* data, const size_t len)$/;"	f
 SHAPrintContext	src/sha1.c	/^void SHAPrintContext(SHA1_CTX *context, char *msg){$/;"	f
+SMARTA_VERSION	src/version.h	/^#define SMARTA_VERSION /;"	d
 SUB_BOTH	src/xmpp.h	/^    SUB_BOTH,$/;"	e	enum:__anon6
 SUB_FROM	src/xmpp.h	/^    SUB_FROM$/;"	e	enum:__anon6
 SUB_TO	src/xmpp.h	/^    SUB_TO,$/;"	e	enum:__anon6
 Service	src/smarta.h	/^} Service;$/;"	t	typeref:struct:_Service
+Slave	src/slave.h	/^} Slave;$/;"	t	typeref:struct:_Slave
 Smarta	src/smarta.h	/^} Smarta;$/;"	t	typeref:struct:_Smarta
 Subscription	src/xmpp.h	/^} Subscription;$/;"	t	typeref:enum:__anon6
 XMPP_EINT	src/xmpp.h	/^#define XMPP_EINT /;"	d
@@ -122,9 +124,10 @@ XMPP_SE_UNSUPPORTED_ENCODING	src/xmpp.h	/^    XMPP_SE_UNSUPPORTED_ENCODING,$/;"	
 XMPP_SE_UNSUPPORTED_STANZA_TYPE	src/xmpp.h	/^    XMPP_SE_UNSUPPORTED_STANZA_TYPE,$/;"	e	enum:__anon4
 XMPP_SE_UNSUPPORTED_VERSION	src/xmpp.h	/^    XMPP_SE_UNSUPPORTED_VERSION,$/;"	e	enum:__anon4
 XMPP_SE_XML_NOT_WELL_FORMED	src/xmpp.h	/^    XMPP_SE_XML_NOT_WELL_FORMED$/;"	e	enum:__anon4
-XMPP_STANZA_TAG	src/stanza.h	/^    XMPP_STANZA_TAG$/;"	e	enum:__anon3
+XMPP_STANZA_CDATA	src/stanza.h	/^    XMPP_STANZA_CDATA,$/;"	e	enum:__anon3
+XMPP_STANZA_TAG	src/stanza.h	/^    XMPP_STANZA_TAG,$/;"	e	enum:__anon3
 XMPP_STANZA_TEXT	src/stanza.h	/^    XMPP_STANZA_TEXT,$/;"	e	enum:__anon3
-XMPP_STANZA_UNKNOWN	src/stanza.h	/^    XMPP_STANZA_UNKNOWN,$/;"	e	enum:__anon3
+XMPP_STANZA_UNKNOWN	src/stanza.h	/^    XMPP_STANZA_UNKNOWN = -1,$/;"	e	enum:__anon3
 XMPP_STREAM_BINDED	src/xmpp.h	/^    XMPP_STREAM_BINDED,$/;"	e	enum:__anon5
 XMPP_STREAM_BINDING	src/xmpp.h	/^    XMPP_STREAM_BINDING,$/;"	e	enum:__anon5
 XMPP_STREAM_CONNECTING	src/xmpp.h	/^    XMPP_STREAM_CONNECTING,$/;"	e	enum:__anon5
@@ -144,11 +147,12 @@ XmppStreamState	src/xmpp.h	/^} XmppStreamState;$/;"	t	typeref:enum:__anon5
 _BSD_SOURCE	src/fmacros.h	/^#define _BSD_SOURCE$/;"	d
 _Buddy	src/xmpp.h	/^typedef struct _Buddy {$/;"	s
 _Command	src/smarta.h	/^typedef struct _Command {$/;"	s
-_Event	src/smarta.h	/^typedef struct _Event {$/;"	s
+_Event	src/event.h	/^typedef struct _Event {$/;"	s
 _Hash	src/hash.c	/^struct _Hash {$/;"	s	file:
 _POSIX_C_SOURCE	src/fmacros.h	/^#define _POSIX_C_SOURCE /;"	d
 _Parser	src/parser.h	/^struct _Parser {$/;"	s
 _Service	src/smarta.h	/^typedef struct _Service {$/;"	s
+_Slave	src/slave.h	/^typedef struct _Slave {$/;"	s
 _Smarta	src/smarta.h	/^typedef struct _Smarta {$/;"	s
 _XOPEN_SOURCE	src/fmacros.h	/^#define _XOPEN_SOURCE /;"	d
 _XOPEN_SOURCE	src/fmacros.h	/^#define _XOPEN_SOURCE$/;"	d
@@ -159,6 +163,7 @@ __ADLIST_H	src/list.h	/^#define __ADLIST_H$/;"	d
 __AE_H	src/ae.h	/^#define __AE_H$/;"	d
 __ANET_H	src/anet.h	/^#define __ANET_H$/;"	d
 __CONFIG_H	src/config.h	/^#define __CONFIG_H$/;"	d
+__EVENT_H	src/event.h	/^#define __EVENT_H$/;"	d
 __FMACRO_H	src/fmacros.h	/^#define __FMACRO_H$/;"	d
 __HASH_H	src/hash.h	/^#define __HASH_H$/;"	d
 __JID_H	src/jid.h	/^#define __JID_H$/;"	d
@@ -166,9 +171,9 @@ __LOGGER_H	src/logger.h	/^#define __LOGGER_H$/;"	d
 __MD5_H	src/md5.h	/^#define __MD5_H$/;"	d
 __PARSER_H	src/parser.h	/^#define __PARSER_H$/;"	d
 __SASL_H	src/sasl.h	/^#define __SASL_H$/;"	d
-__SCHED_H	src/sched.h	/^#define __SCHED_H$/;"	d
 __SDS_H	src/sds.h	/^#define __SDS_H$/;"	d
 __SHA1_H	src/sha1.h	/^#define __SHA1_H$/;"	d
+__SLAVE_H	src/slave.h	/^#define __SLAVE_H$/;"	d
 __SMARTA_H	src/smarta.h	/^#define __SMARTA_H$/;"	d
 __STANZA_H	src/stanza.h	/^#define __STANZA_H$/;"	d
 __XMPP_H	src/xmpp.h	/^#define __XMPP_H$/;"	d
@@ -306,23 +311,29 @@ beforesleep	src/ae.h	/^    aeBeforeSleepProc *beforesleep;$/;"	m	struct:aeEventL
 bits	src/md5.h	/^	uint32_t bits[2];$/;"	m	struct:MD5Context
 blk	src/sha1.c	/^#define blk(/;"	d	file:
 blk0	src/sha1.c	/^#define blk0(/;"	d	file:
-body	src/smarta.h	/^    char *body;$/;"	m	struct:_Event
+body	src/event.h	/^    char *body;$/;"	m	struct:_Event
+buddies	src/smarta.h	/^    list *buddies;$/;"	m	struct:_Smarta
 buddy_new	src/xmpp.c	/^static Buddy *buddy_new() $/;"	f	file:
 buddy_release	src/xmpp.c	/^static void buddy_release(void *p) $/;"	f	file:
 buf	src/md5.h	/^	uint32_t buf[4];$/;"	m	struct:MD5Context
 buf	src/sds.h	/^    char buf[];$/;"	m	struct:sdshdr
 buffer	src/sha1.h	/^    uint8_t  buffer[64];$/;"	m	struct:__anon2
-check_service	src/sched.c	/^int check_service(struct aeEventLoop *el, long long id, void *clientdata) {$/;"	f
+check_service	src/smarta.c	/^int check_service(struct aeEventLoop *el, long long id, void *clientdata) {$/;"	f
 children	src/stanza.h	/^    struct _XmppStanza *children;$/;"	m	struct:_XmppStanza	typeref:struct:_XmppStanza::_XmppStanza
 clientData	src/ae.h	/^    void *clientData;$/;"	m	struct:aeFileEvent
 clientData	src/ae.h	/^    void *clientData;$/;"	m	struct:aeTimeEvent
+cmdusage	src/smarta.h	/^    char *cmdusage;$/;"	m	struct:_Smarta
 collectd	src/smarta.h	/^    int collectd;$/;"	m	struct:_Smarta
+collectd_port	src/smarta.h	/^    int collectd_port;$/;"	m	struct:_Smarta
 command	src/smarta.h	/^    char *command;$/;"	m	struct:_Service
+command_handler	src/smarta.c	/^static void command_handler(XmppStream *stream, XmppStanza *stanza) $/;"	f	file:
+commands	src/smarta.h	/^    list *commands;$/;"	m	struct:_Smarta
 conn_callback	src/xmpp.h	/^typedef void (*conn_callback)(XmppStream *stream, XmppStreamState state);$/;"	t
 conn_callbacks	src/xmpp.h	/^    list *conn_callbacks;$/;"	m	struct:_XmppStream
 conn_handler	src/smarta.c	/^static void conn_handler(XmppStream *stream, XmppStreamState state) $/;"	f	file:
 connect_timeout	src/xmpp.h	/^    unsigned int connect_timeout;$/;"	m	struct:_XmppStream
 count	src/sha1.h	/^    uint32_t count[2];$/;"	m	struct:__anon2
+create_pid_file	src/smarta.c	/^static void create_pid_file(void) {$/;"	f	file:
 daemonize	src/smarta.c	/^static void daemonize(void) {$/;"	f	file:
 daemonize	src/smarta.h	/^    int daemonize;$/;"	m	struct:_Smarta
 data	src/stanza.h	/^    char *data;$/;"	m	struct:_XmppStanza
@@ -332,28 +343,36 @@ digest_to_hex	src/sha1.c	/^void digest_to_hex(const uint8_t digest[SHA1_DIGEST_S
 direction	src/list.h	/^    int direction;$/;"	m	struct:listIter
 domain	src/xmpp.h	/^    char *domain;$/;"	m	struct:_XmppStream
 dup	src/list.h	/^    void *(*dup)(void *ptr);$/;"	m	struct:list
-echo_handler	src/smarta.c	/^static void echo_handler(XmppStream *stream, XmppStanza *stanza) $/;"	f	file:
 el	src/smarta.h	/^    aeEventLoop *el;$/;"	m	struct:_Smarta
 endcb	src/parser.h	/^    parser_end_callback endcb;$/;"	m	struct:_Parser
 entries	src/hash.c	/^    hashentry_t **entries;$/;"	m	struct:_Hash	file:
 entry	src/hash.c	/^    hashentry_t *entry;$/;"	m	struct:_hash_iterator_t	file:
 epfd	src/ae_epoll.c	/^    int epfd;$/;"	m	struct:aeApiState	file:
 error	src/xmpp.h	/^    int error;$/;"	m	struct:_XmppStream
-event_free	src/sched.c	/^static void event_free(Event *event) $/;"	f	file:
-event_new	src/sched.c	/^static Event *event_new() $/;"	f	file:
-event_to_string	src/sched.c	/^static char *event_to_string(Event *event) $/;"	f	file:
+event_free	src/event.c	/^void event_free(Event *event) $/;"	f
+event_has_heads	src/event.c	/^int event_has_heads(Event *event) $/;"	f
+event_heads_to_string	src/event.c	/^sds event_heads_to_string(Event *event)$/;"	f
+event_metrics_to_string	src/event.c	/^sds event_metrics_to_string(Event *event)$/;"	f
+event_new	src/event.c	/^Event *event_new() $/;"	f
+event_parse	src/event.c	/^Event *event_parse(char *buf) $/;"	f
+event_to_string	src/smarta.c	/^static char *event_to_string(Event *event) $/;"	f	file:
 events	src/ae.h	/^    aeFileEvent events[AE_SETSIZE]; \/* Registered events *\/$/;"	m	struct:aeEventLoop
 events	src/ae_epoll.c	/^    struct epoll_event events[AE_SETSIZE];$/;"	m	struct:aeApiState	typeref:struct:aeApiState::epoll_event	file:
 events	src/ae_kqueue.c	/^    struct kevent events[AE_SETSIZE];$/;"	m	struct:aeApiState	typeref:struct:aeApiState::kevent	file:
+events	src/smarta.h	/^    Hash *events;$/;"	m	struct:_Smarta
 events	src/xmpp.h	/^    Hash *events;$/;"	m	struct:_XmppStream
+execute	src/smarta.c	/^static sds execute(char *incmd)$/;"	f	file:
 expat	src/parser.h	/^    XML_Parser expat;$/;"	m	struct:_Parser
 fd	src/ae.h	/^    int fd;$/;"	m	struct:aeFiredEvent
+fd	src/slave.h	/^    int fd;$/;"	m	struct:_Slave
 fd	src/xmpp.h	/^    int fd; \/\/socket$/;"	m	struct:_XmppStream
 finalizerProc	src/ae.h	/^    aeEventFinalizerProc *finalizerProc;$/;"	m	struct:aeTimeEvent
+find_command	src/smarta.c	/^static Command *find_command(char *usage)$/;"	f	file:
 fired	src/ae.h	/^    aeFiredEvent fired[AE_SETSIZE]; \/* Fired events *\/$/;"	m	struct:aeEventLoop
 free	src/list.h	/^    void (*free)(void *ptr);$/;"	m	struct:list
 free	src/sds.h	/^    int free;$/;"	m	struct:sdshdr
 free_fun	src/hash.c	/^    hash_free_func free_fun;$/;"	m	struct:_Hash	file:
+handle_check_result	src/smarta.c	/^void handle_check_result(aeEventLoop *el, int fd, void *privdata, int mask) {$/;"	f
 hash_add	src/hash.c	/^int hash_add(Hash *table, const char * const key, void *data)$/;"	f
 hash_clone	src/hash.c	/^Hash *hash_clone(Hash * const table)$/;"	f
 hash_drop	src/hash.c	/^int hash_drop(Hash *table, const char *key)$/;"	f
@@ -368,7 +387,8 @@ hash_num_keys	src/hash.c	/^int hash_num_keys(Hash *table)$/;"	f
 hash_release	src/hash.c	/^void hash_release(Hash * const table)$/;"	f
 hashentry_t	src/hash.c	/^typedef struct _hashentry_t hashentry_t;$/;"	t	typeref:struct:_hashentry_t	file:
 head	src/list.h	/^    listNode *head;$/;"	m	struct:list
-heads	src/smarta.h	/^    list *heads;$/;"	m	struct:_Event
+heads	src/event.h	/^    list *heads;$/;"	m	struct:_Event
+heartbeat	src/smarta.h	/^    int heartbeat;$/;"	m	struct:_Smarta
 id	src/ae.h	/^    long long id; \/* time event identifier. *\/$/;"	m	struct:aeTimeEvent
 in	src/md5.h	/^	unsigned char in[64];$/;"	m	struct:MD5Context
 increment_used_memory	src/zmalloc.c	/^#define increment_used_memory(/;"	d	file:
@@ -381,12 +401,13 @@ int64_t	src/sasl.c	/^  typedef __int64                 int64_t;$/;"	t	file:
 int64_t	src/sha1.c	/^  typedef __int64                 int64_t;$/;"	t	file:
 int8_t	src/sasl.c	/^  typedef signed char             int8_t;$/;"	t	file:
 int8_t	src/sha1.c	/^  typedef signed char             int8_t;$/;"	t	file:
+ip	src/slave.h	/^    char *ip;$/;"	m	struct:_Slave
 iq_callback	src/xmpp.h	/^typedef void (*iq_callback)(XmppStream *stream, XmppStanza *iq);$/;"	t
 iq_id_callbacks	src/xmpp.h	/^    Hash *iq_id_callbacks;$/;"	m	struct:_XmppStream
 iq_ns_callbacks	src/xmpp.h	/^    Hash *iq_ns_callbacks;$/;"	m	struct:_XmppStream
 is_buddy	src/xmpp.c	/^static int is_buddy(XmppStream *stream, char *jid) $/;"	f	file:
-is_valid	src/sched.c	/^static int is_valid(char *buf) $/;"	f	file:
-is_valid_event	src/sched.c	/^static int is_valid_event(Event *event) {$/;"	f	file:
+is_valid	src/smarta.c	/^static int is_valid(const char *buf) $/;"	f	file:
+is_valid_event	src/smarta.c	/^static int is_valid_event(Event *event) {$/;"	f	file:
 isslave	src/smarta.h	/^    int isslave;$/;"	m	struct:_Smarta
 jid	src/xmpp.h	/^    char *jid;$/;"	m	struct:_Buddy
 jid	src/xmpp.h	/^    char *jid;$/;"	m	struct:_XmppStream
@@ -427,7 +448,6 @@ listSearchKey	src/list.c	/^listNode *listSearchKey(list *list, void *key)$/;"	f
 listSetDupMethod	src/list.h	/^#define listSetDupMethod(/;"	d
 listSetFreeMethod	src/list.h	/^#define listSetFreeMethod(/;"	d
 listSetMatchMethod	src/list.h	/^#define listSetMatchMethod(/;"	d
-load_config	src/smarta.c	/^void load_config(char *filename) {$/;"	f
 log_file	src/logger.c	/^char *log_file;$/;"	v
 log_level	src/logger.c	/^int log_level;$/;"	v
 logfile	src/smarta.h	/^    char *logfile;$/;"	m	struct:_Smarta
@@ -442,16 +462,17 @@ main	src/smarta.c	/^int main(int argc, char **argv) {$/;"	f
 mask	src/ae.h	/^    int mask; \/* one of AE_(READABLE|WRITABLE) *\/$/;"	m	struct:aeFileEvent
 mask	src/ae.h	/^    int mask;$/;"	m	struct:aeFiredEvent
 masterauth	src/smarta.h	/^    char *masterauth;$/;"	m	struct:_Smarta
+masterfd	src/smarta.h	/^    int masterfd;$/;"	m	struct:_Smarta
 masterhost	src/smarta.h	/^    char *masterhost;$/;"	m	struct:_Smarta
 masterport	src/smarta.h	/^    int masterport;$/;"	m	struct:_Smarta
 match	src/list.h	/^    int (*match)(void *ptr, void *key);$/;"	m	struct:list
 maxfd	src/ae.h	/^    int maxfd;$/;"	m	struct:aeEventLoop
 message_callback	src/xmpp.h	/^typedef void (*message_callback)(XmppStream *stream, XmppStanza *message);$/;"	t
 message_callbacks	src/xmpp.h	/^    list *message_callbacks;$/;"	m	struct:_XmppStream
-name	src/smarta.h	/^    char *name;$/;"	m	struct:_Command
 name	src/smarta.h	/^    char *name;$/;"	m	struct:_Service
 name	src/smarta.h	/^    char *name;$/;"	m	struct:_Smarta
 name	src/xmpp.h	/^    char *name;$/;"	m	struct:_Buddy
+neterr	src/smarta.h	/^    char neterr[1024];$/;"	m	struct:_Smarta
 next	src/ae.h	/^    struct aeTimeEvent *next;$/;"	m	struct:aeTimeEvent	typeref:struct:aeTimeEvent::aeTimeEvent
 next	src/hash.c	/^    hashentry_t *next;$/;"	m	struct:_hashentry_t	file:
 next	src/list.h	/^    listNode *next;$/;"	m	struct:listIter
@@ -459,11 +480,10 @@ next	src/list.h	/^    struct listNode *next;$/;"	m	struct:listNode	typeref:struc
 next	src/stanza.h	/^    struct _XmppStanza *next;$/;"	m	struct:_XmppStanza	typeref:struct:_XmppStanza::_XmppStanza
 num_keys	src/hash.c	/^    int num_keys;$/;"	m	struct:_Hash	file:
 parent	src/stanza.h	/^    struct _XmppStanza *parent;$/;"	m	struct:_XmppStanza	typeref:struct:_XmppStanza::_XmppStanza
-parse	src/sched.c	/^static Event *parse(char *buf) $/;"	f	file:
-parse_body	src/sched.c	/^static void parse_body(Event *event, char *buf)$/;"	f	file:
-parse_head_lines	src/sched.c	/^static char *parse_head_lines(Event *event, char *buf)$/;"	f	file:
-parse_status	src/sched.c	/^static void parse_status(Event *event, char *start, char *end)$/;"	f	file:
-parse_status_line	src/sched.c	/^static char *parse_status_line(Event *event, char *buf)$/;"	f	file:
+parse_body	src/event.c	/^static void parse_body(Event *event, char *buf)$/;"	f	file:
+parse_head_lines	src/event.c	/^static char *parse_head_lines(Event *event, char *buf)$/;"	f	file:
+parse_status	src/event.c	/^static void parse_status(Event *event, char *start, char *end)$/;"	f	file:
+parse_status_line	src/event.c	/^static char *parse_status_line(Event *event, char *buf)$/;"	f	file:
 parser	src/xmpp.h	/^    Parser *parser;$/;"	m	struct:_XmppStream
 parser_end_callback	src/parser.h	/^typedef void (*parser_end_callback)($/;"	t
 parser_feed	src/parser.c	/^int parser_feed(Parser *parser, char *chunk, int len) {$/;"	f
@@ -475,14 +495,18 @@ parser_start_callback	src/parser.h	/^typedef void (*parser_start_callback)($/;"	
 pass	src/xmpp.h	/^    char *pass;$/;"	m	struct:_XmppStream
 period	src/smarta.h	/^    long period;$/;"	m	struct:_Service
 pidfile	src/smarta.h	/^    char *pidfile;$/;"	m	struct:_Smarta
+port	src/slave.h	/^    int port;$/;"	m	struct:_Slave
 port	src/xmpp.h	/^    int port;$/;"	m	struct:_XmppStream
 prepare_reset	src/xmpp.h	/^    int prepare_reset;$/;"	m	struct:_XmppStream
 presence_callback	src/xmpp.h	/^typedef void (*presence_callback)(XmppStream *stream, XmppStanza *presence);$/;"	t
 presence_callbacks	src/xmpp.h	/^    list *presence_callbacks;$/;"	m	struct:_XmppStream
+presence_handler	src/smarta.c	/^static void presence_handler(XmppStream *stream, XmppStanza *presence) $/;"	f	file:
 presences	src/xmpp.h	/^    list *presences;$/;"	m	struct:_XmppStream
 prev	src/list.h	/^    struct listNode *prev;$/;"	m	struct:listNode	typeref:struct:listNode::listNode
 prev	src/stanza.h	/^    struct _XmppStanza *prev;$/;"	m	struct:_XmppStanza	typeref:struct:_XmppStanza::_XmppStanza
 processTimeEvents	src/ae.c	/^static int processTimeEvents(aeEventLoop *eventLoop) {$/;"	f	file:
+read_from_slave	src/slave.c	/^static void read_from_slave(aeEventLoop *el, int fd, void *privdata, int mask) $/;"	f	file:
+read_from_xmpp	src/slave.c	/^static void read_from_xmpp(aeEventLoop *el, int fd, void *privdata, int mask) $/;"	f	file:
 ref	src/hash.c	/^    unsigned int ref;$/;"	m	struct:_Hash	file:
 ref	src/hash.c	/^    unsigned int ref;$/;"	m	struct:_hash_iterator_t	file:
 ref	src/stanza.h	/^    int ref;$/;"	m	struct:_XmppStanza
@@ -494,9 +518,7 @@ roster	src/xmpp.h	/^    Hash *roster;$/;"	m	struct:_XmppStream
 sasl_digest_md5	src/sasl.c	/^char *sasl_digest_md5(const char *challenge,$/;"	f
 sasl_plain	src/sasl.c	/^char *sasl_plain(const char *authid, const char *password) {$/;"	f
 sasl_support	src/xmpp.h	/^    int sasl_support; $/;"	m	struct:_XmppStream
-sched_check_result	src/sched.c	/^void sched_check_result(aeEventLoop *el, int fd, void *privdata, int mask) {$/;"	f
-sched_emit_event	src/sched.c	/^static void sched_emit_event(XmppStream *stream, Event *event) $/;"	f	file:
-sched_run	src/sched.c	/^void sched_run(aeEventLoop *el, list *services) {$/;"	f
+sched_checks	src/smarta.c	/^static void sched_checks() {$/;"	f	file:
 sds	src/sds.h	/^typedef char *sds;$/;"	t
 sdsMakeRoomFor	src/sds.c	/^static sds sdsMakeRoomFor(sds s, size_t addlen) {$/;"	f	file:
 sdsOomAbort	src/sds.c	/^static void sdsOomAbort(void) {$/;"	f	file:
@@ -528,32 +550,48 @@ sdstolower	src/sds.c	/^void sdstolower(sds s) {$/;"	f
 sdstoupper	src/sds.c	/^void sdstoupper(sds s) {$/;"	f
 sdstrim	src/sds.c	/^sds sdstrim(sds s, const char *cset) {$/;"	f
 sdsupdatelen	src/sds.c	/^void sdsupdatelen(sds s) {$/;"	f
-send_message	src/smarta.c	/^void send_message(XmppStream *stream, sds result) {$/;"	f
 server	src/smarta.h	/^    char *server;$/;"	m	struct:_Smarta
-service	src/smarta.h	/^    char *service;$/;"	m	struct:_Event
+server	src/xmpp.h	/^    char *server;$/;"	m	struct:_XmppStream
+service	src/event.h	/^    char *service;$/;"	m	struct:_Event
 services	src/smarta.h	/^    list *services;$/;"	m	struct:_Smarta
-should_emit	src/sched.c	/^static int should_emit(XmppStream *stream, char *jid, Event *event) $/;"	f	file:
+shell	src/smarta.h	/^    char *shell;$/;"	m	struct:_Command
+should_emit	src/smarta.c	/^static int should_emit(XmppStream *stream, char *jid, Event *event) $/;"	f	file:
+slave_accept_handler	src/slave.c	/^void slave_accept_handler(aeEventLoop *el, int listenfd, void *privdata, int mask)$/;"	f
+slave_create	src/slave.c	/^static Slave *slave_create(int fd, int xmppfd) {$/;"	f	file:
+slave_release	src/slave.c	/^static void slave_release(Slave *slave) $/;"	f	file:
+slaveip	src/smarta.h	/^    char *slaveip;$/;"	m	struct:_Smarta
+slaveport	src/smarta.h	/^    int slaveport;$/;"	m	struct:_Smarta
+slaves	src/smarta.h	/^    list *slaves;$/;"	m	struct:_Smarta
 smarta	src/smarta.c	/^Smarta smarta;$/;"	v
-smarta_cron	src/smarta.c	/^static int smarta_cron(struct aeEventLoop *eventLoop, long long id, void *clientData) {$/;"	f	file:
-smarta_init	src/smarta.c	/^void smarta_init() {$/;"	f
+smarta_collectd_start	src/smarta.c	/^static void smarta_collectd_start(void)$/;"	f	file:
+smarta_config	src/smarta.c	/^static void smarta_config(char *filename) {$/;"	f	file:
+smarta_cron	src/smarta.c	/^static int smarta_cron(struct aeEventLoop *eventLoop,$/;"	f	file:
+smarta_emit_event	src/smarta.c	/^static void smarta_emit_event(XmppStream *stream, Event *event) $/;"	f	file:
+smarta_init	src/smarta.c	/^static void smarta_init() $/;"	f	file:
+smarta_masterd_start	src/smarta.c	/^static void smarta_masterd_start(void) $/;"	f	file:
+smarta_prepare	src/smarta.c	/^static void smarta_prepare() $/;"	f	file:
 smarta_run	src/smarta.c	/^static void smarta_run() {$/;"	f	file:
+smarta_xmpp_connect	src/smarta.c	/^static void smarta_xmpp_connect(void) $/;"	f	file:
+sortlines	src/smarta.c	/^static void sortlines(void *lines, unsigned int len)$/;"	f	file:
 stanza	src/parser.h	/^    XmppStanza *stanza;$/;"	m	struct:_Parser
 stanza	src/xmpp.h	/^    XmppStanza *stanza;$/;"	m	struct:_XmppStreamError
 stanzacb	src/parser.h	/^    parser_stanza_callback stanzacb;$/;"	m	struct:_Parser
 startcb	src/parser.h	/^    parser_start_callback startcb;$/;"	m	struct:_Parser
+stat_slaves	src/smarta.h	/^    int stat_slaves;$/;"	m	struct:_Smarta
 state	src/sha1.h	/^    uint32_t state[5];$/;"	m	struct:__anon2
 state	src/xmpp.h	/^    XmppStreamState state;$/;"	m	struct:_XmppStream
-status	src/smarta.h	/^    char *status;$/;"	m	struct:_Event
+status	src/event.h	/^    char *status;$/;"	m	struct:_Event
 stop	src/ae.h	/^    int stop;$/;"	m	struct:aeEventLoop
-strcatnew	src/sched.c	/^static char *strcatnew(char *s1, char *s2) $/;"	f	file:
+strcatnew	src/smarta.c	/^static char *strcatnew(char *s1, char *s2) $/;"	f	file:
+strcompare	src/smarta.c	/^static int strcompare(const void *s1, const void *s2) $/;"	f	file:
 stream	src/smarta.h	/^    XmppStream *stream;$/;"	m	struct:_Smarta
 stream_error	src/xmpp.h	/^    XmppStreamError *stream_error;$/;"	m	struct:_XmppStream
 stream_id	src/xmpp.h	/^    char *stream_id;$/;"	m	struct:_XmppStream
 strequal	src/xmpp.c	/^static int strequal(const char* s1, const char *s2) $/;"	f	file:
-strfree	src/sched.c	/^static void strfree(void *s) {$/;"	f	file:
+strfree	src/event.c	/^static void strfree(void *s) {$/;"	f	file:
 strmatch	src/xmpp.c	/^static int strmatch(void *s1, void *s2) $/;"	f	file:
 sub	src/xmpp.h	/^    Subscription sub;$/;"	m	struct:_Buddy
-subject	src/smarta.h	/^    char *subject;$/;"	m	struct:_Event
+subject	src/event.h	/^    char *subject;$/;"	m	struct:_Event
 table	src/hash.c	/^    Hash *table;$/;"	m	struct:_hash_iterator_t	file:
 tail	src/list.h	/^    listNode *tail;$/;"	m	struct:list
 taskid	src/smarta.h	/^    long taskid;$/;"	m	struct:_Service
@@ -576,7 +614,7 @@ uint32_t	src/sasl.c	/^  typedef unsigned int              uint32_t;$/;"	t	file:
 uint32_t	src/sha1.c	/^  typedef unsigned int              uint32_t;$/;"	t	file:
 uint8_t	src/sasl.c	/^  typedef unsigned char             uint8_t;$/;"	t	file:
 uint8_t	src/sha1.c	/^  typedef unsigned char             uint8_t;$/;"	t	file:
-usage	src/smarta.c	/^void usage() {$/;"	f
+usage	src/smarta.c	/^static void usage() $/;"	f	file:
 usage	src/smarta.h	/^    char *usage;$/;"	m	struct:_Command
 used_memory	src/zmalloc.c	/^static size_t used_memory = 0;$/;"	v	file:
 userdata	src/parser.h	/^    void *userdata;$/;"	m	struct:_Parser
@@ -584,7 +622,7 @@ userdata	src/xmpp.h	/^    void *userdata;$/;"	m	struct:_XmppStream
 value	src/hash.c	/^    void *value;$/;"	m	struct:_hashentry_t	file:
 value	src/list.h	/^    void *value;$/;"	m	struct:listNode
 verbosity	src/smarta.h	/^    int verbosity;$/;"	m	struct:_Smarta
-version	src/smarta.c	/^void version() {$/;"	f
+version	src/smarta.c	/^static void version() $/;"	f	file:
 wfds	src/ae_select.c	/^    fd_set rfds, wfds;$/;"	m	struct:aeApiState	file:
 wfileProc	src/ae.h	/^    aeFileProc *wfileProc;$/;"	m	struct:aeFileEvent
 when_ms	src/ae.h	/^    long when_ms; \/* milliseconds *\/$/;"	m	struct:aeTimeEvent
@@ -613,9 +651,11 @@ xmpp_remove_iq_ns_callback	src/xmpp.c	/^void xmpp_remove_iq_ns_callback(XmppStre
 xmpp_remove_message_callback	src/xmpp.c	/^void xmpp_remove_message_callback(XmppStream *stream, message_callback callback) $/;"	f
 xmpp_remove_presence_callback	src/xmpp.c	/^void xmpp_remove_presence_callback(XmppStream *stream, presence_callback callback) $/;"	f
 xmpp_send_format	src/xmpp.c	/^void xmpp_send_format(XmppStream *stream, char *fmt, ...) $/;"	f
+xmpp_send_message	src/xmpp.c	/^void xmpp_send_message(XmppStream *stream, const char *to, const char *data)$/;"	f
 xmpp_send_stanza	src/xmpp.c	/^void xmpp_send_stanza(XmppStream *stream, XmppStanza *stanza) $/;"	f
 xmpp_send_string	src/xmpp.c	/^void xmpp_send_string(XmppStream *stream, char *data, size_t len)$/;"	f
 xmpp_stanza_add_child	src/stanza.c	/^int xmpp_stanza_add_child(XmppStanza *stanza, XmppStanza *child) {$/;"	f
+xmpp_stanza_cdata	src/stanza.c	/^XmppStanza *xmpp_stanza_cdata(const char *data) $/;"	f
 xmpp_stanza_clone	src/stanza.c	/^XmppStanza *xmpp_stanza_clone(XmppStanza *  stanza) {$/;"	f
 xmpp_stanza_copy	src/stanza.c	/^XmppStanza *xmpp_stanza_copy(XmppStanza * stanza) {$/;"	f
 xmpp_stanza_get_attribute	src/stanza.c	/^char *xmpp_stanza_get_attribute(XmppStanza *stanza,$/;"	f
@@ -634,15 +674,16 @@ xmpp_stanza_get_type	src/stanza.c	/^char *xmpp_stanza_get_type(XmppStanza *stanz
 xmpp_stanza_is_tag	src/stanza.c	/^int xmpp_stanza_is_tag(XmppStanza *stanza) {$/;"	f
 xmpp_stanza_is_text	src/stanza.c	/^int xmpp_stanza_is_text(XmppStanza *stanza) {$/;"	f
 xmpp_stanza_new	src/stanza.c	/^XmppStanza *xmpp_stanza_new() {$/;"	f
-xmpp_stanza_newtag	src/stanza.c	/^XmppStanza *xmpp_stanza_newtag(const char *name) $/;"	f
 xmpp_stanza_release	src/stanza.c	/^int xmpp_stanza_release(XmppStanza *stanza) {$/;"	f
 xmpp_stanza_set_attribute	src/stanza.c	/^int xmpp_stanza_set_attribute(XmppStanza *stanza,$/;"	f
 xmpp_stanza_set_id	src/stanza.c	/^int xmpp_stanza_set_id(XmppStanza *stanza, char *id) {$/;"	f
 xmpp_stanza_set_name	src/stanza.c	/^int xmpp_stanza_set_name(XmppStanza *stanza, const char *name) {$/;"	f
 xmpp_stanza_set_ns	src/stanza.c	/^int xmpp_stanza_set_ns(XmppStanza *stanza, char *ns) {$/;"	f
-xmpp_stanza_set_text	src/stanza.c	/^int xmpp_stanza_set_text(XmppStanza *stanza,$/;"	f
+xmpp_stanza_set_text	src/stanza.c	/^int xmpp_stanza_set_text(XmppStanza *stanza, char *text) {$/;"	f
 xmpp_stanza_set_text_with_size	src/stanza.c	/^int xmpp_stanza_set_text_with_size(XmppStanza *stanza,$/;"	f
 xmpp_stanza_set_type	src/stanza.c	/^int xmpp_stanza_set_type(XmppStanza *stanza,$/;"	f
+xmpp_stanza_tag	src/stanza.c	/^XmppStanza *xmpp_stanza_tag(const char *name) $/;"	f
+xmpp_stanza_text	src/stanza.c	/^XmppStanza *xmpp_stanza_text(const char *text) $/;"	f
 xmpp_stanza_to_text	src/stanza.c	/^int xmpp_stanza_to_text($/;"	f
 xmpp_stream_feed	src/xmpp.c	/^int xmpp_stream_feed(XmppStream *stream, char *buffer, int len) $/;"	f
 xmpp_stream_get_jid	src/xmpp.c	/^char *xmpp_stream_get_jid(XmppStream *stream) $/;"	f
@@ -651,8 +692,11 @@ xmpp_stream_new	src/xmpp.c	/^XmppStream *xmpp_stream_new() $/;"	f
 xmpp_stream_open	src/xmpp.c	/^int xmpp_stream_open(XmppStream *stream) $/;"	f
 xmpp_stream_set_jid	src/xmpp.c	/^void xmpp_stream_set_jid(XmppStream *stream, const char *jid) $/;"	f
 xmpp_stream_set_pass	src/xmpp.c	/^void xmpp_stream_set_pass(XmppStream *stream, const char *pass) {$/;"	f
+xmpp_stream_set_port	src/xmpp.c	/^void xmpp_stream_set_port(XmppStream *stream, int port) {$/;"	f
+xmpp_stream_set_server	src/xmpp.c	/^void xmpp_stream_set_server(XmppStream *stream, const char *server) $/;"	f
 xmpp_stream_set_state	src/xmpp.c	/^void xmpp_stream_set_state(XmppStream *stream, int state)  $/;"	f
-yesnotoi	src/smarta.c	/^int yesnotoi(char *s) {$/;"	f
+xmppfd	src/slave.h	/^    int xmppfd;$/;"	m	struct:_Slave
+yesnotoi	src/smarta.c	/^static int yesnotoi(char *s) {$/;"	f	file:
 zfree	src/zmalloc.c	/^void zfree(void *ptr) {$/;"	f
 zmalloc	src/zmalloc.c	/^void *zmalloc(size_t size) {$/;"	f
 zmalloc_oom	src/zmalloc.c	/^static void zmalloc_oom(size_t size) {$/;"	f	file:

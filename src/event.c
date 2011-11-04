@@ -115,7 +115,7 @@ static char *parse_status_line(Event *event, char *buf)
         }
     }
     parse_status(event, buf, sep-1);
-    event->subject = sdsnewlen(sep+2, eol-sep-1);
+    event->subject = sdsnewlen(sep+2, eol-sep-2);
     return p;
 }
 
