@@ -411,33 +411,25 @@ static void presence_handler(XmppStream *stream, XmppStanza *presence)
         sds output = sdsempty();
         const char *key;
         Event *event;
-        char **vector, **ptr;
-        int vectorlen = hash_num_keys(smarta.events);
-        if(vectorlen == 0) {
-            return; 
-        }
-        ptr = vector = zmalloc(sizeof(char *) * vectorlen);
-        vectorlen = 0; //reset
+        //FIXME LATER
+        char *vector[1024];
+        int vectorlen = 0;
         hash_iterator_t *iter = hash_iter_new(smarta.events);
         while((key = hash_iter_next(iter))) {
             event = hash_get(smarta.events, key);
             if(strcmp(event->status, "OK")) {
-                *(ptr++) = sdscatprintf(sdsempty(), "%s %s - %s\n", 
-                        key, event->status, event->subject);
-                vectorlen++;
+                vector[vectorlen++] = sdscatprintf(sdsempty(),
+                    "%s %s - %s\n", key, event->status, event->subject);
+                if(vectorlen >= 1024) break;
             }
         }
         hash_iter_release(iter);
-        if(vectorlen == 0) {
-            zfree(vector);
-            return;
-        }
+        if(vectorlen == 0)  return;
         sortlines(vector, vectorlen);
         for(i = 0; i < vectorlen; i++) {
             output = sdscat(output, vector[i]);
             sdsfree(vector[i]);
         }
-        zfree(vector);
 
         xmpp_send_message(smarta.stream, from, output);
         
@@ -488,7 +480,7 @@ static Command *find_command(char *usage)
 
 static int strcompare(const void *s1, const void *s2) 
 {
-    return sdscmp(*(char **)s1, *(char **)s2);
+    return strcmp(*(const char **)s1, *(const char **)s2);
 }
 
 static void sortlines(void *lines, unsigned int len)
@@ -505,26 +497,26 @@ static sds execute(char *incmd)
         int i = 0;
         const char *key;
         Event *event;
-        char **vector, **ptr;
-        int vectorlen = hash_num_keys(smarta.events);
+        //FIXME LATER
+        char *vector[1024];
+        int vectorlen = 0;
+        hash_iterator_t *iter = hash_iter_new(smarta.events);
+        while((key = hash_iter_next(iter))) {
+            event = hash_get(smarta.events, key);
+            vector[vectorlen++] = sdscatprintf(sdsempty(), "%s %s - %s\n", 
+                    key, event->status, event->subject);
+            if(vectorlen >= 1024) break;
+        }
+        hash_iter_release(iter);
         if(vectorlen == 0) {
             output = sdscat(output, "no events");
             return output;
         }
-        ptr = vector = zmalloc(sizeof(char *) * vectorlen);
-        hash_iterator_t *iter = hash_iter_new(smarta.events);
-        while((key = hash_iter_next(iter))) {
-            event = hash_get(smarta.events, key);
-            *(ptr++) = sdscatprintf(sdsempty(), "%s %s - %s\n", 
-                    key, event->status, event->subject);
-        }
-        hash_iter_release(iter);
         sortlines(vector, vectorlen);
         for(i = 0; i < vectorlen; i++) {
             output = sdscat(output, vector[i]);
             sdsfree(vector[i]);
         }
-        zfree(vector);
     } else if( (command = find_command(incmd) )) {
         FILE *fp = popen(command->shell, "r");
         if(!fp) {
@@ -691,7 +683,7 @@ static char *event_to_string(Event *event)
     sds s = sdscatprintf(sdsempty(), "%s %s - %s",
         event->service, event->status, event->subject);
     if(event->body && sdslen(event->body) > 0) {
-        s = sdscatprintf(s, "%s\n", event->body);
+        s = sdscatprintf(s, "\n%s", event->body);
     }
     return s;
 }
