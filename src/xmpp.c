@@ -521,6 +521,13 @@ static void _handle_xmpp_presence(XmppStream *stream, XmppStanza *presence)
 
 static void _handle_xmpp_message(XmppStream *stream, XmppStanza *message) 
 {
+    char *from = xmpp_stanza_get_attribute(message, "from");
+
+    if(!is_buddy(stream, from)) {
+        logger_warning("ROSTER", "%s is not buddy", from);
+        return;
+    }
+
     listNode *node;
     message_callback callback;
     listIter *iter = listGetIterator(stream->message_callbacks, AL_START_HEAD);
