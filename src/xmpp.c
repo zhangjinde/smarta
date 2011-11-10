@@ -187,7 +187,7 @@ XmppStream *xmpp_stream_new()
 
     stream->jid = NULL;
 
-    stream->server = NULL;
+    //stream->server = NULL;
 
     stream->port = 5222;
 
@@ -247,13 +247,16 @@ void xmpp_stream_set_jid(XmppStream *stream, const char *jid)
 {
     stream->jid = zstrdup(jid);
     stream->domain = xmpp_jid_domain(jid);
-    if(!stream->server) stream->server = xmpp_jid_domain(jid);
+    xmpp_stream_set_server(stream, stream->domain);
 }
 
 void xmpp_stream_set_server(XmppStream *stream, const char *server) 
 { 
-    if(stream->server) zfree(stream->server);
-    stream->server = zstrdup(server);
+    char err[1024];
+    if(anetResolve(err, stream->domain, stream->server) != ANET_OK) {
+        logger_error("XMPP", "cannot resolve %s, error: %s", stream->domain, err);
+        exit(-1);
+    } 
 }
 
 void xmpp_stream_set_port(XmppStream *stream, int port) {
