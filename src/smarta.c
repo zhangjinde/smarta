@@ -115,6 +115,8 @@ static void smarta_prepare()
     smarta.isslave = 0;
     smarta.verbosity = 0;
     smarta.daemonize = 1;
+    smarta.collectd = -1;
+    smarta.collectd_port = 0;
     smarta.pidfile = "/var/run/smarta.pid";
     smarta.services = listCreate();
     smarta.commands = listCreate();
@@ -129,8 +131,6 @@ static void smarta_init()
 {
     signal(SIGCHLD, SIG_IGN);
     signal(SIGPIPE, SIG_IGN);
-    smarta.collectd = -1;
-    smarta.collectd_port = 0;
     smarta.events = hash_new(8, (hash_free_func)event_free);
     smarta.slaves = listCreate();
     smarta.el = aeCreateEventLoop();
