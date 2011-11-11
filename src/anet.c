@@ -296,7 +296,7 @@ int anetUdpServer(char *err, char *bindaddr, int port)
     int sockfd;
     struct sockaddr_in sa;
 
-    sockfd=socket(AF_INET,SOCK_DGRAM,0);
+    sockfd=socket(AF_INET,SOCK_DGRAM,port);
     if(!sockfd) {
         anetSetError(err, "creating socket: %s", strerror(errno));
         return ANET_ERR;
