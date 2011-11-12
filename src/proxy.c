@@ -50,9 +50,10 @@ static void proxy_conn_handler(aeEventLoop *el, int fd, void *privdata, int mask
         return;
     }
     logger_debug("PROXY", "%d data from request: \n%s", nread, buf);
-    http_request(buf, nread, response, &length);
-    logger_debug("PROXY", "%d response received: \n%s", length, response);
-    anetWrite(fd, response, length);
+    if(http_request(buf, nread, response, &length) == 0) {
+        logger_debug("PROXY", "%d response received: \n%s", length, response);
+        anetWrite(fd, response, length);
+    }
     aeDeleteFileEvent(smarta.el, fd, AE_READABLE);
     close(fd);
 }
