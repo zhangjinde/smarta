@@ -5,7 +5,7 @@
 
 typedef struct _Event {
     char *status;
-    char *service;
+    char *sensor;
     char *subject;
     list *heads;
     char *body;

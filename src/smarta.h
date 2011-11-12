@@ -7,12 +7,12 @@
 #include "hash.h"
 #include "xmpp.h"
 
-typedef struct _Service {
+typedef struct _Sensor{
     char *name;
     long period;
     char *command;
     long taskid;
-} Service;
+} Sensor;
 
 typedef struct _Command {
     char *usage;
@@ -31,7 +31,7 @@ typedef struct _Smarta {
     int heartbeat;
     char *masterhost;
     char *masterauth;
-    list *services;
+    list *sensors;
     list *commands;
     char *cmdusage;
     list *slaves;
