@@ -17,7 +17,7 @@
 #include <sys/uio.h>
 #include <sys/stat.h>
 #include <sys/socket.h>
-#include <fcntl.h> //open
+#include <fcntl.h>
 #include <netinet/in.h>
 #include <netinet/tcp.h>
 #include <arpa/inet.h>
@@ -29,6 +29,7 @@
 #include "xmpp.h"
 #include "event.h"
 #include "slave.h"
+#include "proxy.h"
 #include "logger.h"
 #include "smarta.h"
 #include "zmalloc.h"
@@ -56,6 +57,8 @@ static void smarta_xmpp_connect(void);
 static void smarta_collectd_start(void);
 
 static void smarta_masterd_start(void);
+
+static void smarta_proxy_start(void);
 
 static void sched_checks(void);
 
@@ -225,6 +228,8 @@ static void smarta_config(char *filename) {
             smarta.pidfile = strdup(argv[1]);
         } else if ((state == IN_SMARTA_BLOCK) && !strcasecmp(argv[0],"collectd") && argc == 2) {
             smarta.collectd_port = atoi(argv[1]);
+        } else if ((state == IN_SMARTA_BLOCK) && !strcasecmp(argv[0],"proxy") && argc == 2) {
+            smarta.proxyport = atoi(argv[1]);
         } else if ((state == IN_SMARTA_BLOCK) && !strcasecmp(argv[0],"master") && argc == 2) {
             smarta.masterport = atoi(argv[1]);
         } else if ((state == IN_SMARTA_BLOCK) && !strcasecmp(argv[0],"slaveof") && argc == 3) {
@@ -285,6 +290,8 @@ int main(int argc, char **argv) {
 
     if(smarta.masterport)  smarta_masterd_start();
 
+    if(smarta.proxyport) smarta_proxy_start();
+
     sched_checks();
 
     smarta_run();
@@ -340,11 +347,23 @@ static void smarta_collectd_start(void)
             logger_error("SMARTA", "failed to getsockname of collectd.");
             exit(-1);
         }
-        logger_info("SMARTA", "collected on %s:%d", inet_ntoa(sa.sin_addr), ntohs(sa.sin_port));
+        logger_info("SMARTA", "collectd on %s:%d", inet_ntoa(sa.sin_addr), ntohs(sa.sin_port));
         smarta.collectd_port = ntohs(sa.sin_port);
     }
 
     aeCreateFileEvent(smarta.el, smarta.collectd, AE_READABLE, handle_check_result, smarta.stream);
+}
+
+static void smarta_proxy_start(void) 
+{
+    smarta.proxyfd = anetTcpServer(smarta.neterr, smarta.proxyport, NULL);
+    if(smarta.proxyfd <= 0) {
+        logger_error("SMARTA", "open proxy socket %d. err: %s",
+            smarta.proxyport, smarta.neterr);
+        exit(-1);
+    }
+    logger_info("SMARTA", "proxy on port %d", smarta.proxyport);
+    aeCreateFileEvent(smarta.el, smarta.proxyfd, AE_READABLE, proxy_accept_handler, NULL);
 }
 
 static void smarta_masterd_start(void) 

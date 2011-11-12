@@ -101,3 +101,5 @@ $ ./configure
 
 $ make
 
+== HTTP Proxy 
+curl --proxy localhost:8888 -s --data "login=root&password=public&node[name]=xxxx" http://hub.nextim.cn:5000/nodes

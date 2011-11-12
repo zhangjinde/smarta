@@ -52,6 +52,9 @@ typedef struct _Smarta {
     int masterport;
     char *slaveip;
     int slaveport;
+    //proxy
+    int proxyfd;
+    int proxyport;
     //stats
     int stat_slaves;
 } Smarta;
