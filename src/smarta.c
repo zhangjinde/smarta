@@ -440,13 +440,28 @@ static void roster_handler(XmppStream *stream, XmppStanza *iq)
         item; item = xmpp_stanza_get_next(item)) {
         jid = xmpp_stanza_get_attribute(item, "jid");
         sub = xmpp_stanza_get_attribute(item, "subscription");
-        if(strcmp(sub, "follow")) {
+        if(strcmp(sub, "follow") == 0) {
             buddy = buddy_new();
             buddy->jid = zstrdup(jid);
             buddy->sub = SUB_BOTH;
-            logger_info("XMPP", "add roster '%s'", jid);
+            logger_info("SMARTA", "%s followed this node.", jid);
             hash_add(stream->roster, buddy->jid, buddy);
-        } else if(strcmp(sub, "unfollow")) {
+        } else if(strcmp(sub, "unfollow") == 0) {
+            logger_info("SMARTA", "%s unfollowed this node.", jid);
+            int i = 0, j = 0;
+            listIter *iter;
+            listNode *node;
+            listNode *nodes[listLength(stream->presences)];
+            iter = listGetIterator(stream->presences, AL_START_HEAD);
+            while((node = listNext(iter))) {
+                if(strncmp((char *)node->value, jid, strlen(jid)) == 0) {
+                    nodes[i++] = node;
+                }
+            }
+            listReleaseIterator(iter);
+            for(j = 0; j < i; j++) {
+                listDelNode(stream->presences, nodes[j]);
+            }
             hash_drop(stream->roster, jid);
             //FIXME:
             //delete from stream->presences
@@ -463,7 +478,6 @@ static void presence_handler(XmppStream *stream, XmppStanza *presence)
     type = xmpp_stanza_get_type(presence);
     from = xmpp_stanza_get_attribute(presence, "from");
 
-    printf("presence from: %s\n", from);
     domain = xmpp_jid_domain(from);
     if(strcmp(domain, "nodebus.com")) { //not a buddy from nodebus.com
         return;

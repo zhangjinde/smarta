@@ -152,6 +152,11 @@ void xmpp_disconnect(aeEventLoop *el, XmppStream *stream)
         hash_release(stream->iq_id_callbacks);
         stream->iq_id_callbacks = hash_new(8, NULL);
     }
+
+    if(stream->iq_ns_callbacks) {
+        hash_release(stream->iq_ns_callbacks);
+        stream->iq_ns_callbacks = hash_new(8, NULL);
+    }
     
     stream->prepare_reset = 0;
 
@@ -306,6 +311,11 @@ void xmpp_add_iq_ns_callback(XmppStream *stream, char *iq_ns, iq_callback callba
     hash_add(stream->iq_ns_callbacks, iq_ns, callback);
 }
 
+void xmpp_remove_iq_ns_callback(XmppStream *stream, char *iq_ns) 
+{
+    hash_drop(stream->iq_ns_callbacks, iq_ns);
+}
+
 void xmpp_remove_iq_id_callback(XmppStream *stream, char *iq_id) 
 {
     hash_drop(stream->iq_id_callbacks, iq_id);
@@ -319,11 +329,6 @@ iq_callback xmpp_get_iq_id_callback(XmppStream *stream, char *id)
 void xmpp_add_iq_id_callback(XmppStream *stream, char *iq_id, iq_callback callback) 
 {
     hash_add(stream->iq_id_callbacks, iq_id, callback);
-}
-
-void xmpp_remove_iq_ns_callback(XmppStream *stream, char *iq_ns) 
-{
-    hash_drop(stream->iq_id_callbacks, iq_ns);
 }
 
 int xmpp_stream_open(XmppStream *stream) 
@@ -586,6 +591,7 @@ static void _handle_auth_failure(XmppStream *stream, XmppStanza *stanza)
 static void _handle_xmpp_iq(XmppStream *stream, XmppStanza *iq) 
 {
     char *id, *xmlns;
+    XmppStanza *query;
     iq_callback callback;
     
     id = xmpp_stanza_get_id(iq);
@@ -593,10 +599,14 @@ static void _handle_xmpp_iq(XmppStream *stream, XmppStanza *iq)
         callback = xmpp_get_iq_id_callback(stream, id);
         if(callback) callback(stream, iq);
     }
-    xmlns = xmpp_stanza_get_ns(iq);
-    if(xmlns) {
-        callback = xmpp_get_iq_ns_callback(stream, id);
-        if(callback) callback(stream, iq);
+
+    query = xmpp_stanza_get_child_by_name(iq, "query");
+    if(query) {
+        xmlns = xmpp_stanza_get_ns(query);
+        if(xmlns) {
+            callback = xmpp_get_iq_ns_callback(stream, xmlns);
+            if(callback) callback(stream, iq);
+        }
     }
 }
 
@@ -763,6 +773,8 @@ static void _xmpp_stream_roster(XmppStream *stream)
 Buddy *buddy_new() 
 {
     Buddy *buddy =  zmalloc(sizeof(Buddy));
+    buddy->name = NULL;
+    buddy->jid = NULL;
     return buddy;
 }
     
