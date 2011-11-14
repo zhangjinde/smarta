@@ -25,7 +25,7 @@ Event *event_new()
 {
     Event *event = zmalloc(sizeof(Event));
     event->status = NULL;
-    event->service = NULL;
+    event->sensor = NULL;
     event->subject = NULL;
     event->heads = listCreate();
     listSetFreeMethod(event->heads, strfree);
@@ -71,8 +71,8 @@ void event_free(Event *event)
     if(event->status) {
         sdsfree(event->status);
     }
-    if(event->service) {
-        sdsfree(event->service);
+    if(event->sensor) {
+        sdsfree(event->sensor);
     }
     if(event->subject) {
         sdsfree(event->subject);
@@ -128,7 +128,7 @@ static void parse_status(Event *event, char *start, char *end)
         p++;
     }
     if((lastsp - start) > 0) {
-        event->service = sdsnewlen(start, lastsp - start); 
+        event->sensor = sdsnewlen(start, lastsp - start); 
     }
     if((end - lastsp) > 1) {
         event->status = sdsnewlen(lastsp+1, end - lastsp - 1);

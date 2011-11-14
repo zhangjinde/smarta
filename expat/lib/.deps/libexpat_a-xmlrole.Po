@@ -1,10 +1,9 @@
-expat/lib/libexpat_a-xmlrole.o expat/lib/libexpat_a-xmlrole.o:  \
- expat/lib/xmlrole.c \
-  /usr/lib/gcc/i686-apple-darwin9/4.0.1/include/stddef.h \
-  expat/lib/expat_external.h expat/lib/internal.h expat/lib/xmlrole.h \
-  expat/lib/xmltok.h expat/lib/ascii.h
+expat/lib/libexpat_a-xmlrole.o: expat/lib/xmlrole.c \
+ /usr/lib/gcc/i486-linux-gnu/4.4.3/include/stddef.h \
+ expat/lib/expat_external.h expat/lib/internal.h expat/lib/xmlrole.h \
+ expat/lib/xmltok.h expat/lib/ascii.h
 
-/usr/lib/gcc/i686-apple-darwin9/4.0.1/include/stddef.h:
+/usr/lib/gcc/i486-linux-gnu/4.4.3/include/stddef.h:
 
 expat/lib/expat_external.h:
 
