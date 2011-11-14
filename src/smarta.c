@@ -342,20 +342,22 @@ static void smarta_collectd_start(void)
 
     smarta.collectd = anetUdpServer(smarta.neterr, "127.0.0.1", smarta.collectd_port);
 
-    if(smarta.collectd < 0) {
+	logger_info("SMARTA", "collected port: %d", smarta.collectd_port);
+
+    if(smarta.collectd <= 0) {
         logger_error("SMARTA", "failed to open collectd socket %d. err: %s", 
             smarta.collectd_port, smarta.neterr);
         exit(-1);
     }
 
     if(!smarta.collectd_port) {
-        ret = getsockname(smarta.collectd, (struct sockaddr *)&sa, &size);
-        if(ret < 0) {
-            logger_error("SMARTA", "failed to getsockname of collectd.");
-            exit(-1);
-        }
-        logger_info("SMARTA", "collectd on %s:%d", inet_ntoa(sa.sin_addr), ntohs(sa.sin_port));
-        smarta.collectd_port = ntohs(sa.sin_port);
+        //ret = getsockname(smarta.collectd, (struct sockaddr *)&sa, &size);
+        //if(ret < 0) {
+        //    logger_error("SMARTA", "failed to getsockname of collectd.");
+        //    exit(-1);
+        //}
+        //logger_info("SMARTA", "collected on %s:%d", inet_ntoa(sa.sin_addr), ntohs(sa.sin_port));
+        //smarta.collectd_port = ntohs(sa.sin_port);
     }
 
     aeCreateFileEvent(smarta.el, smarta.collectd, AE_READABLE, handle_check_result, smarta.stream);
