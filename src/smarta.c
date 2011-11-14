@@ -118,6 +118,8 @@ static void usage()
 */
 static void smarta_prepare() 
 {
+    log_level = LOG_INFO;
+    log_file = "smarta.log";
     smarta.isslave = 0;
     smarta.verbosity = 0;
     smarta.daemonize = 1;
