@@ -294,5 +294,9 @@ void xmpp_send_format(XmppStream *stream, char *fmt, ...);
 
 void xmpp_send_string(XmppStream *stream, char *data, size_t len);
 
+Buddy *buddy_new();
+    
+void buddy_release(void *buddy);
+
 #endif /* __XMPP_H__ */
 

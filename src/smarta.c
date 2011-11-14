@@ -77,6 +77,9 @@ static void presence_handler(XmppStream *stream,
 static void command_handler(XmppStream *stream, 
     XmppStanza *stanza); 
 
+static void roster_handler(XmppStream *stream,
+    XmppStanza *iq);
+
 static void handle_check_result(aeEventLoop *el,
     int fd, void *privdata, int mask);
 
@@ -325,6 +328,8 @@ static void smarta_xmpp_connect(void)
     xmpp_add_presence_callback(smarta.stream, (presence_callback)presence_handler);
     
     xmpp_add_message_callback(smarta.stream, (message_callback)command_handler);
+
+    xmpp_add_iq_ns_callback(smarta.stream, "nodebus:iq:roster", (iq_callback)roster_handler);
 }
 
 static void smarta_collectd_start(void)
@@ -409,6 +414,47 @@ static void conn_handler(XmppStream *stream, XmppStreamState state)
     } else {
         //IGNORE
     }
+}
+
+static void roster_handler(XmppStream *stream, XmppStanza *iq) 
+{
+    Buddy *buddy;
+    XmppStanza *query, *item;
+    char *from, *jid, *type, *sub;
+
+    type = xmpp_stanza_get_type(iq);
+    from = xmpp_stanza_get_attribute(iq, "from");
+
+    if (strcmp(type, "error") == 0) {
+        logger_error("XMPP", "error roster stanza.");
+        return;
+    }
+
+    if(!from || strcmp(from, "status.nodebus.com")) {
+        logger_error("XMPP", "invalid from.");
+        return;
+    }
+
+	query = xmpp_stanza_get_child_by_name(iq, "query");
+	for (item = xmpp_stanza_get_children(query);
+        item; item = xmpp_stanza_get_next(item)) {
+        jid = xmpp_stanza_get_attribute(item, "jid");
+        sub = xmpp_stanza_get_attribute(item, "subscription");
+        if(strcmp(sub, "follow")) {
+            buddy = buddy_new();
+            buddy->jid = zstrdup(jid);
+            buddy->sub = SUB_BOTH;
+            logger_info("XMPP", "add roster '%s'", jid);
+            hash_add(stream->roster, buddy->jid, buddy);
+        } else if(strcmp(sub, "unfollow")) {
+            hash_drop(stream->roster, jid);
+            //FIXME:
+            //delete from stream->presences
+        } else {
+            logger_warning("XMPP", "unknown sub: '%s'", sub);
+        }
+    }
+    //FIXME: send result
 }
 
 static void presence_handler(XmppStream *stream, XmppStanza *presence) 

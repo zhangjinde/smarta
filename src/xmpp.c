@@ -65,10 +65,6 @@ static void _xmpp_stream_roster(XmppStream *stream);
 
 static void _xmpp_stream_roster_callback(XmppStream *stream, XmppStanza *stanza); 
 
-static Buddy *buddy_new();
-    
-static void buddy_release(void *buddy);
-
 static int strequal(const char* s1, const char *s2); 
 
 static int strmatch(void *s1, void *s2);
@@ -764,13 +760,13 @@ static void _xmpp_stream_roster(XmppStream *stream)
     
 }
 
-static Buddy *buddy_new() 
+Buddy *buddy_new() 
 {
     Buddy *buddy =  zmalloc(sizeof(Buddy));
     return buddy;
 }
     
-static void buddy_release(void *p) 
+void buddy_release(void *p) 
 {
     Buddy *buddy = (Buddy *)p;
     if(buddy->name) zfree(buddy->name);
