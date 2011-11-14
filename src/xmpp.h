@@ -162,7 +162,7 @@ struct _XmppStream {
 
     char *domain;
     
-    char *server;
+    char server[128];
 
     char *pass;
 

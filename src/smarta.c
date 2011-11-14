@@ -1,7 +1,7 @@
 /* 
 ** Smarta agent.
 **
-** Copyright (C) 2011 nodehub.cn
+** Copyright (C) 2011 nodebus.com
 **
 */
 
@@ -402,7 +402,7 @@ static void presence_handler(XmppStream *stream, XmppStanza *presence)
 
     printf("presence from: %s\n", from);
     domain = xmpp_jid_domain(from);
-    if(strcmp(domain, "nodehub.cn")) { //not a buddy from nodehub.cn
+    if(strcmp(domain, "nodebus.com")) { //not a buddy from nodebus.com
         return;
     }
     zfree(domain);
@@ -734,7 +734,7 @@ static void smarta_emit_event(XmppStream *stream, Event *event)
     while((node = listNext(iter)) != NULL) {
         jid = (char *)node->value;
         domain =xmpp_jid_domain(jid); 
-        if( !strcmp(domain, "nodehub.cn") 
+        if( !strcmp(domain, "nodebus.com") 
             && should_emit(stream, jid, event) ) {
             buf = event_to_string(event);
             message = xmpp_stanza_tag("message");
@@ -750,7 +750,7 @@ static void smarta_emit_event(XmppStream *stream, Event *event)
             xmpp_send_stanza(stream, message);
             xmpp_stanza_release(message);
             sdsfree(buf);
-        } else if(!strcmp(domain, "event.nodehub.cn") 
+        } else if(!strcmp(domain, "event.nodebus.com") 
             && should_emit(stream, jid, event)) {
             XmppStanza *subject, *subject_text;
             XmppStanza *thread, *thread_text;
@@ -782,7 +782,7 @@ static void smarta_emit_event(XmppStream *stream, Event *event)
             xmpp_send_stanza(stream, message);
             xmpp_stanza_release(message);
             sdsfree(buf);
-        } else if(!strcmp(domain, "metric.nodehub.cn")
+        } else if(!strcmp(domain, "metric.nodebus.com")
             && event_has_heads(event)) {
             buf = event_metrics_to_string(event);
             if(buf && sdslen(buf) > 0) {
