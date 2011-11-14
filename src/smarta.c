@@ -351,13 +351,13 @@ static void smarta_collectd_start(void)
     }
 
     if(!smarta.collectd_port) {
-        //ret = getsockname(smarta.collectd, (struct sockaddr *)&sa, &size);
-        //if(ret < 0) {
-        //    logger_error("SMARTA", "failed to getsockname of collectd.");
-        //    exit(-1);
-        //}
-        //logger_info("SMARTA", "collected on %s:%d", inet_ntoa(sa.sin_addr), ntohs(sa.sin_port));
-        //smarta.collectd_port = ntohs(sa.sin_port);
+        ret = getsockname(smarta.collectd, (struct sockaddr *)&sa, &size);
+        if(ret < 0) {
+            logger_error("SMARTA", "failed to getsockname of collectd.");
+            exit(-1);
+        }
+        logger_info("SMARTA", "collected on %s:%d", inet_ntoa(sa.sin_addr), ntohs(sa.sin_port));
+        smarta.collectd_port = ntohs(sa.sin_port);
     }
 
     aeCreateFileEvent(smarta.el, smarta.collectd, AE_READABLE, handle_check_result, smarta.stream);
