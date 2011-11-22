@@ -35,6 +35,11 @@
 #include "zmalloc.h"
 #include "version.h"
 
+#if defined(__CYGWIN__)
+	#include "plugin.h"
+	#include <windows.h>
+#endif
+
 #define CONFIGLINE_MAX 1024
 #define IN_SMARTA_BLOCK 1
 #define IN_SENSOR_BLOCK 2
@@ -89,11 +94,11 @@ static int check_sensor(struct aeEventLoop *el,
 static void smarta_emit_event(XmppStream *stream,
      Event *event);
 
+static int is_valid(const char *buf);
+
 static sds execute(char *incmd);
 
 static void create_pid_file(void);
-
-static int is_valid(const char *buf);
 
 static int yesnotoi(char *s); 
 
@@ -125,7 +130,7 @@ static void smarta_prepare()
     smarta.daemonize = 1;
     smarta.collectd = -1;
     smarta.collectd_port = 0;
-    smarta.pidfile = "/var/run/smarta.pid";
+    smarta.pidfile = "smarta.pid";
     smarta.sensors = listCreate();
     smarta.commands = listCreate();
     smarta.cmdusage = NULL;
@@ -141,6 +146,9 @@ static void smarta_init()
     signal(SIGPIPE, SIG_IGN);
     smarta.events = hash_new(8, (hash_free_func)event_free);
     smarta.slaves = listCreate();
+	#ifdef __CYGWIN__
+	smarta.plugins = listCreate();
+	#endif
     smarta.el = aeCreateEventLoop();
     aeCreateTimeEvent(smarta.el, 100, smarta_cron, NULL, NULL);
     srand(time(NULL)^getpid());
@@ -269,6 +277,57 @@ loaderr:
     exit(1);
 }
 
+#ifdef __CYGWIN__
+
+Plugin *find_plugin(char *name)
+{
+	listNode *node;
+	listIter *iter = listGetIterator(smarta.plugins, AL_START_HEAD);
+	while((node = listNext(iter)) != NULL) {
+		Plugin *plugin = (Plugin *)node->value;
+		if(!strcmp(plugin->name, name)) {
+			return plugin;
+		}
+	}
+	listReleaseIterator(iter);
+	return NULL;
+}
+
+void load_plugin_dll(TCHAR *dllName)
+{
+	HMODULE dll;
+	Plugin *plugin;
+	PluginInfo info;
+	char dllPath[4096];
+	snprintf(dllPath, 4095, "plugins\\%s", dllName);
+	dll = LoadLibraryA(dllPath);
+	info = (PluginInfo)GetProcAddress(dll,"plugin_info");
+	if(info){
+		plugin = info();
+		logger_info("PLUGIN", "load %s plugin, version: %s, usage: %s",
+				plugin->name, plugin->vsn, plugin->usage);
+		listAddNodeHead(smarta.plugins, plugin);
+	}
+}
+
+void load_plugins(void)
+{
+	HANDLE hFind=INVALID_HANDLE_VALUE;
+	WIN32_FIND_DATA ffd;
+	hFind = FindFirstFile("plugins/*.dll", &ffd);
+	if (hFind != INVALID_HANDLE_VALUE) {
+		do {
+			if (!(ffd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)) {
+				load_plugin_dll(ffd.cFileName);
+			}
+		} while (FindNextFile(hFind, &ffd));
+		FindClose(hFind);
+	}
+
+}
+
+#endif
+
 int main(int argc, char **argv) {
 
     smarta_prepare();
@@ -288,6 +347,11 @@ int main(int argc, char **argv) {
     smarta_init();
 
     if(smarta.daemonize) create_pid_file();
+
+	#ifdef __CYGWIN__
+    //loading dll
+    load_plugins();
+	#endif
 
     smarta_xmpp_connect();
 
@@ -681,7 +745,7 @@ static void sched_checks() {
     while((node = listNext(iter)) != NULL) {
         delay = (random() % 300) * 1000;
         sensor = (Sensor *)node->value;
-        logger_debug("sched", "schedule sensor '%s' after %d seconds", 
+        logger_info("sched", "schedule sensor '%s' after %d seconds",
             sensor->name, delay/1000);
         taskid = aeCreateTimeEvent(smarta.el, delay, check_sensor, sensor, NULL);
         sensor->taskid = taskid;
@@ -691,6 +755,31 @@ static void sched_checks() {
 
 int check_sensor(struct aeEventLoop *el, long long id, void *clientdata) {
     Sensor *sensor = (Sensor *)clientdata;
+#ifdef __CYGWIN__
+    int i,argc;
+    sds *argv;
+    Plugin *plugin;
+    int size;
+    char result[4096] = {0};
+    argv = sdssplitargswithquotes(sensor->command, &argc);
+    sdstolower(argv[0]);
+    plugin = find_plugin(argv[0]);
+    logger_info("SCHED", "sched sensor: %s", sensor->name);
+	if(plugin) {
+		logger_info("SCHED", "find plugin:%s", argv[0]);
+	    if(plugin->check(argc-1, argv+1, result, &size) >= 0 && size > 0) {
+	       sds data = sdscat(sensor->name, " ");
+	       data = sdscatlen(data, result, size);
+	       logger_info("SCHED", "check result: %s", result);
+	       anetUdpSend("127.0.0.1", smarta.collectd_port, data, sdslen(data));
+	       sdsfree(data);
+	    }
+	}
+	for (i = 0; i < argc; i++){
+		sdsfree(argv[i]);
+	}
+	zfree(argv);
+#else
     pid_t pid = 0;
     pid = fork();
     if(pid == -1) {
@@ -726,7 +815,7 @@ int check_sensor(struct aeEventLoop *el, long long id, void *clientdata) {
     } else {
         //FIXME: later
     }
-
+#endif
     return sensor->period;
 }
 
@@ -749,7 +838,7 @@ void handle_check_result(aeEventLoop *el, int fd, void *privdata, int mask) {
         logger_debug("COLLECTD", "no data");
         return;
     }
-    logger_debug("COLLECTD", "RECV: %s", buf);
+    logger_info("COLLECTD", "RECV: %s", buf);
     if(stream->state == XMPP_STREAM_ESTABLISHED) {
         event = event_parse(buf);
         if(is_valid_event(event)) {
@@ -887,14 +976,6 @@ static void smarta_emit_event(XmppStream *stream, Event *event)
     listReleaseIterator(iter);
 }
 
-static int is_valid(const char *buf) 
-{
-    if(strncmp(buf, "OK", 2) == 0) return 1;
-    if(strncmp(buf, "WARNING", 7) == 0) return 1;
-    if(strncmp(buf, "CRITICAL", 8) == 0) return 1;
-    return 0;
-}
-
 static void create_pid_file(void) {
     FILE *fp = fopen(smarta.pidfile,"w");
     if (fp) {
@@ -909,3 +990,10 @@ static int yesnotoi(char *s) {
     else return -1;
 }
 
+static int is_valid(const char *buf) 
+{
+    if(strncmp(buf, "OK", 2) == 0) return 1;
+    if(strncmp(buf, "WARNING", 7) == 0) return 1;
+    if(strncmp(buf, "CRITICAL", 8) == 0) return 1;
+    return 0;
+}
