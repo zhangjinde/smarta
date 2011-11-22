@@ -351,7 +351,7 @@ static void smarta_collectd_start(void)
     }
 
     if(!smarta.collectd_port) {
-        ret = getsockname(smarta.collectd, (struct sockaddr *)&sa, &size);
+        ret = getsockname(smarta.collectd, (struct sockaddr *)&sa, (socklen_t *)&size);
         if(ret < 0) {
             logger_error("SMARTA", "failed to getsockname of collectd.");
             exit(-1);
