@@ -16,11 +16,10 @@ typedef struct _Sensor{
 
 typedef struct _Command {
     char *usage;
+    char *shell;
     #ifdef __CYGWIN__
     void *fun; 
-    #else
-    char *shell;
-    #endif
+	#endif
 } Command;
 
 typedef struct _Smarta {

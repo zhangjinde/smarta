@@ -94,7 +94,9 @@ static int check_sensor(struct aeEventLoop *el,
 static void smarta_emit_event(XmppStream *stream,
      Event *event);
 
+#ifndef __CYGWIN__
 static int is_valid(const char *buf);
+#endif
 
 static sds execute(char *incmd);
 
@@ -672,7 +674,8 @@ static sds execute(char *incmd)
     } else if( (command = find_command(incmd) )) {
         #ifdef __CYGWIN__
             int size;
-            if(command->fun(0, NULL, buf, &size) >= 0) {
+            Check check=(Check)command->fun;
+            if(check(0, NULL, buf, &size) >= 0) {
                 output = sdscatlen(output, buf, size);
             }
         #else
@@ -1002,6 +1005,7 @@ static int yesnotoi(char *s) {
     else return -1;
 }
 
+#ifndef __CYGWIN__
 static int is_valid(const char *buf) 
 {
     if(strncmp(buf, "OK", 2) == 0) return 1;
@@ -1009,3 +1013,4 @@ static int is_valid(const char *buf)
     if(strncmp(buf, "CRITICAL", 8) == 0) return 1;
     return 0;
 }
+#endif
