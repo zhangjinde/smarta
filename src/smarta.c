@@ -298,6 +298,7 @@ void load_plugin_dll(TCHAR *dllName)
 	HMODULE dll;
 	Plugin *plugin;
 	PluginInfo info;
+    Command *command;
 	char dllPath[4096];
 	snprintf(dllPath, 4095, "plugins\\%s", dllName);
 	dll = LoadLibraryA(dllPath);
@@ -307,6 +308,10 @@ void load_plugin_dll(TCHAR *dllName)
 		logger_info("PLUGIN", "load %s plugin, version: %s, usage: %s",
 				plugin->name, plugin->vsn, plugin->usage);
 		listAddNodeHead(smarta.plugins, plugin);
+        command = zmalloc(sizeof(Command));
+        command->usage = zstrdup(plugin->usage);
+        command->fun = (void *)plugin->check;    
+        listAddNodeHead(smarta.commands, command);
 	}
 }
 
@@ -665,15 +670,22 @@ static sds execute(char *incmd)
             sdsfree(vector[i]);
         }
     } else if( (command = find_command(incmd) )) {
-        FILE *fp = popen(command->shell, "r");
-        if(!fp) {
-            sdsfree(output);
-            return NULL;
-        }
-        while(fgets(buf, 1023, fp)) {
-            output = sdscat(output, buf);
-        }
-        pclose(fp);
+        #ifdef __CYGWIN__
+            int size;
+            if(command->fun(0, NULL, buf, &size) >= 0) {
+                output = sdscatlen(output, buf, size);
+            }
+        #else
+            FILE *fp = popen(command->shell, "r");
+            if(!fp) {
+                sdsfree(output);
+                return NULL;
+            }
+            while(fgets(buf, 1023, fp)) {
+                output = sdscat(output, buf);
+            }
+            pclose(fp);
+        #endif
     } else {
         if(smarta.cmdusage) {
             output = sdscat(output, smarta.cmdusage);
