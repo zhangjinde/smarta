@@ -9,6 +9,7 @@
 #include <unistd.h>
 
 #include "ae.h"
+#include "sds.h"
 #include "jid.h"
 #include "anet.h"
 #include "sasl.h"
@@ -204,7 +205,7 @@ XmppStream *xmpp_stream_new()
 
     stream->state = XMPP_STREAM_DISCONNECTED;
 
-    stream->events = hash_new(8, zfree);
+    stream->events = hash_new(8, (hash_free_func)sdsfree);
 
     stream->presences = listCreate();
 

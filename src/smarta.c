@@ -858,7 +858,7 @@ void handle_check_result(aeEventLoop *el, int fd, void *privdata, int mask) {
         event = event_parse(buf);
         if(is_valid_event(event)) {
             //Old event will be released by hash_add
-            hash_add(smarta.events, event->sensor, event);
+            hash_add(smarta.events, zstrdup(event->sensor), event);
             smarta_emit_event(stream, event);
         }
         //event_free(event);
@@ -891,7 +891,7 @@ static int should_emit(XmppStream *stream, char *jid, Event *event)
     int yes;
     char *key, *val, *status;
     key = strcatnew(jid, event->sensor); 
-    val = zstrdup(event->status);
+    val = sdsdup(event->status);
     if((status = hash_get(stream->events, key))) {
         if(strcmp(status, event->status)) {
             yes = 1;
