@@ -782,11 +782,11 @@ int check_sensor(struct aeEventLoop *el, long long id, void *clientdata) {
     plugin = find_plugin(argv[0]);
     logger_info("SCHED", "sched sensor: %s", sensor->name);
 	if(plugin) {
-		logger_info("SCHED", "find plugin:%s", argv[0]);
+		logger_debug("SCHED", "find plugin:%s", argv[0]);
 	    if(plugin->check(argc-1, argv+1, result, &size) >= 0 && size > 0) {
 	       sds data = sdscat(sensor->name, " ");
 	       data = sdscatlen(data, result, size);
-	       logger_info("SCHED", "check result: %s", result);
+	       logger_debug("SCHED", "check result: %s", result);
 	       anetUdpSend("127.0.0.1", smarta.collectd_port, data, sdslen(data));
 	       sdsfree(data);
 	    }
@@ -854,7 +854,7 @@ void handle_check_result(aeEventLoop *el, int fd, void *privdata, int mask) {
         logger_debug("COLLECTD", "no data");
         return;
     }
-    logger_info("COLLECTD", "RECV: %s", buf);
+    logger_debug("COLLECTD", "RECV: %s", buf);
     if(stream->state == XMPP_STREAM_ESTABLISHED) {
         event = event_parse(buf);
         if(is_valid_event(event)) {
@@ -871,7 +871,7 @@ static char *event_to_string(Event *event)
     sds s = sdscatprintf(sdsempty(), "%s %s - %s",
         event->sensor, event->status, event->subject);
     if(event->body && sdslen(event->body) > 0) {
-        s = sdscatprintf(s, "\n%s", event->body);
+        s = sdscatprintf(s, "\n\n%s", event->body);
     }
     return s;
 }
@@ -906,7 +906,6 @@ static int should_emit(XmppStream *stream, char *jid, Event *event)
 {
     int yes;
     int status = event_intstatus(event);
-    printf("status: %d\n", status); 
     Emitted *emitted = emitted_find(jid, event->sensor);
     if(emitted) {
         if(status == emitted->status) {
@@ -955,13 +954,13 @@ static void smarta_emit_event(XmppStream *stream, Event *event)
             sdsfree(buf);
         } else if(!strcmp(domain, "event.nodebus.com") 
             && should_emit(stream, jid, event)) {
+            sds title = event_title(event);
+            if(event->body) {
+                buf = sdsnewlen(event->body, sdslen(event->body));
+            }
             XmppStanza *subject, *subject_text;
             XmppStanza *thread, *thread_text;
 
-            buf = sdsempty();
-            buf = sdscat(buf, event->status);
-            buf = sdscat(buf, " - ");
-            buf = sdscat(buf, event->subject);
             message = xmpp_stanza_tag("message");
             xmpp_stanza_set_type(message, "normal");
             xmpp_stanza_set_attribute(message, "to", jid);
@@ -972,18 +971,19 @@ static void smarta_emit_event(XmppStream *stream, Event *event)
             xmpp_stanza_add_child(message, thread);
             
             subject = xmpp_stanza_tag("subject");
-            subject_text = xmpp_stanza_text(buf);
+            subject_text = xmpp_stanza_text(title);
             xmpp_stanza_add_child(subject, subject_text);
             xmpp_stanza_add_child(message, subject);
 
             body = xmpp_stanza_tag("body");
-            text = xmpp_stanza_cdata(event->body);
+            text = xmpp_stanza_cdata(buf);
             xmpp_stanza_add_child(body, text);
 
             xmpp_stanza_add_child(message, body);
 
             xmpp_send_stanza(stream, message);
             xmpp_stanza_release(message);
+            sdsfree(title);
             sdsfree(buf);
         } else if(!strcmp(domain, "metric.nodebus.com")
             && event_has_heads(event)) {

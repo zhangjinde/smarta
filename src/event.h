@@ -25,4 +25,6 @@ Event *event_parse(char *buf);
 
 int event_intstatus(Event *event);
 
+sds event_title(Event *event); 
+
 #endif
