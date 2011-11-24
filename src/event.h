@@ -23,4 +23,6 @@ void event_free(Event *event);
 
 Event *event_parse(char *buf);
 
+int event_intstatus(Event *event);
+
 #endif

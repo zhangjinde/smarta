@@ -205,8 +205,6 @@ XmppStream *xmpp_stream_new()
 
     stream->state = XMPP_STREAM_DISCONNECTED;
 
-    stream->events = hash_new(8, (hash_free_func)sdsfree);
-
     stream->presences = listCreate();
 
     listSetMatchMethod(stream->presences, strmatch); 

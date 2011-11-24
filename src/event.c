@@ -33,6 +33,15 @@ Event *event_new()
     return event;
 }
 
+int event_intstatus(Event *event) 
+{
+    char *status = event->status;
+    if(strcasecmp(status, "critical") == 0) return 2;
+    if(strcasecmp(status, "warning") == 0) return 1;
+    if(strcasecmp(status, "ok") == 0) return 0;
+    return -1;
+}
+
 int event_has_heads(Event *event) 
 {
     return listLength(event->heads);       

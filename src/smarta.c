@@ -147,6 +147,7 @@ static void smarta_init()
     signal(SIGCHLD, SIG_IGN);
     signal(SIGPIPE, SIG_IGN);
     smarta.events = hash_new(8, (hash_free_func)event_free);
+    smarta.emitted = listCreate();
     smarta.slaves = listCreate();
 	#ifdef __CYGWIN__
 	smarta.plugins = listCreate();
@@ -875,37 +876,54 @@ static char *event_to_string(Event *event)
     return s;
 }
 
-static char *strcatnew(char *s1, char *s2) 
+Emitted *emitted_find(char *jid, char *sensor)
 {
-    int len1 = strlen(s1);
-    int len2 = strlen(s2);
-    char *key = zmalloc(len1 + len2 +1);
-    memcpy(key, s1, len1);
-    memcpy(key+len1, s2, len2); 
-    *(key+len1+len2) = '\0'; 
-    return key;
+    listNode *node;
+    listIter *iter;
+    iter = listGetIterator(smarta.emitted, AL_START_HEAD);
+    while((node = listNext(iter))) {
+        Emitted *e = (Emitted *)node->value;
+        if( (strcmp(e->jid, jid) == 0) && 
+            (strcmp(e->sensor, sensor) == 0)) {
+            return e;
+        }
+
+    }
+    listReleaseIterator(iter);
+    return NULL;
+}
+
+Emitted *emitted_new(char *jid, char *sensor, int status) 
+{
+    Emitted *e = zmalloc(sizeof(Emitted));
+    e->jid = zstrdup(jid);
+    e->sensor = zstrdup(sensor);
+    e->status = status;
+    return e;
 }
 
 static int should_emit(XmppStream *stream, char *jid, Event *event) 
 {
     int yes;
-    char *key, *val, *status;
-    key = strcatnew(jid, event->sensor); 
-    val = sdsdup(event->status);
-    if((status = hash_get(stream->events, key))) {
-        if(strcmp(status, event->status)) {
-            yes = 1;
-        } else {
+    int status = event_intstatus(event);
+    printf("status: %d\n", status); 
+    Emitted *emitted = emitted_find(jid, event->sensor);
+    if(emitted) {
+        if(status == emitted->status) {
             yes = 0;
+        } else {
+            emitted->status = status;
+            yes = 1; 
         }
     } else {
-        if(strcmp(val, "OK"))  { 
-            yes = 1; 
-        } else {
+        if(status <=0) {
             yes = 0;
+        } else {
+            yes = 1;
         }
+        emitted = emitted_new(jid, event->sensor, status);
+        listAddNodeTail(smarta.emitted, emitted);
     }
-    hash_add(stream->events, key, val);
     return yes;
 }
 

@@ -22,6 +22,12 @@ typedef struct _Command {
 	#endif
 } Command;
 
+typedef struct _Emitted {
+    char *jid;
+    char *sensor;
+    int status;
+} Emitted;
+
 typedef struct _Smarta {
     char *name;
     char *server;
@@ -49,6 +55,8 @@ typedef struct _Smarta {
     //events cache
     Hash *events;
     
+    //emitted
+    list *emitted;
     
     //master/slave
     int masterfd;
