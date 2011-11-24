@@ -67,6 +67,8 @@ static void smarta_proxy_start(void);
 
 static void sched_checks(void);
 
+static char *cn(char *status);
+
 static int smarta_cron(aeEventLoop *eventLoop, 
     long long id, void *clientData);
 
@@ -224,6 +226,8 @@ static void smarta_config(char *filename) {
         } else if ((state == IN_SMARTA_BLOCK) && !strcasecmp(argv[0],"logfile") && argc == 2) {
             if(strcmp(argv[1], "stdout")) {
                 log_file = zstrdup(argv[1]);
+            } else {
+                log_file = NULL;
             }
         } else if ((state == IN_SMARTA_BLOCK) && !strcasecmp(argv[0],"loglevel") && argc == 2) {
             if(strcasecmp(argv[1], "debug") == 0) {
@@ -659,7 +663,7 @@ static sds execute(char *incmd)
         while((key = hash_iter_next(iter))) {
             event = hash_get(smarta.events, key);
             vector[vectorlen++] = sdscatprintf(sdsempty(), "%s %s - %s\n", 
-                    key, event->status, event->subject);
+                    key, cn(event->status), event->subject);
             if(vectorlen >= 1024) break;
         }
         hash_iter_release(iter);
@@ -866,10 +870,25 @@ void handle_check_result(aeEventLoop *el, int fd, void *privdata, int mask) {
     }
 }
 
+static char *cn(char *status) 
+{
+    printf("%s\n", status);
+    if(strcmp(status, "WARNING") == 0) {
+        return "告警";
+    }
+    if(strcmp(status, "CRITICAL") == 0) {
+        return "故障";
+    }
+    if(strcmp(status, "OK") == 0) {
+        return "正常";
+    }
+    return status;
+}
+
 static char *event_to_string(Event *event) 
 {
     sds s = sdscatprintf(sdsempty(), "%s %s - %s",
-        event->sensor, event->status, event->subject);
+        event->sensor, cn(event->status), event->subject);
     if(event->body && sdslen(event->body) > 0) {
         s = sdscatprintf(s, "\n\n%s", event->body);
     }
