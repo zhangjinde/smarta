@@ -9,6 +9,7 @@
 #include <unistd.h>
 
 #include "ae.h"
+#include "sds.h"
 #include "jid.h"
 #include "anet.h"
 #include "sasl.h"
@@ -203,8 +204,6 @@ XmppStream *xmpp_stream_new()
     stream->stream_id = NULL;
 
     stream->state = XMPP_STREAM_DISCONNECTED;
-
-    stream->events = hash_new(8, zfree);
 
     stream->presences = listCreate();
 
@@ -827,14 +826,20 @@ static void _add_buddies_to_roster(XmppStream *stream, XmppStanza *stanza)
 
 static void _xmpp_stream_roster_callback(XmppStream *stream, XmppStanza *stanza) 
 {
-
-    XmppStanza *presence;
+    XmppStanza *presence, *status, *text;
 
     _add_buddies_to_roster(stream, stanza);
 
     xmpp_stream_set_state(stream, XMPP_STREAM_ESTABLISHED),
 
     presence = xmpp_stanza_tag("presence");
+
+    status = xmpp_stanza_tag("status");
+    text = xmpp_stanza_text("Online");
+    xmpp_stanza_add_child(status, text);
+
+    xmpp_stanza_add_child(presence, status);
+
     xmpp_send_stanza(stream, presence);
     xmpp_stanza_release(presence);
 }

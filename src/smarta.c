@@ -35,6 +35,11 @@
 #include "zmalloc.h"
 #include "version.h"
 
+#if defined(__CYGWIN__)
+	#include "plugin.h"
+	#include <windows.h>
+#endif
+
 #define CONFIGLINE_MAX 1024
 #define IN_SMARTA_BLOCK 1
 #define IN_SENSOR_BLOCK 2
@@ -61,6 +66,8 @@ static void smarta_masterd_start(void);
 static void smarta_proxy_start(void);
 
 static void sched_checks(void);
+
+static char *cn(char *status);
 
 static int smarta_cron(aeEventLoop *eventLoop, 
     long long id, void *clientData);
@@ -89,11 +96,13 @@ static int check_sensor(struct aeEventLoop *el,
 static void smarta_emit_event(XmppStream *stream,
      Event *event);
 
+#ifndef __CYGWIN__
+static int is_valid(const char *buf);
+#endif
+
 static sds execute(char *incmd);
 
 static void create_pid_file(void);
-
-static int is_valid(const char *buf);
 
 static int yesnotoi(char *s); 
 
@@ -125,7 +134,7 @@ static void smarta_prepare()
     smarta.daemonize = 1;
     smarta.collectd = -1;
     smarta.collectd_port = 0;
-    smarta.pidfile = "/var/run/smarta.pid";
+    smarta.pidfile = "smarta.pid";
     smarta.sensors = listCreate();
     smarta.commands = listCreate();
     smarta.cmdusage = NULL;
@@ -140,7 +149,11 @@ static void smarta_init()
     signal(SIGCHLD, SIG_IGN);
     signal(SIGPIPE, SIG_IGN);
     smarta.events = hash_new(8, (hash_free_func)event_free);
+    smarta.emitted = listCreate();
     smarta.slaves = listCreate();
+	#ifdef __CYGWIN__
+	smarta.plugins = listCreate();
+	#endif
     smarta.el = aeCreateEventLoop();
     aeCreateTimeEvent(smarta.el, 100, smarta_cron, NULL, NULL);
     srand(time(NULL)^getpid());
@@ -213,6 +226,8 @@ static void smarta_config(char *filename) {
         } else if ((state == IN_SMARTA_BLOCK) && !strcasecmp(argv[0],"logfile") && argc == 2) {
             if(strcmp(argv[1], "stdout")) {
                 log_file = zstrdup(argv[1]);
+            } else {
+                log_file = NULL;
             }
         } else if ((state == IN_SMARTA_BLOCK) && !strcasecmp(argv[0],"loglevel") && argc == 2) {
             if(strcasecmp(argv[1], "debug") == 0) {
@@ -269,6 +284,62 @@ loaderr:
     exit(1);
 }
 
+#ifdef __CYGWIN__
+
+Plugin *find_plugin(char *name)
+{
+	listNode *node;
+	listIter *iter = listGetIterator(smarta.plugins, AL_START_HEAD);
+	while((node = listNext(iter)) != NULL) {
+		Plugin *plugin = (Plugin *)node->value;
+		if(!strcmp(plugin->name, name)) {
+			return plugin;
+		}
+	}
+	listReleaseIterator(iter);
+	return NULL;
+}
+
+void load_plugin_dll(TCHAR *dllName)
+{
+	HMODULE dll;
+	Plugin *plugin;
+	PluginInfo info;
+    Command *command;
+	char dllPath[4096];
+	snprintf(dllPath, 4095, "plugins\\%s", dllName);
+	dll = LoadLibraryA(dllPath);
+	info = (PluginInfo)GetProcAddress(dll,"plugin_info");
+	if(info){
+		plugin = info();
+		logger_info("PLUGIN", "load %s plugin, version: %s, usage: %s",
+				plugin->name, plugin->vsn, plugin->usage);
+		listAddNodeHead(smarta.plugins, plugin);
+        command = zmalloc(sizeof(Command));
+        command->usage = zstrdup(plugin->usage);
+        command->fun = (void *)plugin->check;    
+        listAddNodeHead(smarta.commands, command);
+	}
+}
+
+void load_plugins(void)
+{
+	HANDLE hFind=INVALID_HANDLE_VALUE;
+	WIN32_FIND_DATA ffd;
+	hFind = FindFirstFile("plugins/*.dll", &ffd);
+	if (hFind != INVALID_HANDLE_VALUE) {
+		do {
+			if (!(ffd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)) {
+				load_plugin_dll(ffd.cFileName);
+			}
+		} while (FindNextFile(hFind, &ffd));
+		FindClose(hFind);
+	}
+
+}
+
+#endif
+
 int main(int argc, char **argv) {
 
     smarta_prepare();
@@ -288,6 +359,11 @@ int main(int argc, char **argv) {
     smarta_init();
 
     if(smarta.daemonize) create_pid_file();
+
+	#ifdef __CYGWIN__
+    //loading dll
+    load_plugins();
+	#endif
 
     smarta_xmpp_connect();
 
@@ -351,13 +427,13 @@ static void smarta_collectd_start(void)
     }
 
     if(!smarta.collectd_port) {
-        //ret = getsockname(smarta.collectd, (struct sockaddr *)&sa, &size);
-        //if(ret < 0) {
-        //    logger_error("SMARTA", "failed to getsockname of collectd.");
-        //    exit(-1);
-        //}
-        //logger_info("SMARTA", "collected on %s:%d", inet_ntoa(sa.sin_addr), ntohs(sa.sin_port));
-        //smarta.collectd_port = ntohs(sa.sin_port);
+        ret = getsockname(smarta.collectd, (struct sockaddr *)&sa, (socklen_t *)&size);
+        if(ret < 0) {
+            logger_error("SMARTA", "failed to getsockname of collectd.");
+            exit(-1);
+        }
+        logger_info("SMARTA", "collected on %s:%d", inet_ntoa(sa.sin_addr), ntohs(sa.sin_port));
+        smarta.collectd_port = ntohs(sa.sin_port);
     }
 
     aeCreateFileEvent(smarta.el, smarta.collectd, AE_READABLE, handle_check_result, smarta.stream);
@@ -587,7 +663,7 @@ static sds execute(char *incmd)
         while((key = hash_iter_next(iter))) {
             event = hash_get(smarta.events, key);
             vector[vectorlen++] = sdscatprintf(sdsempty(), "%s %s - %s\n", 
-                    key, event->status, event->subject);
+                    key, cn(event->status), event->subject);
             if(vectorlen >= 1024) break;
         }
         hash_iter_release(iter);
@@ -601,15 +677,23 @@ static sds execute(char *incmd)
             sdsfree(vector[i]);
         }
     } else if( (command = find_command(incmd) )) {
-        FILE *fp = popen(command->shell, "r");
-        if(!fp) {
-            sdsfree(output);
-            return NULL;
-        }
-        while(fgets(buf, 1023, fp)) {
-            output = sdscat(output, buf);
-        }
-        pclose(fp);
+        #ifdef __CYGWIN__
+            int size;
+            Check check=(Check)command->fun;
+            if(check(0, NULL, buf, &size) >= 0) {
+                output = sdscatlen(output, buf, size);
+            }
+        #else
+            FILE *fp = popen(command->shell, "r");
+            if(!fp) {
+                sdsfree(output);
+                return NULL;
+            }
+            while(fgets(buf, 1023, fp)) {
+                output = sdscat(output, buf);
+            }
+            pclose(fp);
+        #endif
     } else {
         if(smarta.cmdusage) {
             output = sdscat(output, smarta.cmdusage);
@@ -681,7 +765,7 @@ static void sched_checks() {
     while((node = listNext(iter)) != NULL) {
         delay = (random() % 300) * 1000;
         sensor = (Sensor *)node->value;
-        logger_debug("sched", "schedule sensor '%s' after %d seconds", 
+        logger_info("sched", "schedule sensor '%s' after %d seconds",
             sensor->name, delay/1000);
         taskid = aeCreateTimeEvent(smarta.el, delay, check_sensor, sensor, NULL);
         sensor->taskid = taskid;
@@ -691,6 +775,31 @@ static void sched_checks() {
 
 int check_sensor(struct aeEventLoop *el, long long id, void *clientdata) {
     Sensor *sensor = (Sensor *)clientdata;
+#ifdef __CYGWIN__
+    int i,argc;
+    sds *argv;
+    Plugin *plugin;
+    int size;
+    char result[4096] = {0};
+    argv = sdssplitargswithquotes(sensor->command, &argc);
+    sdstolower(argv[0]);
+    plugin = find_plugin(argv[0]);
+    logger_info("SCHED", "sched sensor: %s", sensor->name);
+	if(plugin) {
+		logger_debug("SCHED", "find plugin:%s", argv[0]);
+	    if(plugin->check(argc-1, argv+1, result, &size) >= 0 && size > 0) {
+	       sds data = sdscat(sensor->name, " ");
+	       data = sdscatlen(data, result, size);
+	       logger_debug("SCHED", "check result: %s", result);
+	       anetUdpSend("127.0.0.1", smarta.collectd_port, data, sdslen(data));
+	       sdsfree(data);
+	    }
+	}
+	for (i = 0; i < argc; i++){
+		sdsfree(argv[i]);
+	}
+	zfree(argv);
+#else
     pid_t pid = 0;
     pid = fork();
     if(pid == -1) {
@@ -726,7 +835,7 @@ int check_sensor(struct aeEventLoop *el, long long id, void *clientdata) {
     } else {
         //FIXME: later
     }
-
+#endif
     return sensor->period;
 }
 
@@ -754,54 +863,85 @@ void handle_check_result(aeEventLoop *el, int fd, void *privdata, int mask) {
         event = event_parse(buf);
         if(is_valid_event(event)) {
             //Old event will be released by hash_add
-            hash_add(smarta.events, event->sensor, event);
+            hash_add(smarta.events, zstrdup(event->sensor), event);
             smarta_emit_event(stream, event);
         }
         //event_free(event);
     }
 }
 
+static char *cn(char *status) 
+{
+    printf("%s\n", status);
+    if(strcmp(status, "WARNING") == 0) {
+        return "告警";
+    }
+    if(strcmp(status, "CRITICAL") == 0) {
+        return "故障";
+    }
+    if(strcmp(status, "OK") == 0) {
+        return "正常";
+    }
+    return status;
+}
+
 static char *event_to_string(Event *event) 
 {
     sds s = sdscatprintf(sdsempty(), "%s %s - %s",
-        event->sensor, event->status, event->subject);
+        event->sensor, cn(event->status), event->subject);
     if(event->body && sdslen(event->body) > 0) {
-        s = sdscatprintf(s, "\n%s", event->body);
+        s = sdscatprintf(s, "\n\n%s", event->body);
     }
     return s;
 }
 
-static char *strcatnew(char *s1, char *s2) 
+Emitted *emitted_find(char *jid, char *sensor)
 {
-    int len1 = strlen(s1);
-    int len2 = strlen(s2);
-    char *key = zmalloc(len1 + len2 +1);
-    memcpy(key, s1, len1);
-    memcpy(key+len1, s2, len2); 
-    *(key+len1+len2) = '\0'; 
-    return key;
+    listNode *node;
+    listIter *iter;
+    iter = listGetIterator(smarta.emitted, AL_START_HEAD);
+    while((node = listNext(iter))) {
+        Emitted *e = (Emitted *)node->value;
+        if( (strcmp(e->jid, jid) == 0) && 
+            (strcmp(e->sensor, sensor) == 0)) {
+            return e;
+        }
+
+    }
+    listReleaseIterator(iter);
+    return NULL;
+}
+
+Emitted *emitted_new(char *jid, char *sensor, int status) 
+{
+    Emitted *e = zmalloc(sizeof(Emitted));
+    e->jid = zstrdup(jid);
+    e->sensor = zstrdup(sensor);
+    e->status = status;
+    return e;
 }
 
 static int should_emit(XmppStream *stream, char *jid, Event *event) 
 {
     int yes;
-    char *key, *val, *status;
-    key = strcatnew(jid, event->sensor); 
-    val = zstrdup(event->status);
-    if((status = hash_get(stream->events, key))) {
-        if(strcmp(status, event->status)) {
-            yes = 1;
-        } else {
+    int status = event_intstatus(event);
+    Emitted *emitted = emitted_find(jid, event->sensor);
+    if(emitted) {
+        if(status == emitted->status) {
             yes = 0;
+        } else {
+            emitted->status = status;
+            yes = 1; 
         }
     } else {
-        if(strcmp(val, "OK"))  { 
-            yes = 1; 
-        } else {
+        if(status <=0) {
             yes = 0;
+        } else {
+            yes = 1;
         }
+        emitted = emitted_new(jid, event->sensor, status);
+        listAddNodeTail(smarta.emitted, emitted);
     }
-    hash_add(stream->events, key, val);
     return yes;
 }
 
@@ -833,13 +973,13 @@ static void smarta_emit_event(XmppStream *stream, Event *event)
             sdsfree(buf);
         } else if(!strcmp(domain, "event.nodebus.com") 
             && should_emit(stream, jid, event)) {
+            sds title = event_title(event);
+            if(event->body) {
+                buf = sdsnewlen(event->body, sdslen(event->body));
+            }
             XmppStanza *subject, *subject_text;
             XmppStanza *thread, *thread_text;
 
-            buf = sdsempty();
-            buf = sdscat(buf, event->status);
-            buf = sdscat(buf, " - ");
-            buf = sdscat(buf, event->subject);
             message = xmpp_stanza_tag("message");
             xmpp_stanza_set_type(message, "normal");
             xmpp_stanza_set_attribute(message, "to", jid);
@@ -850,18 +990,19 @@ static void smarta_emit_event(XmppStream *stream, Event *event)
             xmpp_stanza_add_child(message, thread);
             
             subject = xmpp_stanza_tag("subject");
-            subject_text = xmpp_stanza_text(buf);
+            subject_text = xmpp_stanza_text(title);
             xmpp_stanza_add_child(subject, subject_text);
             xmpp_stanza_add_child(message, subject);
 
             body = xmpp_stanza_tag("body");
-            text = xmpp_stanza_cdata(event->body);
+            text = xmpp_stanza_cdata(buf);
             xmpp_stanza_add_child(body, text);
 
             xmpp_stanza_add_child(message, body);
 
             xmpp_send_stanza(stream, message);
             xmpp_stanza_release(message);
+            sdsfree(title);
             sdsfree(buf);
         } else if(!strcmp(domain, "metric.nodebus.com")
             && event_has_heads(event)) {
@@ -887,14 +1028,6 @@ static void smarta_emit_event(XmppStream *stream, Event *event)
     listReleaseIterator(iter);
 }
 
-static int is_valid(const char *buf) 
-{
-    if(strncmp(buf, "OK", 2) == 0) return 1;
-    if(strncmp(buf, "WARNING", 7) == 0) return 1;
-    if(strncmp(buf, "CRITICAL", 8) == 0) return 1;
-    return 0;
-}
-
 static void create_pid_file(void) {
     FILE *fp = fopen(smarta.pidfile,"w");
     if (fp) {
@@ -909,3 +1042,12 @@ static int yesnotoi(char *s) {
     else return -1;
 }
 
+#ifndef __CYGWIN__
+static int is_valid(const char *buf) 
+{
+    if(strncmp(buf, "OK", 2) == 0) return 1;
+    if(strncmp(buf, "WARNING", 7) == 0) return 1;
+    if(strncmp(buf, "CRITICAL", 8) == 0) return 1;
+    return 0;
+}
+#endif

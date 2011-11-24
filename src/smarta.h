@@ -17,7 +17,16 @@ typedef struct _Sensor{
 typedef struct _Command {
     char *usage;
     char *shell;
+    #ifdef __CYGWIN__
+    void *fun; 
+	#endif
 } Command;
+
+typedef struct _Emitted {
+    char *jid;
+    char *sensor;
+    int status;
+} Emitted;
 
 typedef struct _Smarta {
     char *name;
@@ -46,6 +55,8 @@ typedef struct _Smarta {
     //events cache
     Hash *events;
     
+    //emitted
+    list *emitted;
     
     //master/slave
     int masterfd;
@@ -57,6 +68,9 @@ typedef struct _Smarta {
     int proxyport;
     //stats
     int stat_slaves;
+	#ifdef __CYGWIN__
+	list *plugins;
+    #endif
 } Smarta;
 
 #endif

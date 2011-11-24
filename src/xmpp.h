@@ -195,8 +195,6 @@ struct _XmppStream {
     
     void *userdata;
 
-    Hash *events;
-
     list *presences;
 
     list *conn_callbacks;
