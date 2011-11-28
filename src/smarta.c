@@ -335,7 +335,6 @@ void load_plugins(void)
 		} while (FindNextFile(hFind, &ffd));
 		FindClose(hFind);
 	}
-
 }
 
 #endif
@@ -678,11 +677,20 @@ static sds execute(char *incmd)
         }
     } else if( (command = find_command(incmd) )) {
         #ifdef __CYGWIN__
-            int size;
-            Check check=(Check)command->fun;
-            if(check(0, NULL, buf, &size) >= 0) {
-                output = sdscatlen(output, buf, size);
+    		int argc;
+    		int i = 0;
+    		sds *argv;
+    		argv = sdssplitargswithquotes(incmd, &argc);
+    		int size;
+    		char result[4096];
+    		Check check=(Check)command->fun;
+            if( check(argc-1, argv+1, result, &size) >= 0) {
+                output = sdscatlen(output, result, size);
             }
+        	for (i = 0; i < argc; i++) {
+        		sdsfree(argv[i]);
+        	}
+        	zfree(argv);
         #else
             FILE *fp = popen(command->shell, "r");
             if(!fp) {
@@ -779,16 +787,18 @@ int check_sensor(struct aeEventLoop *el, long long id, void *clientdata) {
     int i,argc;
     sds *argv;
     Plugin *plugin;
+    argv = sdssplitargswithquotes(sensor->command, &argc);
     int size;
     char result[4096] = {0};
-    argv = sdssplitargswithquotes(sensor->command, &argc);
     sdstolower(argv[0]);
     plugin = find_plugin(argv[0]);
     logger_info("SCHED", "sched sensor: %s", sensor->name);
 	if(plugin) {
 		logger_debug("SCHED", "find plugin:%s", argv[0]);
-	    if(plugin->check(argc-1, argv+1, result, &size) >= 0 && size > 0) {
-	       sds data = sdscat(sensor->name, " ");
+	    if( plugin->check(argc-1, argv+1, result, &size) >= 0 ) {
+	       sds data = sdsempty();
+	       data = sdscat(data, sensor->name);
+	       data = sdscat(data, " ");
 	       data = sdscatlen(data, result, size);
 	       logger_debug("SCHED", "check result: %s", result);
 	       anetUdpSend("127.0.0.1", smarta.collectd_port, data, sdslen(data));
