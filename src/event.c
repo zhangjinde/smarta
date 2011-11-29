@@ -1,4 +1,3 @@
-
 #include <stdio.h>
 #include <stdarg.h>
 #include <time.h>
@@ -11,41 +10,42 @@
 #include "event.h"
 #include "zmalloc.h"
 
-static void strfree(void *s);
-
-static void parse_body(Event *event, char *buf);
-
-static char *parse_head_lines(Event *event, char *buf);
+static char *parse_sensor_line(Event *event, char *buf);
 
 static char *parse_status_line(Event *event, char *buf);
 
 static void parse_status(Event *event, char *start, char *end);
 
+static char *parse_head_lines(Event *event, char *buf);
+
+static void parse_body(Event *event, char *buf);
+
+static void strfree(void *s);
+
 Event *event_new() 
 {
     Event *event = zmalloc(sizeof(Event));
-    event->status = NULL;
+    event->status = -1;
     event->sensor = NULL;
-    event->subject = NULL;
+    event->title = NULL;
     event->heads = listCreate();
     listSetFreeMethod(event->heads, strfree);
     event->body = sdsempty();
     return event;
 }
 
-sds event_title(Event *event) {
-    sds title = sdscatprintf(sdsempty(), "%s %s - %s",
-        event->sensor, event->status, event->subject);
-    return title;
-}
-
-int event_intstatus(Event *event) 
+char *event_status(Event *event) 
 {
-    char *status = event->status;
-    if(strcasecmp(status, "critical") == 0) return 2;
-    if(strcasecmp(status, "warning") == 0) return 1;
-    if(strcasecmp(status, "ok") == 0) return 0;
-    return -1;
+    if(event->status == 2) {
+        return "CRITICAL";
+    }
+    if(event->status == 1) {
+        return "WARNING";
+    }
+    if(event->status == 0) {
+        return "OK";
+    }
+    return "UNKNOWN";
 }
 
 int event_has_heads(Event *event) 
@@ -83,14 +83,11 @@ sds event_metrics_to_string(Event *event)
 void event_free(Event *event) 
 {
     if(!event)  return;
-    if(event->status) {
-        sdsfree(event->status);
-    }
     if(event->sensor) {
         sdsfree(event->sensor);
     }
-    if(event->subject) {
-        sdsfree(event->subject);
+    if(event->title) {
+        sdsfree(event->title);
     }
     if(event->body) {
         sdsfree(event->body);
@@ -101,10 +98,16 @@ void event_free(Event *event)
     zfree(event);
 }
 
-Event *event_parse(char *buf) 
+Event *event_feed(char *buf) 
 {
+    if(strncmp(buf, "sensor/", 7)) {
+        return NULL;
+    }
     Event *event = event_new();
-    buf = parse_status_line(event, buf);
+    buf = parse_sensor_line(event, buf+7);
+    if(buf && *buf) {
+        buf = parse_status_line(event, buf);
+    }
     if(buf && *buf) {
         buf = parse_head_lines(event, buf);
     }
@@ -113,6 +116,30 @@ Event *event_parse(char *buf)
     }
     return event;
     
+}
+
+static char *parse_sensor_line(Event *event, char *buf)
+{        
+    char *p = buf;
+    char *eol = NULL; 
+    char *sep = NULL;
+    while(p && *p) {
+        if(isspace(*p)) {
+            if(!sep) sep = p++;
+        } else if(*p == '\n') {
+            eol = p++;
+            break;
+        } else {
+            p++;
+        }
+    }
+    if(strncmp(buf, "passive", 7) == 0) {
+        event->sensortype = PASSIVE;
+    } else { //active
+        event->sensortype = ACTIVE;
+    }
+    event->title = sdsnewlen(sep+1, eol-sep-1);
+    return p;
 }
 
 static char *parse_status_line(Event *event, char *buf)
@@ -130,23 +157,20 @@ static char *parse_status_line(Event *event, char *buf)
         }
     }
     parse_status(event, buf, sep-1);
-    event->subject = sdsnewlen(sep+2, eol-sep-2);
+    event->title = sdsnewlen(sep+2, eol-sep-2);
     return p;
 }
 
 static void parse_status(Event *event, char *start, char *end)
 {
-    char *p = start;
-    char *lastsp;
-    while(p < end) {
-        if(isspace(*p)) lastsp = p;
-        p++;
-    }
-    if((lastsp - start) > 0) {
-        event->sensor = sdsnewlen(start, lastsp - start); 
-    }
-    if((end - lastsp) > 1) {
-        event->status = sdsnewlen(lastsp+1, end - lastsp - 1);
+    if(strncmp("OK", start, end - start) == 0) {
+        event->status = OK; 
+    } else if(strncmp("WARNING", start, end - start) == 0) {
+        event->status = WARNING;
+    } else if(strncmp("CRITICAL", start, end - start) == 0) {
+        event->status = CRITICAL;
+    } else { //if(strncmp("UNKNOWN", start, end - start) == 0) {
+        event->status = UNKNOWN;
     }
 }
 

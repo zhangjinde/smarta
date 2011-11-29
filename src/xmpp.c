@@ -106,7 +106,7 @@ static void xmpp_read(aeEventLoop *el, int fd, void *privdata, int mask) {
         logger_error("smarta", "xmpp server is disconnected.");
         xmpp_disconnect(el, stream);
         timeout = (random() % 120) * 1000,
-        logger_debug("XMPP", "reconnect after %d seconds", timeout/1000);
+        logger_info("XMPP", "reconnect after %d seconds", timeout/1000);
         aeCreateTimeEvent(el, timeout, xmpp_reconnect, stream, NULL);
     } else {
         logger_debug("SOCKET", "RECV: %s", buf);
@@ -505,7 +505,8 @@ static void _handle_xmpp_presence(XmppStream *stream, XmppStanza *presence)
         return;
     }
 
-    if(!type || strcmp(type, "available") ==0) { //available
+    if(!type || strcmp(type, "available") ==0 ||
+        strcmp(type, "probe") == 0) { //available
         node = listSearchKey(stream->presences, from);
         if(!node) {
             logger_info("ROSTER", "%s is available", from);

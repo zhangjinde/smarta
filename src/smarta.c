@@ -67,7 +67,7 @@ static void smarta_proxy_start(void);
 
 static void sched_checks(void);
 
-static char *cn(char *status);
+static char *cn(int status);
 
 static int smarta_cron(aeEventLoop *eventLoop, 
     long long id, void *clientData);
@@ -553,6 +553,7 @@ static void roster_handler(XmppStream *stream, XmppStanza *iq)
 
 static void presence_handler(XmppStream *stream, XmppStanza *presence) 
 {
+    XmppStanza *stanza;
     char *type, *from, *domain;
     type = xmpp_stanza_get_type(presence);
     from = xmpp_stanza_get_attribute(presence, "from");
@@ -575,9 +576,9 @@ static void presence_handler(XmppStream *stream, XmppStanza *presence)
         hash_iterator_t *iter = hash_iter_new(smarta.events);
         while((key = hash_iter_next(iter))) {
             event = hash_get(smarta.events, key);
-            if(strcmp(event->status, "OK")) {
-                vector[vectorlen++] = sdscatprintf(sdsempty(),
-                    "%s %s - %s\n", key, event->status, event->subject);
+            if(event->status != OK) {
+                vector[vectorlen++] = sdscatprintf(sdsempty(), "%s %s - %s\n",
+                    key, event_status(event), event->title);
                 if(vectorlen >= 1024) break;
             }
         }
@@ -592,8 +593,11 @@ static void presence_handler(XmppStream *stream, XmppStanza *presence)
         xmpp_send_message(smarta.stream, from, output);
         
         sdsfree(output);
+    } else if(strcmp(type, "probe") == 0) {
+        stanza = xmpp_stanza_tag("presence");
+        xmpp_send_stanza(stream, stanza);
+        xmpp_stanza_release(stanza);
     }
-
 }
 
 static void command_handler(XmppStream *stream, XmppStanza *stanza) 
@@ -662,7 +666,7 @@ static sds execute(char *incmd)
         while((key = hash_iter_next(iter))) {
             event = hash_get(smarta.events, key);
             vector[vectorlen++] = sdscatprintf(sdsempty(), "%s %s - %s\n", 
-                    key, cn(event->status), event->subject);
+                    key, cn(event->status), event->title);
             if(vectorlen >= 1024) break;
         }
         hash_iter_release(iter);
@@ -761,7 +765,8 @@ static void smarta_run() {
 
 static int smarta_cron(struct aeEventLoop *eventLoop,
     long long id, void *clientData) {
-    return 1000;
+    logger_info("SMARTA", "status: %d", smarta.stream->state);
+    return 20*60*1000;
 }
 
 static void sched_checks() {
@@ -796,10 +801,7 @@ int check_sensor(struct aeEventLoop *el, long long id, void *clientdata) {
 	if(plugin) {
 		logger_debug("SCHED", "find plugin:%s", argv[0]);
 	    if( plugin->check(argc-1, argv+1, result, &size) >= 0 ) {
-	       sds data = sdsempty();
-	       data = sdscat(data, sensor->name);
-	       data = sdscat(data, " ");
-	       data = sdscatlen(data, result, size);
+	       sds data = sdscatprintf(sdsempty(), "sensor/active %s\n%s", sensor->name, result);
 	       logger_debug("SCHED", "check result: %s", result);
 	       anetUdpSend("127.0.0.1", smarta.collectd_port, data, sdslen(data));
 	       sdsfree(data);
@@ -833,8 +835,7 @@ int check_sensor(struct aeEventLoop *el, long long id, void *clientdata) {
             result = sdscat(result, output);
         }
         if((len = sdslen(result) && is_valid(result)) > 0) {
-            sds data = sdscat(sensor->name, " ");
-            data = sdscat(data, result);
+            sds data = sdscatprintf(sdsempty(), "sensor/active %s\n%s", sensor->name, result);
             anetUdpSend("127.0.0.1", smarta.collectd_port, data, sdslen(data));
             sdsfree(data);
         }
@@ -852,53 +853,54 @@ int check_sensor(struct aeEventLoop *el, long long id, void *clientdata) {
 static int is_valid_event(Event *event) {
 
     if(!event) return 0;
-    if(!event->status) return 0;
+    if(event->status == UNKNOWN) return 0;
     if(!event->sensor) return 0;
-    if(!event->subject) return 0;
+    if(!event->title) return 0;
     return 1;
 }
 
 void handle_check_result(aeEventLoop *el, int fd, void *privdata, int mask) {
     int nread;
     Event *event;
-    char buf[1024] = {0};
-    nread = read(fd, buf, 1023);
+    char buf[4096] = {0};
+    nread = read(fd, buf, 4095);
     XmppStream *stream = (XmppStream *)privdata;
     if(nread <= 0) {
         logger_debug("COLLECTD", "no data");
         return;
     }
+    if(strncmp(buf, "sensor/", 7)) {
+        logger_info("COLLECTD", "invalid data: \n%s", buf);
+        return;
+    }
     logger_debug("COLLECTD", "RECV: %s", buf);
     if(stream->state == XMPP_STREAM_ESTABLISHED) {
-        event = event_parse(buf);
+        event = event_feed(buf);
         if(is_valid_event(event)) {
-            //Old event will be released by hash_add
             hash_add(smarta.events, zstrdup(event->sensor), event);
             smarta_emit_event(stream, event);
         }
-        //event_free(event);
     }
 }
 
-static char *cn(char *status) 
+static char *cn(int status) 
 {
-    printf("%s\n", status);
-    if(strcmp(status, "WARNING") == 0) {
+    if(status == WARNING) {
         return "告警";
     }
-    if(strcmp(status, "CRITICAL") == 0) {
+    if(status == CRITICAL) {
         return "故障";
     }
-    if(strcmp(status, "OK") == 0) {
+    if(status == OK) {
         return "正常";
     }
-    return status;
+    return "未知";
 }
 
 static char *event_to_string(Event *event) 
 {
     sds s = sdscatprintf(sdsempty(), "%s %s - %s",
-        event->sensor, cn(event->status), event->subject);
+        event->sensor, cn(event->status), event->title);
     if(event->body && sdslen(event->body) > 0) {
         s = sdscatprintf(s, "\n\n%s", event->body);
     }
@@ -934,7 +936,7 @@ Emitted *emitted_new(char *jid, char *sensor, int status)
 static int should_emit(XmppStream *stream, char *jid, Event *event) 
 {
     int yes;
-    int status = event_intstatus(event);
+    int status = event->status;
     Emitted *emitted = emitted_find(jid, event->sensor);
     if(emitted) {
         if(status == emitted->status) {
@@ -983,7 +985,9 @@ static void smarta_emit_event(XmppStream *stream, Event *event)
             sdsfree(buf);
         } else if(!strcmp(domain, "event.nodebus.com") 
             && should_emit(stream, jid, event)) {
-            sds title = event_title(event);
+            sds title = sdscatprintf(sdsempty(), "%s %s - %s",
+                event->sensor, event_status(event),
+                event->title);
             if(event->body) {
                 buf = sdsnewlen(event->body, sdslen(event->body));
             }

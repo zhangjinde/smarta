@@ -3,15 +3,26 @@
 
 #include "list.h"
 
+#define UNKNOWN -1
+#define OK 0
+#define WARNING 1
+#define CRITICAL 2
+
+#define ACTIVE 1
+#define PASSIVE 2
+
 typedef struct _Event {
-    char *status;
+    int status;
     char *sensor;
-    char *subject;
-    list *heads;
+    int sensortype;
+    char *title;
     char *body;
+    list *heads;
 } Event;
 
 Event *event_new();
+
+char *event_status(Event *event);
 
 int event_has_heads(Event *event);
 
@@ -21,10 +32,7 @@ sds event_metrics_to_string(Event *event);
 
 void event_free(Event *event);
 
-Event *event_parse(char *buf);
-
-int event_intstatus(Event *event);
-
-sds event_title(Event *event); 
+Event *event_feed(char *buf);
 
 #endif
+
