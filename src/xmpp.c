@@ -20,8 +20,6 @@
 
 static void xmpp_read(aeEventLoop *el, int fd, void *privdata, int mask);
 
-static int xmpp_reconnect(aeEventLoop *el, long long id, void *clientData);
-
 static void _xmpp_stream_starttls(XmppStream *stream, XmppStanza *tlsFeature);
 
 static XmppStanza *_make_starttls(XmppStream *stream);
@@ -102,8 +100,11 @@ static void xmpp_read(aeEventLoop *el, int fd, void *privdata, int mask) {
 
     nread = read(fd, buf, 4096);
     if(nread <= 0) {
-        if (errno == EAGAIN) return;
-        logger_error("smarta", "xmpp server is disconnected.");
+        if (errno == EAGAIN) { 
+            logger_warning("XMPP", "TCP EAGAIN");
+            return;
+        }
+        logger_error("XMPP", "xmpp server is disconnected.");
         xmpp_disconnect(el, stream);
         timeout = (random() % 120) * 1000,
         logger_info("XMPP", "reconnect after %d seconds", timeout/1000);
@@ -114,7 +115,7 @@ static void xmpp_read(aeEventLoop *el, int fd, void *privdata, int mask) {
     }
 }
 
-static int xmpp_reconnect(aeEventLoop *el, long long id, void *clientData) 
+int xmpp_reconnect(aeEventLoop *el, long long id, void *clientData) 
 {
     int fd;
     int timeout;
@@ -167,6 +168,26 @@ void xmpp_disconnect(aeEventLoop *el, XmppStream *stream)
     
     stream->prepare_reset = 0;
 
+}
+
+char *xmpp_send_ping(XmppStream *stream)
+{
+    XmppStanza *iq, *ping;
+    char *id = sdscatprintf(sdsempty(), "ping_%ld", random());
+
+	iq = xmpp_stanza_tag("iq");
+	xmpp_stanza_set_type(iq, "get");
+	xmpp_stanza_set_id(iq, id); 
+
+	ping = xmpp_stanza_tag("ping");
+	xmpp_stanza_set_ns(ping, XMPP_NS_PING);
+
+	xmpp_stanza_add_child(iq, ping);
+	xmpp_stanza_release(ping);
+
+    xmpp_send_stanza(stream, iq);
+    xmpp_stanza_release(iq);
+    return id;
 }
 
 void xmpp_send_message(XmppStream *stream, const char *to, const char *data)
@@ -222,6 +243,7 @@ XmppStream *xmpp_stream_new()
     stream->iq_id_callbacks = hash_new(8, NULL);
 
     stream->prepare_reset = 0;
+
     stream->parser = parser_new(_handle_stream_start,
           _handle_stream_end,
           _handle_stream_stanza,
@@ -603,6 +625,7 @@ static void _handle_xmpp_iq(XmppStream *stream, XmppStanza *iq)
     if(id) {
         callback = xmpp_get_iq_id_callback(stream, id);
         if(callback) callback(stream, iq);
+        xmpp_remove_iq_id_callback(stream, id);
     }
 
     query = xmpp_stanza_get_child_by_name(iq, "query");

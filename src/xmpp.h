@@ -80,6 +80,8 @@
  */
 #define XMPP_NS_ROSTER "jabber:iq:roster"
 
+#define XMPP_NS_PING "urn:xmpp:ping"
+
 /* error defines */
 /** @def XMPP_EOK
  *  Success error code.
@@ -190,6 +192,11 @@ struct _XmppStream {
 
     int prepare_reset;
 
+    /* keep alive */
+    //long keepalive;
+
+    //long keepalive_timeout;
+
     /* user handlers only get called after authentication */
     int authenticated;
     
@@ -216,6 +223,8 @@ typedef struct _Buddy {
     char *name;
     Subscription sub;
 } Buddy;
+
+char *xmpp_send_ping(XmppStream *stream);
 
 void xmpp_send_message(XmppStream *stream, const char *to, const char *data);
 
@@ -277,6 +286,8 @@ char *xmpp_stream_get_pass(XmppStream *stream);
 void xmpp_stream_set_pass(XmppStream *stream, const char *pass);
 
 int xmpp_connect(aeEventLoop *el, XmppStream *stream);
+
+int xmpp_reconnect(aeEventLoop *el, long long id, void *clientData);
 
 void xmpp_disconnect(aeEventLoop *el, XmppStream *stream);
 

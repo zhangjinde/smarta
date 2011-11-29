@@ -45,7 +45,8 @@
 #define IN_SENSOR_BLOCK 2
 #define IN_COMMAND_BLOCK 3
 
-#define HEARTBEAT_TIMEOUT 800000
+#define HEARTBEAT 120000
+#define HEARTBEAT_TIMEOUT 20000
 
 Smarta smarta;
 
@@ -72,8 +73,14 @@ static char *cn(int status);
 static int smarta_cron(aeEventLoop *eventLoop, 
     long long id, void *clientData);
 
-//static int smarta_heartbeat(aeEventLoop *el, 
-//    long long id, void *clientData); 
+static int smarta_heartbeat(aeEventLoop *el, 
+    long long id, void *clientData); 
+
+static int smarta_heartbeat_timeout(aeEventLoop *el, 
+    long long id, void *clientData);
+
+static void smarta_heartbeat_callback(XmppStream *stream, 
+    XmppStanza *stanza);
 
 static void conn_handler(XmppStream *stream, 
     XmppStreamState state); 
@@ -462,14 +469,41 @@ static void smarta_masterd_start(void)
     aeCreateFileEvent(smarta.el, smarta.masterfd, AE_READABLE, slave_accept_handler, NULL);
 }
 
-//static int smarta_heartbeat(aeEventLoop *el, long long id, void *clientData) 
-//{
-//    XmppStream *stream = (XmppStream *)clientData;
-//    XmppStanza *presence = xmpp_stanza_tag("presence");
-//    xmpp_send_stanza(stream, presence);
-//    xmpp_stanza_release(presence);
-//    return HEARTBEAT_TIMEOUT;
-//}
+static int smarta_heartbeat(aeEventLoop *el, long long id, void *clientData) 
+{
+    char *ping_id;
+    XmppStream *stream = (XmppStream *)clientData;
+
+    ping_id = xmpp_send_ping(stream);
+
+    xmpp_add_iq_id_callback(stream, ping_id, smarta_heartbeat_callback);
+
+    smarta.heartbeat_timeout = aeCreateTimeEvent(smarta.el, 
+        HEARTBEAT_TIMEOUT, smarta_heartbeat_timeout, stream, NULL);
+
+    sdsfree(ping_id);
+
+    return HEARTBEAT;
+}
+
+static int smarta_heartbeat_timeout(aeEventLoop *el, long long id, void *clientData) 
+{
+    long timeout = (random() % 180) * 1000;
+    XmppStream *stream = (XmppStream *)clientData;
+    logger_info("XMPP", "heartbeat timeout.");
+    xmpp_disconnect(el, stream);
+    logger_info("XMPP", "reconnect after %d seconds", timeout/1000);
+    aeCreateTimeEvent(el, timeout, xmpp_reconnect, stream, NULL);
+    return AE_NOMORE;
+}
+
+static void smarta_heartbeat_callback(XmppStream *stream, XmppStanza *stanza)
+{
+    logger_debug("XMPP", "pong received");
+    if(smarta.heartbeat_timeout != 0) {
+        aeDeleteTimeEvent(smarta.el, smarta.heartbeat_timeout);
+    }
+} 
 
 static void conn_handler(XmppStream *stream, XmppStreamState state) 
 {
@@ -487,7 +521,14 @@ static void conn_handler(XmppStream *stream, XmppStreamState state)
     } else if(state == XMPP_STREAM_SASL_AUTHED) {
         logger_info("SMARTA", "authenticate successfully.");
     } else if(state == XMPP_STREAM_ESTABLISHED) {
-        //smarta.heartbeat = aeCreateTimeEvent(smarta.el, HEARTBEAT_TIMEOUT, smarta_heartbeat, stream, NULL);
+        if(smarta.heartbeat != 0) {
+            aeDeleteTimeEvent(smarta.el, smarta.heartbeat);
+        }
+        if(smarta.heartbeat_timeout != 0) {
+            aeDeleteTimeEvent(smarta.el, smarta.heartbeat_timeout);
+        }
+        smarta.heartbeat = aeCreateTimeEvent(smarta.el, HEARTBEAT,
+            smarta_heartbeat, stream, NULL);
         logger_info("SMARTA", "session established.");
         logger_info("SMARTA", "smarta is started successfully.");
     } else {
@@ -801,7 +842,7 @@ int check_sensor(struct aeEventLoop *el, long long id, void *clientdata) {
 	if(plugin) {
 		logger_debug("SCHED", "find plugin:%s", argv[0]);
 	    if( plugin->check(argc-1, argv+1, result, &size) >= 0 ) {
-	       sds data = sdscatprintf(sdsempty(), "sensor/active %s\n%s", sensor->name, result);
+	       sds data = sdscatprintf(sdsempty(), "sensor/1.0 %s\n%s", sensor->name, result);
 	       logger_debug("SCHED", "check result: %s", result);
 	       anetUdpSend("127.0.0.1", smarta.collectd_port, data, sdslen(data));
 	       sdsfree(data);
@@ -835,7 +876,7 @@ int check_sensor(struct aeEventLoop *el, long long id, void *clientdata) {
             result = sdscat(result, output);
         }
         if((len = sdslen(result) && is_valid(result)) > 0) {
-            sds data = sdscatprintf(sdsempty(), "sensor/active %s\n%s", sensor->name, result);
+            sds data = sdscatprintf(sdsempty(), "sensor/1.0 %s\n%s", sensor->name, result);
             anetUdpSend("127.0.0.1", smarta.collectd_port, data, sdslen(data));
             sdsfree(data);
         }
@@ -867,10 +908,6 @@ void handle_check_result(aeEventLoop *el, int fd, void *privdata, int mask) {
     XmppStream *stream = (XmppStream *)privdata;
     if(nread <= 0) {
         logger_debug("COLLECTD", "no data");
-        return;
-    }
-    if(strncmp(buf, "sensor/", 7)) {
-        logger_info("COLLECTD", "invalid data: \n%s", buf);
         return;
     }
     logger_debug("COLLECTD", "RECV: %s", buf);

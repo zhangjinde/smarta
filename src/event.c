@@ -100,11 +100,11 @@ void event_free(Event *event)
 
 Event *event_feed(char *buf) 
 {
-    if(strncmp(buf, "sensor/", 7)) {
+    if(strncmp(buf, "sensor/1.0", 10)) {//FIXME: check version later.
         return NULL;
     }
     Event *event = event_new();
-    buf = parse_sensor_line(event, buf+7);
+    buf = parse_sensor_line(event, buf+10);
     if(buf && *buf) {
         buf = parse_status_line(event, buf);
     }
@@ -121,43 +121,37 @@ Event *event_feed(char *buf)
 static char *parse_sensor_line(Event *event, char *buf)
 {        
     char *p = buf;
+    char *sp = NULL;
     char *eol = NULL; 
-    char *sep = NULL;
     while(p && *p) {
-        if(isspace(*p)) {
-            if(!sep) sep = p++;
+        if(*p == ' ') {
+            if(!sp) sp = p;
         } else if(*p == '\n') {
             eol = p++;
             break;
-        } else {
-            p++;
-        }
+        } 
+        p++;
     }
-    if(strncmp(buf, "passive", 7) == 0) {
-        event->sensortype = PASSIVE;
-    } else { //active
-        event->sensortype = ACTIVE;
-    }
-    event->title = sdsnewlen(sep+1, eol-sep-1);
+    if(eol) event->sensor = sdsnewlen(sp+1, eol-sp-1);
     return p;
 }
 
 static char *parse_status_line(Event *event, char *buf)
 {        
     char *p = buf;
-    char *eol, *sep;
+    char *eol = NULL;
+    char *sep = NULL;
     while(p && *p) {
         if(*p == '-') {
-            sep = p++;
+            if(!sep) sep = p;
         }else if(*p == '\n') {
             eol = p++;
             break;
-        } else {
-            p++;
-        }
+        } 
+        p++;
     }
-    parse_status(event, buf, sep-1);
-    event->title = sdsnewlen(sep+2, eol-sep-2);
+    if(sep) parse_status(event, buf, sep-1);
+    if(eol) event->title = sdsnewlen(sep+2, eol-sep-2);
     return p;
 }
 

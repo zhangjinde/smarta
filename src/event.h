@@ -8,13 +8,13 @@
 #define WARNING 1
 #define CRITICAL 2
 
-#define ACTIVE 1
-#define PASSIVE 2
+//#define ACTIVE 1
+//#define PASSIVE 2
 
 typedef struct _Event {
     int status;
     char *sensor;
-    int sensortype;
+    //int sensortype;
     char *title;
     char *body;
     list *heads;

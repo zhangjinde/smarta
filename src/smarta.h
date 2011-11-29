@@ -37,7 +37,8 @@ typedef struct _Smarta {
     int collectd;
     int collectd_port;
     int daemonize;
-    int heartbeat;
+    long long heartbeat;
+    long long heartbeat_timeout;
     char *masterhost;
     char *masterauth;
     list *sensors;
