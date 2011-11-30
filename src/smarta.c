@@ -619,7 +619,7 @@ static void presence_handler(XmppStream *stream, XmppStanza *presence)
             event = hash_get(smarta.events, key);
             if(event->status != OK) {
                 vector[vectorlen++] = sdscatprintf(sdsempty(), "%s %s - %s\n",
-                    key, event_status(event), event->title);
+                    key, cn(event->status), event->title);
                 if(vectorlen >= 1024) break;
             }
         }
