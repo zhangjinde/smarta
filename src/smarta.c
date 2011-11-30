@@ -54,6 +54,8 @@ extern int log_level;
 
 extern char *log_file;
 
+static void setupSignalHandlers(void);
+
 static void daemonize(void); 
 
 static void smarta_run(void); 
@@ -141,6 +143,7 @@ static void smarta_prepare()
     smarta.daemonize = 1;
     smarta.collectd = -1;
     smarta.collectd_port = 0;
+    smarta.shutdown_asap = 0;
     smarta.pidfile = "smarta.pid";
     smarta.sensors = listCreate();
     smarta.commands = listCreate();
@@ -155,6 +158,9 @@ static void smarta_init()
 {
     signal(SIGCHLD, SIG_IGN);
     signal(SIGPIPE, SIG_IGN);
+
+    setupSignalHandlers();
+
     smarta.events = hash_new(8, (hash_free_func)event_free);
     smarta.emitted = listCreate();
     smarta.slaves = listCreate();
@@ -346,6 +352,32 @@ void load_plugins(void)
 
 #endif
 
+static void sigtermHandler(int sig) {
+    logger_info("SMARTA", "SIGTERM, scheduling shutdown...");
+    smarta.shutdown_asap = 1;
+}       
+
+static void setupSignalHandlers(void) {
+    struct sigaction act;
+
+    /* When the SA_SIGINFO flag is set in sa_flags then sa_sigaction is used.
+     * Otherwise, sa_handler is used. */
+    sigemptyset(&act.sa_mask);
+    act.sa_flags = SA_NODEFER | SA_ONSTACK | SA_RESETHAND;
+    act.sa_handler = sigtermHandler;
+    sigaction(SIGTERM, &act, NULL);
+
+    return;
+}
+
+static int pidfile_existed() {
+    if(smarta.pidfile) {
+    FILE *fp = fopen(smarta.pidfile, "r");
+    return fp ? 1 : 0;
+    }
+    return 0;
+}  
+
 int main(int argc, char **argv) {
 
     smarta_prepare();
@@ -359,6 +391,11 @@ int main(int argc, char **argv) {
     } else {
         usage();
     } 
+
+    if(pidfile_existed()) {
+        fprintf(stderr, "ERROR: smarta.pid existed, kill it first.\n");
+        exit(1);
+    }
 
     if(smarta.daemonize) daemonize();
 
@@ -539,6 +576,7 @@ static void conn_handler(XmppStream *stream, XmppStreamState state)
 static void roster_handler(XmppStream *stream, XmppStanza *iq) 
 {
     Buddy *buddy;
+    XmppStanza *presence;
     XmppStanza *query, *item;
     char *from, *jid, *type, *sub;
 
@@ -566,6 +604,11 @@ static void roster_handler(XmppStream *stream, XmppStanza *iq)
             buddy->sub = SUB_BOTH;
             logger_info("SMARTA", "%s followed this node.", jid);
             hash_add(stream->roster, buddy->jid, buddy);
+            presence = xmpp_stanza_tag("presence");
+            xmpp_stanza_set_type(presence, "subscribe");
+            xmpp_stanza_set_attribute(presence, "to", jid);
+            xmpp_send_stanza(stream, presence);
+            xmpp_stanza_release(presence);
         } else if(strcmp(sub, "unfollow") == 0) {
             logger_info("SMARTA", "%s unfollowed this node.", jid);
             int i = 0, j = 0;
@@ -789,7 +832,6 @@ static void daemonize(void) {
     }
 }
 
-
 static void before_sleep(struct aeEventLoop *eventLoop) {
     if(smarta.stream->prepare_reset == 1) {
         logger_debug("SMARTA", "before sleep... reset parser");
@@ -806,8 +848,14 @@ static void smarta_run() {
 
 static int smarta_cron(struct aeEventLoop *eventLoop,
     long long id, void *clientData) {
-    logger_info("SMARTA", "status: %d", smarta.stream->state);
-    return 20*60*1000;
+    if(smarta.shutdown_asap) {
+        //TODO: ok???
+        aeStop(smarta.el);
+        if(smarta.daemonize) {
+            unlink(smarta.pidfile);
+        }
+    }
+    return 1000;
 }
 
 static void sched_checks() {
