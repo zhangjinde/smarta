@@ -223,7 +223,11 @@ static void smarta_config(char *filename) {
             state = IN_COMMAND_BLOCK;
             command = zmalloc(sizeof(Command));
         } else if ((state == IN_SMARTA_BLOCK) && !strcasecmp(argv[0],"name") && argc == 2) {
-            smarta.name = zstrdup(argv[1]);
+            if(strchr(argv[1], '@')) {
+                smarta.name = sdsdup(argv[1]);
+            } else {
+                smarta.name = sdscat(sdsnew(argv[1]), "@nodebus.com");
+            }
             smarta.server = xmpp_jid_domain(smarta.name);
         } else if ((state == IN_SMARTA_BLOCK) && !strcasecmp(argv[0],"server") && argc == 2) {
             if(smarta.server) {
