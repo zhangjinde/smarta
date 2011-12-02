@@ -1,16 +1,5 @@
 src/*.o
-examples/*.o
-expat/lib/*.o
-examples/active
-examples/basic
-examples/bot
-examples/roster
 libexpat.a
-libstrophe.a
-examples/roster
-expat/lib/libexpat_a-xmlparse.o
-expat/lib/libexpat_a-xmlrole.o
-expat/lib/libexpat_a-xmltok.o
 src/.deps/*
 config.log
 autom4te.cache
@@ -19,7 +8,6 @@ Makefile.in
 config.status
 smarta
 smarta.log
-src/.deps/*
 aclocal.m4
 src/.dirstamp
 .exrc
