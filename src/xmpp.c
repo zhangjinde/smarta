@@ -511,6 +511,7 @@ static int is_buddy(XmppStream *stream, char *jid)
 static void _handle_xmpp_presence(XmppStream *stream, XmppStanza *presence) 
 {
     listNode *node;
+    int changed = 0;
     char *from, *type = NULL;
     presence_callback callback;
 
@@ -533,21 +534,27 @@ static void _handle_xmpp_presence(XmppStream *stream, XmppStanza *presence)
         if(!node) {
             logger_info("ROSTER", "%s is available", from);
             listAddNodeHead(stream->presences, zstrdup(from));
+            changed = 1;
         }
     } else if(strcmp(type, "unavailable") == 0) {
         node = listSearchKey(stream->presences, from);
         if(node) {
             listDelNode(stream->presences, node);
+            changed = 1;
         }
+    } else {
+        changed = 1;
     }
     
-    /* callbacks */    
-    listIter *iter = listGetIterator(stream->presence_callbacks, AL_START_HEAD);
-    while((node = listNext(iter))) {
-        callback = (presence_callback)node->value;
-        callback(stream, presence);
+    if(changed) {
+        /* callbacks */    
+        listIter *iter = listGetIterator(stream->presence_callbacks, AL_START_HEAD);
+        while((node = listNext(iter))) {
+            callback = (presence_callback)node->value;
+            callback(stream, presence);
+        }
+        listReleaseIterator(iter);
     }
-    listReleaseIterator(iter);
 }
 
 static void _handle_xmpp_message(XmppStream *stream, XmppStanza *message) 
