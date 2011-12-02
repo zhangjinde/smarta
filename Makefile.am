@@ -5,6 +5,15 @@ CFLAGS = -g -Wall
 expat_CFLAGS = -I src/expat
 expat_LIBS = libexpat.a
 
+PARSER_CFLAGS=@PARSER_CFLAGS@
+PARSER_LIBS=@PARSER_LIBS@
+
+SMARTA_FLAGS = -I src/ \
+	-I src/core \
+	-I src/expat \
+	-I src/xmpp
+SMARTA_LIBS = $(PARSER_LIBS) -lssl
+
 lib_LIBRARIES = libexpat.a
 
 libexpat_a_CFLAGS=-DXML_DTD -DXML_NS -DXML_CONTEXT_BYTES=1024 -DXML_STATIC \
@@ -22,10 +31,6 @@ smarta_SOURCES = src/core/ae.c \
 	src/xmpp/xmpp.c src/event.c \
 	src/slave.c src/smarta.c
 
-smarta_CFLAGS = -I src/ \
-	-I src/core \
-	-I src/expat \
-	-I src/xmpp
-
-smarta_LDADD = -lexpat -lssl 
-
+smarta_CFLAGS = $(SMARTA_FLAGS)
+smarta_LDADD = $(SMARTA_LIBS) 
+ 
