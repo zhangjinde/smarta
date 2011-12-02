@@ -1,48 +1,49 @@
-= Smarta
+# Smarta
 
-smarta agent for linux/unix
+Smart Agent for linux/unix.
 
-= Build
+# Build
 
 ./build.sh
 
-= Install
+# Install
 
 0. install lua
-
-tar xvf lua-5.1.4.tar.gz
-cd lua-5.1.4
-make linux && make install
+	wget http://www.lua.org/ftp/lua-5.1.4.tar.gz
+	tar xvf lua-5.1.4.tar.gz
+	cd lua-5.1.4
+	make linux && make install
 
 1. login http://nodebus.com
+	
+	Add Node, get name and apikey
 
-2. register node, got name and apikey
-
-3. configue smarta.conf 
+2. configure smarta.conf 
     replace $NAME$ with name
     replace $APIKEY$ with apikey
 
-4. start smarta:
+3. start smarta:
     ./smarta smarta.conf
 
-= Master/Slave
+# Master/Slave
 
-If your servers behind firewall and cannot access internet directly,
+	If your servers behind firewall and cannot access internet directly,
 you could configure one smarta as master:
+
     smarta {
         master 7777
     }
 
-others as slaves:
+	others as slaves:
     smarta {
         slaveof MASTER_IP 7777
     }
 
-= Credits
+# Credits
 
 I seldom write c program, but i know what's the best. So smarta use redis event library to rewrite libstrope xmpp library.
 
-= Plugins
+# Plugins
 
 1. check_disk check disk
 2. check_memory check memory usage
