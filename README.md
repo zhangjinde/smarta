@@ -9,9 +9,13 @@ Smart Agent for linux/unix.
 # Install
 
 0. install lua
+
 	wget http://www.lua.org/ftp/lua-5.1.4.tar.gz
+
 	tar xvf lua-5.1.4.tar.gz
+
 	cd lua-5.1.4
+
 	make linux && make install
 
 1. login http://nodebus.com
@@ -19,22 +23,26 @@ Smart Agent for linux/unix.
 	Add Node, get name and apikey
 
 2. configure smarta.conf 
+
     replace $NAME$ with name
+
     replace $APIKEY$ with apikey
 
 3. start smarta:
+
     ./smarta smarta.conf
 
 # Master/Slave
 
 	If your servers behind firewall and cannot access internet directly,
-you could configure one smarta as master:
+you could configure one smarta master/slave:
 
     smarta {
         master 7777
     }
 
-	others as slaves:
+	slaves:
+
     smarta {
         slaveof MASTER_IP 7777
     }
