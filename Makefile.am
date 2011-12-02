@@ -1,6 +1,6 @@
 AUTOMAKE_OPTIONS = subdir-objects
 
-CFLAGS = -std=c99 -g -Wall
+CFLAGS = -g -Wall
 
 expat_CFLAGS = -I src/expat
 expat_LIBS = libexpat.a
