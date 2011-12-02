@@ -33,7 +33,11 @@ void slave_accept_handler(aeEventLoop *el, int listenfd, void *privdata, int mas
     }
     logger_info("SLAVE", "slave %s:%d is connected.", ip, port);
 
-    xmppfd = anetTcpConnect(smarta.neterr, smarta.server, 5222);
+    if(smarta.slaveip) {//FIXME: both master and slave
+        xmppfd = anetTcpConnect(smarta.neterr, smarta.slaveip, smarta.slaveport);
+    } else {
+        xmppfd = anetTcpConnect(smarta.neterr, smarta.server, 5222);
+    }
     if(xmppfd < 0) {
         logger_warning("SLAVE", "failed to connect %s:%d,", smarta.server, 5222);
         close(fd);

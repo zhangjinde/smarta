@@ -29,7 +29,6 @@
 #include "xmpp.h"
 #include "event.h"
 #include "slave.h"
-#include "proxy.h"
 #include "logger.h"
 #include "smarta.h"
 #include "zmalloc.h"
@@ -488,14 +487,14 @@ static void smarta_collectd_start(void)
 
 static void smarta_proxy_start(void) 
 {
-    smarta.proxyfd = anetTcpServer(smarta.neterr, smarta.proxyport, NULL);
-    if(smarta.proxyfd <= 0) {
-        logger_error("SMARTA", "open proxy socket %d. err: %s",
-            smarta.proxyport, smarta.neterr);
-        exit(-1);
-    }
-    logger_info("SMARTA", "proxy on port %d", smarta.proxyport);
-    aeCreateFileEvent(smarta.el, smarta.proxyfd, AE_READABLE, proxy_accept_handler, NULL);
+//    smarta.proxyfd = anetTcpServer(smarta.neterr, smarta.proxyport, NULL);
+//    if(smarta.proxyfd <= 0) {
+//        logger_error("SMARTA", "open proxy socket %d. err: %s",
+//            smarta.proxyport, smarta.neterr);
+//        exit(-1);
+//    }
+//    logger_info("SMARTA", "proxy on port %d", smarta.proxyport);
+//    aeCreateFileEvent(smarta.el, smarta.proxyfd, AE_READABLE, proxy_accept_handler, NULL);
 }
 
 static void smarta_masterd_start(void) 
