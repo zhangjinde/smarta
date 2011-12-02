@@ -27,7 +27,7 @@ make linux && make install
 
 = Master/Slave
 
-if your servers behind firewall and cannot access internet directly,
+If your servers behind firewall and cannot access internet directly,
 you could configure one smarta as master:
     smarta {
         master 7777
@@ -37,6 +37,10 @@ others as slaves:
     smarta {
         slaveof MASTER_IP 7777
     }
+
+= Credits
+
+I seldom write c program, but i know what's the best. So smarta use redis event library to rewrite libstrope xmpp library.
 
 = Plugins
 
