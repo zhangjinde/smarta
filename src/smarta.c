@@ -33,6 +33,7 @@
 #include "smarta.h"
 #include "zmalloc.h"
 #include "version.h"
+#include "ctl.h"
 
 #if defined(__CYGWIN__)
 	#include "plugin.h"
@@ -387,9 +388,21 @@ int main(int argc, char **argv) {
 
     if (argc == 2) {
         if (strcmp(argv[1], "-v") == 0 ||
-            strcmp(argv[1], "--version") == 0) version();
+            strcmp(argv[1], "--version") == 0) {
+			version();
+		}
         if (strcmp(argv[1], "-h") == 0 ||
-            strcmp(argv[1], "--help") == 0) usage();
+            strcmp(argv[1], "--help") == 0) {
+			usage();
+		}
+		if(strcmp(argv[1], "status") == 0) {
+			smarta_ctl_status();
+			exit(0);
+		}
+		if(strcmp(argv[1], "stop") == 0) {
+			smarta_ctl_stop();
+			exit(0);
+		}
         smarta_config(argv[1]);
     } else {
         usage();
