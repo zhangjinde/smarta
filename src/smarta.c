@@ -127,7 +127,8 @@ static void version()
 
 static void usage() 
 {
-    fprintf(stderr,"Usage: ./smarta [/path/to/smarta.conf]\n");
+    fprintf(stderr,"Usage:  ./smarta [/path/to/smarta.conf]\n"
+		"\t./smarta status\n\t./smarta stop\n");
     exit(1);
 }
 

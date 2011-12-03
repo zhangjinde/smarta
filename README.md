@@ -32,6 +32,16 @@ Smart Agent for linux/unix.
 
     ./smarta smarta.conf
 
+#Admin
+
+1. status
+
+./smarta status
+
+2. stop
+
+./smarta stop
+
 # Master/Slave
 
 	If your servers behind firewall and cannot access internet directly,
