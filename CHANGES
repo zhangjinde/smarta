@@ -3,5 +3,9 @@ Changes with smarta 0.4.5                                        02 Dec 2011
 
     *) Feature: rewrite configure and makefile
 
+    *) Feature: add ctl.c to support 'status' and 'stop' command
+	
+	*) Feature: add 'show status' command
+
     *) Bugfix: master/slave cascade
 

@@ -40,4 +40,6 @@ src/xmpp/smarta-parser.o
 src/xmpp/smarta-sasl.o
 src/xmpp/smarta-stanza.o
 src/xmpp/smarta-xmpp.o
-
+var/log/*
+var/run/*
+var/data/*

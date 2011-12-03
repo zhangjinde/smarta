@@ -24,9 +24,11 @@ void smarta_ctl_stop()
 		fprintf(stderr, "Smarta is not running.\n");
 		return;
 	}
-	status = system("kill `cat smarta.pid`");
+	sds cmd = sdscatprintf(sdsempty(), "kill `cat %s`", smarta.pidfile);
+	status = system(cmd);
 	if(status == 0) {
 		printf("Smarta is stopped.\n");
 	}
+	sdsfree(cmd);
 }
 

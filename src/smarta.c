@@ -75,6 +75,9 @@ static char *cn(int status);
 static int smarta_cron(aeEventLoop *eventLoop, 
     long long id, void *clientData);
 
+static int smarta_system_status(aeEventLoop *eventLoop,
+    long long id, void *clientData);
+
 static int smarta_heartbeat(aeEventLoop *el, 
     long long id, void *clientData); 
 
@@ -138,14 +141,14 @@ static void usage()
 static void smarta_prepare() 
 {
     log_level = LOG_INFO;
-    log_file = "smarta.log";
+    log_file = "var/log/smarta.log";
     smarta.isslave = 0;
     smarta.verbosity = 0;
     smarta.daemonize = 1;
     smarta.collectd = -1;
     smarta.collectd_port = 0;
     smarta.shutdown_asap = 0;
-    smarta.pidfile = "smarta.pid";
+    smarta.pidfile = "var/run/smarta.pid";
     smarta.sensors = listCreate();
     smarta.commands = listCreate();
     smarta.cmdusage = NULL;
@@ -170,6 +173,7 @@ static void smarta_init()
 	#endif
     smarta.el = aeCreateEventLoop();
     aeCreateTimeEvent(smarta.el, 100, smarta_cron, NULL, NULL);
+	aeCreateTimeEvent(smarta.el, 1000, smarta_system_status, NULL, NULL);
     srand(time(NULL)^getpid());
 }
 
@@ -780,7 +784,22 @@ static sds execute(char *incmd)
             output = sdscat(output, vector[i]);
             sdsfree(vector[i]);
         }
-    } else if( (command = find_command(incmd) )) {
+    } else if(strcmp(incmd, "help") == 0 || 
+		strcmp(incmd, "?") == 0) {
+        if(smarta.cmdusage) {
+            output = sdscat(output, smarta.cmdusage);
+        } else {
+            listNode *node;
+            output = sdscatprintf(output, "Smarta %s, available commands:\nshow events\n", SMARTA_VERSION);
+            listIter *iter = listGetIterator(smarta.commands, AL_START_HEAD);
+            while((node = listNext(iter)) != NULL) {
+                command = (Command *)node->value;
+                output = sdscatprintf(output, "%s\n", command->usage);
+            }
+            listReleaseIterator(iter);
+            smarta.cmdusage = sdsdup(output);
+        }
+	}else if( (command = find_command(incmd) )) {
         #ifdef __CYGWIN__
     		int argc;
     		int i = 0;
@@ -808,19 +827,15 @@ static sds execute(char *incmd)
             pclose(fp);
         #endif
     } else {
-        if(smarta.cmdusage) {
-            output = sdscat(output, smarta.cmdusage);
-        } else {
-            listNode *node;
-            output = sdscatprintf(output, "Smarta %s, available commands:\nshow events\n", SMARTA_VERSION);
-            listIter *iter = listGetIterator(smarta.commands, AL_START_HEAD);
-            while((node = listNext(iter)) != NULL) {
-                command = (Command *)node->value;
-                output = sdscatprintf(output, "%s\n", command->usage);
-            }
-            listReleaseIterator(iter);
-            smarta.cmdusage = sdsdup(output);
-        }
+		FILE *fp = fopen("var/data/status", "r");
+		if(fp) {
+            output = sdscatprintf(output, "Smarta %s, system current status:\n\n", SMARTA_VERSION);
+			if(fread(buf, sizeof(char *), 1023, fp) > 0) {
+				output = sdscat(output, buf);
+			}
+		}
+		output = sdscat(output, "\n'help' or '?' for available commands.\n");
+		fclose(fp);
     }
     return output;
 }
@@ -863,16 +878,33 @@ static void smarta_run() {
     aeDeleteEventLoop(smarta.el);
 }
 
-static int smarta_cron(struct aeEventLoop *eventLoop,
+static int smarta_cron(aeEventLoop *eventLoop,
     long long id, void *clientData) {
     if(smarta.shutdown_asap) {
         //TODO: ok???
+		logger_info("SMARTA", "shutdown.");
         aeStop(smarta.el);
         if(smarta.daemonize) {
             unlink(smarta.pidfile);
         }
     }
     return 1000;
+}
+
+static int smarta_system_status(aeEventLoop *eventLoop,
+    long long id, void *clientData) {
+    pid_t pid = 0;
+    pid = fork();
+    if(pid == -1) {
+        logger_error("SCHED", "fork error when get system status");
+    } else if(pid == 0) { //subprocess
+        char *cmd = "bin/show_status > var/data/status";
+		int status = system(cmd);
+		exit(status);
+    } else {
+        //smarta process
+    }
+    return 60000;
 }
 
 static void sched_checks() {
