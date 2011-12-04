@@ -19,15 +19,7 @@ install-sh
 missing
 src/core/.deps/
 src/core/.dirstamp
-src/core/smarta-ae.o
-src/core/smarta-anet.o
-src/core/smarta-hash.o
-src/core/smarta-list.o
-src/core/smarta-logger.o
-src/core/smarta-md5.o
-src/core/smarta-sds.o
-src/core/smarta-sha1.o
-src/core/smarta-zmalloc.o
+src/core/*.o
 src/expat/.deps/
 src/expat/.dirstamp
 src/expat/libexpat_a-xmlparse.o
