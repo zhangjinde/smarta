@@ -1,3 +1,10 @@
+Changes with smarta 0.4.6                                        04 Dec 2011
+
+    *) Feature: tls support
+
+    *) Feature: add bin/show_cpu, bin/show_mem scripts
+	
+    *) Bugfix: ./smarta to start
 
 Changes with smarta 0.4.5                                        02 Dec 2011
 
