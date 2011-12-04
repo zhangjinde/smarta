@@ -390,8 +390,10 @@ static int pidfile_existed() {
 int main(int argc, char **argv) {
 
     smarta_prepare();
-
-    if (argc == 2) {
+	
+	if(argc == 1) {
+        smarta_config("smarta.conf");
+	} else if (argc == 2) {
         if (strcmp(argv[1], "-v") == 0 ||
             strcmp(argv[1], "--version") == 0) {
 			version();
