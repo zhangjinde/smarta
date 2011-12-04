@@ -21,7 +21,7 @@ libexpat_a_CFLAGS=-DXML_DTD -DXML_NS -DXML_CONTEXT_BYTES=1024 -DXML_STATIC \
 libexpat_a_SOURCES=src/expat/xmlparse.c src/expat/xmltok.c src/expat/xmlrole.c
 
 noinst_PROGRAMS = smarta
-smarta_SOURCES = src/core/ae.c \
+smarta_SOURCES = src/core/ae.c src/core/tls.c \
     src/core/anet.c src/core/sds.c \
 	src/core/list.c src/core/logger.c \
     src/core/md5.c src/core/sha1.c \

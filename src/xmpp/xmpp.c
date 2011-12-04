@@ -24,6 +24,8 @@ static void _xmpp_stream_starttls(XmppStream *stream, XmppStanza *tlsFeature);
 
 static XmppStanza *_make_starttls(XmppStream *stream);
 
+static void _handle_tls_opened(XmppStream *stream);
+
 static void _xmpp_stream_auth(XmppStream *const stream, XmppStanza *mechanisms);
 
 static XmppStanza *_make_sasl_auth(const char *mechanism);
@@ -98,7 +100,11 @@ static void xmpp_read(aeEventLoop *el, int fd, void *privdata, int mask) {
 
     XmppStream *stream = (XmppStream *)privdata;
 
-    nread = read(fd, buf, 4096);
+	if(stream->tls) {
+		nread = tls_read(stream->tls, buf, 4096);
+	} else {
+		nread = read(fd, buf, 4096);
+	}
     if(nread <= 0) {
         if (errno == EAGAIN) { 
             logger_warning("XMPP", "TCP EAGAIN");
@@ -138,6 +144,10 @@ int xmpp_reconnect(aeEventLoop *el, long long id, void *clientData)
 void xmpp_disconnect(aeEventLoop *el, XmppStream *stream) 
 {
     logger_debug("XMPP", "xmpp is disconnected");
+	if(stream->tls) {
+		tls_free(stream->tls);
+		stream->tls = NULL;
+	}
     if(stream->fd > 0) {
         aeDeleteFileEvent(el, stream->fd, AE_READABLE);
         close(stream->fd);
@@ -398,14 +408,15 @@ void xmpp_send_format(XmppStream *stream, char *fmt, ...)
 
 void xmpp_send_string(XmppStream *stream, char *data, size_t len)
 {
-
     if (stream->state == XMPP_STREAM_DISCONNECTED) {
         return;
     }
-
 	logger_debug("XMPP", "SENT: %s", data);
-
-    anetWrite(stream->fd, data, len);
+	if(stream->tls) {
+		tls_write(stream->tls, data, len);
+	} else {
+		anetWrite(stream->fd, data, len);
+	}
 }
 
 void xmpp_send_stanza(XmppStream *stream, XmppStanza *stanza) 
@@ -446,6 +457,7 @@ static void _handle_stream_start(char *name, char **attrs, void *userdata)
 
 static void _handle_stream_stanza(XmppStanza * const stanza, void * const userdata) 
 {
+	int ret;
     char *buf;
     size_t len;
     char *xmlns, *name;
@@ -489,14 +501,28 @@ static void _handle_stream_stanza(XmppStanza * const stanza, void * const userda
             logger_error("XMPP", "Ignoreing spurios %s", name);
         } else {
             if(strequal(name, "proceed")) {
-                //FIXME LATER   
-                //tls_init
+				stream->tls = tls_new(stream->fd);
+				ret = tls_start(stream->tls);
+				if(ret <= 0) {
+					logger_error("XMPP", "Couldn't start TLS, exit now! error: %d", ret);
+					tls_free(stream->tls);
+					//FIXME:
+					//xmpp_disconnect(stream);
+					exit(-1);
+				}
+				_handle_tls_opened(stream); 
             }
         }
     } else {
         logger_error("XMPP", "received unknown stanza: %s", name);
     }
 
+}
+
+static void _handle_tls_opened(XmppStream *stream) 
+{
+    xmpp_stream_set_state(stream, XMPP_STREAM_TSL_OPENED);
+    xmpp_stream_open(stream);
 }
 
 static int is_buddy(XmppStream *stream, char *jid) 
@@ -579,15 +605,14 @@ static void _handle_xmpp_message(XmppStream *stream, XmppStanza *message)
 static void _handle_stream_features(XmppStream *stream, XmppStanza *stanza) 
 {
     XmppStanza *mechanisms, *bind, *session, *starttls;
+    starttls = xmpp_stanza_get_child_by_name(stanza, "starttls");
+    if(starttls) {
+        _xmpp_stream_starttls(stream, starttls);
+        return;
+    }
     mechanisms = xmpp_stanza_get_child_by_name(stanza, "mechanisms");
     if(mechanisms) {
         _xmpp_stream_auth(stream, mechanisms);
-        return;
-    }
-    starttls = xmpp_stanza_get_child_by_name(stanza, "starttls");
-    if(starttls) {
-        //TODO:FIXME LATER
-        _xmpp_stream_starttls(stream, starttls);
         return;
     }
     bind = xmpp_stanza_get_child_by_name(stanza, "bind");
