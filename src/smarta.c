@@ -581,6 +581,21 @@ static void conn_handler(XmppStream *stream, XmppStreamState state)
     } else if(state == XMPP_STREAM_SASL_AUTHED) {
         logger_info("SMARTA", "authenticate successfully.");
     } else if(state == XMPP_STREAM_ESTABLISHED) {
+		//FIXME: refactor later.
+        FILE *fp = NULL;
+        char output[1024] = {0};
+        sds result =sdsempty();
+        fp = popen("bin/show_cfg", "r");
+        if(fp) {
+			while(fgets(output, 1023, fp)) {
+				result = sdscat(result, output);
+			}
+			xmpp_send_message(stream, "info@status.nodebus.com", result);
+        }else {
+            logger_error("SMARTA", "failed to open bin/show_cfg.");
+		}
+		sdsfree(result);
+		//heartbeat	
         if(smarta.heartbeat != 0) {
             aeDeleteTimeEvent(smarta.el, smarta.heartbeat);
         }
