@@ -8,6 +8,7 @@
 #include "sds.h"
 #include "list.h"
 #include "event.h"
+#include "logger.h"
 #include "zmalloc.h"
 
 static char *parse_sensor_line(Event *event, char *buf);
@@ -36,15 +37,10 @@ Event *event_new()
 
 char *event_status(Event *event) 
 {
-    if(event->status == 2) {
-        return "CRITICAL";
-    }
-    if(event->status == 1) {
-        return "WARNING";
-    }
-    if(event->status == 0) {
-        return "OK";
-    }
+    if(event->status == CRITICAL) return "CRITICAL";
+    if(event->status == WARNING) return "WARNING";
+	if(event->status == INFO) return "INFO";
+    if(event->status == OK) return "OK";
     return "UNKNOWN";
 }
 
@@ -169,6 +165,8 @@ static void parse_status(Event *event, char *start, char *end)
 {
     if(strncmp("OK", start, end - start) == 0) {
         event->status = OK; 
+    } else if(strncmp("INFO", start, end - start) == 0) {
+        event->status = INFO; 
     } else if(strncmp("WARNING", start, end - start) == 0) {
         event->status = WARNING;
     } else if(strncmp("CRITICAL", start, end - start) == 0) {

@@ -1036,17 +1036,13 @@ void handle_check_result(aeEventLoop *el, int fd, void *privdata, int mask) {
     }
 }
 
+//FIXME: stupid...
 static char *cn(int status) 
 {
-    if(status == WARNING) {
-        return "告警";
-    }
-    if(status == CRITICAL) {
-        return "故障";
-    }
-    if(status == OK) {
-        return "正常";
-    }
+    if(status == WARNING)  return "告警";
+    if(status == CRITICAL) return "故障";
+    if(status == INFO) return "信息";
+    if(status == OK) return "正常";
     return "未知";
 }
 
@@ -1090,6 +1086,8 @@ static int should_emit(XmppStream *stream, char *jid, Event *event)
 {
     int yes;
     int status = event->status;
+	if(event->sensortype == PASSIVE) return 1;
+
     Emitted *emitted = emitted_find(jid, event->sensor);
     if(emitted) {
         if(status == emitted->status) {
@@ -1213,6 +1211,7 @@ static int yesnotoi(char *s) {
 static int is_valid(const char *buf) 
 {
     if(strncmp(buf, "OK", 2) == 0) return 1;
+    if(strncmp(buf, "INFO", 4) == 0) return 1;
     if(strncmp(buf, "WARNING", 7) == 0) return 1;
     if(strncmp(buf, "CRITICAL", 8) == 0) return 1;
     return 0;

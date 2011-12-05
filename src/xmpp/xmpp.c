@@ -100,11 +100,11 @@ static void xmpp_read(aeEventLoop *el, int fd, void *privdata, int mask) {
 
     XmppStream *stream = (XmppStream *)privdata;
 
-	if(stream->tls) {
-		nread = tls_read(stream->tls, buf, 4096);
-	} else {
+	//if(stream->tls) {
+	//		nread = tls_read(stream->tls, buf, 4096);
+	//} else {
 		nread = read(fd, buf, 4096);
-	}
+	//}
     if(nread <= 0) {
         if (errno == EAGAIN) { 
             logger_warning("XMPP", "TCP EAGAIN");
@@ -144,10 +144,10 @@ int xmpp_reconnect(aeEventLoop *el, long long id, void *clientData)
 void xmpp_disconnect(aeEventLoop *el, XmppStream *stream) 
 {
     logger_debug("XMPP", "xmpp is disconnected");
-	if(stream->tls) {
-		tls_free(stream->tls);
-		stream->tls = NULL;
-	}
+	//if(stream->tls) {
+	//		tls_free(stream->tls);
+	//	stream->tls = NULL;
+	//}
     if(stream->fd > 0) {
         aeDeleteFileEvent(el, stream->fd, AE_READABLE);
         close(stream->fd);
@@ -412,11 +412,11 @@ void xmpp_send_string(XmppStream *stream, char *data, size_t len)
         return;
     }
 	logger_debug("XMPP", "SENT: %s", data);
-	if(stream->tls) {
-		tls_write(stream->tls, data, len);
-	} else {
+	//if(stream->tls) {
+//		tls_write(stream->tls, data, len);
+//	} else {
 		anetWrite(stream->fd, data, len);
-	}
+//	}
 }
 
 void xmpp_send_stanza(XmppStream *stream, XmppStanza *stanza) 
@@ -501,16 +501,14 @@ static void _handle_stream_stanza(XmppStanza * const stanza, void * const userda
             logger_error("XMPP", "Ignoreing spurios %s", name);
         } else {
             if(strequal(name, "proceed")) {
-				stream->tls = tls_new(stream->fd);
-				ret = tls_start(stream->tls);
-				if(ret <= 0) {
-					logger_error("XMPP", "Couldn't start TLS, exit now! error: %d", ret);
-					tls_free(stream->tls);
-					//FIXME:
-					//xmpp_disconnect(stream);
-					exit(-1);
-				}
-				_handle_tls_opened(stream); 
+				//stream->tls = tls_new(stream->fd);
+				//ret = tls_start(stream->tls);
+				//if(ret <= 0) {
+			//		logger_error("XMPP", "Couldn't start TLS, exit now! error: %d", ret);
+		//			tls_free(stream->tls);
+		//			exit(-1);
+		//		}
+		//		_handle_tls_opened(stream); 
             }
         }
     } else {
@@ -605,14 +603,14 @@ static void _handle_xmpp_message(XmppStream *stream, XmppStanza *message)
 static void _handle_stream_features(XmppStream *stream, XmppStanza *stanza) 
 {
     XmppStanza *mechanisms, *bind, *session, *starttls;
-    starttls = xmpp_stanza_get_child_by_name(stanza, "starttls");
-    if(starttls) {
-        _xmpp_stream_starttls(stream, starttls);
-        return;
-    }
     mechanisms = xmpp_stanza_get_child_by_name(stanza, "mechanisms");
     if(mechanisms) {
         _xmpp_stream_auth(stream, mechanisms);
+        return;
+    }
+    starttls = xmpp_stanza_get_child_by_name(stanza, "starttls");
+    if(starttls) {
+        _xmpp_stream_starttls(stream, starttls);
         return;
     }
     bind = xmpp_stanza_get_child_by_name(stanza, "bind");

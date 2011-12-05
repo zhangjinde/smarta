@@ -5,8 +5,9 @@
 
 #define UNKNOWN -1
 #define OK 0
-#define WARNING 1
-#define CRITICAL 2
+#define INFO 1
+#define WARNING 2
+#define CRITICAL 3
 
 #define ACTIVE 1
 #define PASSIVE 2

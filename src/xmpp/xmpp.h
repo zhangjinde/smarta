@@ -25,7 +25,7 @@
 #include <stdint.h>
 
 #include "ae.h"
-#include "tls.h"
+//#include "tls.h"
 #include "hash.h"
 #include "list.h"
 #include "stanza.h"
@@ -181,7 +181,7 @@ struct _XmppStream {
 
     XmppStreamError *stream_error;
 
-	Tls *tls;
+	//Tls *tls;
 
     int tls_support;
 
