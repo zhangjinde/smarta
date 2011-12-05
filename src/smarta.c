@@ -529,7 +529,7 @@ static void smarta_masterd_start(void)
     aeCreateFileEvent(smarta.el, smarta.masterfd, AE_READABLE, slave_accept_handler, NULL);
 }
 
-static int smarta_heartbeat(aeEventLoop *el, long long id, void *clientData) 
+static int smarta_heartbeat(aeEventLoop *el, long long id, void *clientData)
 {
     char *ping_id;
     XmppStream *stream = (XmppStream *)clientData;
@@ -546,14 +546,16 @@ static int smarta_heartbeat(aeEventLoop *el, long long id, void *clientData)
     return HEARTBEAT;
 }
 
-static int smarta_heartbeat_timeout(aeEventLoop *el, long long id, void *clientData) 
+static int smarta_heartbeat_timeout(aeEventLoop *el, long long id, void *clientData)
 {
     long timeout = (random() % 180) * 1000;
     XmppStream *stream = (XmppStream *)clientData;
     logger_info("XMPP", "heartbeat timeout.");
-    xmpp_disconnect(el, stream);
-    logger_info("XMPP", "reconnect after %d seconds", timeout/1000);
-    aeCreateTimeEvent(el, timeout, xmpp_reconnect, stream, NULL);
+	if(stream->state == XMPP_STREAM_ESTABLISHED) {//confirm established?
+		xmpp_disconnect(el, stream);
+		logger_info("XMPP", "reconnect after %d seconds", timeout/1000);
+		aeCreateTimeEvent(el, timeout, xmpp_reconnect, stream, NULL);
+	}
     return AE_NOMORE;
 }
 

@@ -3,6 +3,8 @@ Changes with smarta 0.4.6                                        04 Dec 2011
     *) Feature: tls support
 
     *) Feature: add bin/show_cpu, bin/show_mem scripts
+
+    *) Feature: support to report host config information
 	
     *) Bugfix: ./smarta to start
 

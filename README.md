@@ -30,7 +30,7 @@ Smart Agent for linux/unix.
 
 3. start smarta:
 
-    ./smarta smarta.conf
+    ./smarta
 
 ## Admin
 
