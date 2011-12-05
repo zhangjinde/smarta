@@ -958,7 +958,7 @@ int check_sensor(struct aeEventLoop *el, long long id, void *clientdata) {
 	if(plugin) {
 		logger_debug("SCHED", "find plugin:%s", argv[0]);
 	    if( plugin->check(argc-1, argv+1, result, &size) >= 0 ) {
-	       sds data = sdscatprintf(sdsempty(), "sensor/1.0 %s\n%s", sensor->name, result);
+	       sds data = sdscatprintf(sdsempty(), "Sensor/a %s\n%s", sensor->name, result);
 	       logger_debug("SCHED", "check result: %s", result);
 	       anetUdpSend("127.0.0.1", smarta.collectd_port, data, sdslen(data));
 	       sdsfree(data);
@@ -992,7 +992,7 @@ int check_sensor(struct aeEventLoop *el, long long id, void *clientdata) {
             result = sdscat(result, output);
         }
         if((len = sdslen(result) && is_valid(result)) > 0) {
-            sds data = sdscatprintf(sdsempty(), "sensor/1.0 %s\n%s", sensor->name, result);
+            sds data = sdscatprintf(sdsempty(), "Sensor/a %s\n%s", sensor->name, result);
             anetUdpSend("127.0.0.1", smarta.collectd_port, data, sdslen(data));
             sdsfree(data);
         }
@@ -1026,7 +1026,7 @@ void handle_check_result(aeEventLoop *el, int fd, void *privdata, int mask) {
         logger_debug("COLLECTD", "no data");
         return;
     }
-    logger_debug("COLLECTD", "RECV: %s", buf);
+    logger_debug("COLLECTD", "RECV: \n%s", buf);
     if(stream->state == XMPP_STREAM_ESTABLISHED) {
         event = event_feed(buf);
         if(is_valid_event(event)) {

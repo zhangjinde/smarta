@@ -1,6 +1,8 @@
 This is smart agent based on xmpp protocal, libstrophe library, redis event library.
 
-== xmpp connection process
+#XMPP
+
+## xmpp connection process
 
 xmpp connection process:
 
@@ -12,7 +14,7 @@ xmpp connection process:
 
 4. send initial presence
 
-== XMPP Client FSM
+## XMPP Client FSM
 
 connecting:
 wait_for_stream
@@ -28,7 +30,7 @@ wait_for_legacy_auth_method/2,
 wait_for_auth_result/2,
 logged_in/2, logged_in/3
 
-== XMPP Features
+## XMPP Features
 
 after first openstream:
 
@@ -93,13 +95,18 @@ send presence:
 <presence xml:lang="en" to="node.erylee.me@nodehub.cn/1983397901319162340856874" from="node.erylee.me@nodehub.cn/1983397901319162340856874"/>
 
 
-== Build Instructions ==
+# Sensors
 
-$ ./bootstrap.sh
+# Active Sensor
 
-$ ./configure
+Sensor/a CPU
+WARNING - CPU usage is over 40%
 
-$ make
+usage: 10%, idle: 20%, xxxx
 
-== HTTP Proxy 
-curl --proxy localhost:8888 -s --data "login=root&password=public&node[name]=xxxx" http://hub.nextim.cn:5000/nodes
+# Passive Sensor
+
+Sensor/p Webport
+CRITICAL - exception when importing aps
+
+excptiong content

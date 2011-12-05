@@ -100,11 +100,21 @@ void event_free(Event *event)
 
 Event *event_feed(char *buf) 
 {
-    if(strncmp(buf, "sensor/1.0", 10)) {//FIXME: check version later.
+    if(strncasecmp(buf, "sensor/", 7)) {
         return NULL;
     }
+	buf = buf+7;
     Event *event = event_new();
-    buf = parse_sensor_line(event, buf+10);
+	if(*buf == 'a') {
+		event->sensortype = ACTIVE;
+	} else if(*buf == 'p') {
+		event->sensortype = PASSIVE;
+	} else {
+		logger_warning("SENSOR", "bad sensor type: %s", buf);
+		event_free(event);
+		return NULL;
+	}
+    buf = parse_sensor_line(event, buf+1);
     if(buf && *buf) {
         buf = parse_status_line(event, buf);
     }
