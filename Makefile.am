@@ -12,7 +12,7 @@ SMARTA_FLAGS = -I src/ \
 	-I src/core \
 	-I src/expat \
 	-I src/xmpp
-SMARTA_LIBS = $(PARSER_LIBS) -lssl
+SMARTA_LIBS = $(PARSER_LIBS) #-lssl
 
 lib_LIBRARIES = libexpat.a
 
