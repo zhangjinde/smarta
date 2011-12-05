@@ -1,0 +1,112 @@
+This is smart agent based on xmpp protocal, libstrophe library, redis event library.
+
+#XMPP
+
+## xmpp connection process
+
+xmpp connection process:
+
+1. open stream
+
+2. tls negotiation and restart stream
+
+3. sasl negotiation and restart stream
+
+4. send initial presence
+
+## XMPP Client FSM
+
+connecting:
+wait_for_stream
+stream_opened
+wait_for_starttls_result
+wait_for_sasl_response
+wait_for_stream_features
+wait_for_bind_response
+wait_for_session_response
+stream_error
+stream_closed
+wait_for_legacy_auth_method/2,
+wait_for_auth_result/2,
+logged_in/2, logged_in/3
+
+## XMPP Features
+
+after first openstream:
+
+<stream:features>
+    <starttls xmlns="urn:ietf:params:xml:ns:xmpp-tls"/>
+    <mechanisms xmlns="urn:ietf:params:xml:ns:xmpp-sasl">
+        <mechanism>PLAIN</mechanism>
+    </mechanisms>
+</stream:features>
+
+starttls:
+
+<starttls xmlns="urn:ietf:params:xml:ns:xmpp-tls"/>
+<proceed xmlns="urn:ietf:params:xml:ns:xmpp-tls"/>
+
+reopen stream:
+
+<stream:stream xmlns='jabber:client' xmlns:stream='http://etherx.jabber.org/streams' id='3863363214' from='nodehub.cn' version='1.0' xml:lang='en'>
+
+<stream:features>
+    <mechanisms xmlns="urn:ietf:params:xml:ns:xmpp-sasl">
+        <mechanism>PLAIN</mechanism>
+    </mechanisms>
+</stream:features>
+
+begin to auth:
+<auth mechanism="PLAIN" xmlns="urn:ietf:params:xml:ns:xmpp-sasl">
+    AG5vZGUuZXJ5bGVlLm1lAE9Ta25MV1hx
+</auth>
+<success xmlns="urn:ietf:params:xml:ns:xmpp-sasl"/>
+
+reopen stream:
+
+<?xml version="1.0"?>
+<stream:stream to="nodehub.cn" xml:lang="en" version="1.0" xmlns="jabber:client" xmlns:stream="http://etherx.jabber.org/streams">
+
+<stream:features>
+    <bind xmlns="urn:ietf:params:xml:ns:xmpp-bind"/>
+    <session xmlns="urn:ietf:params:xml:ns:xmpp-session"/>
+</stream:features>
+
+begin to bind:
+
+<iq id="_xmpp_bind1" type="set"><bind xmlns="urn:ietf:params:xml:ns:xmpp-bind"/></iq>
+<iq id="_xmpp_bind1" type="result">
+    <bind xmlns="urn:ietf:params:xml:ns:xmpp-bind">
+        <jid>node.erylee.me@nodehub.cn/1983397901319162340856874</jid>
+    </bind>
+</iq>
+
+create session:
+<iq id="_xmpp_session1" type="set">
+    <session xmlns="urn:ietf:params:xml:ns:xmpp-session"/>
+</iq>
+<iq id="_xmpp_session1" type="result">
+    <session xmlns="urn:ietf:params:xml:ns:xmpp-session"/>
+</iq>
+
+send presence:
+
+<presence/>
+<presence xml:lang="en" to="node.erylee.me@nodehub.cn/1983397901319162340856874" from="node.erylee.me@nodehub.cn/1983397901319162340856874"/>
+
+
+# Sensors
+
+# Active Sensor
+
+Sensor/a CPU
+WARNING - CPU usage is over 40%
+
+usage: 10%, idle: 20%, xxxx
+
+# Passive Sensor
+
+Sensor/p Webport
+CRITICAL - exception when importing aps
+
+excptiong content

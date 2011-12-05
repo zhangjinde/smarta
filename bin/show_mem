@@ -1,0 +1,91 @@
+#!/bin/bash
+
+uname=`uname`
+
+if [ "$uname" = "Linux" ]; then
+	array=(`cat /proc/meminfo | awk "{print $1 $2}"`)
+	for (( i=0; i<${#array[*]};++i ))
+	do
+		if [ "MemTotal:" = "${array[$i]}" ];then
+			memtotal=${array[$i+1]}
+		elif [ "MemFree:" = "${array[$i]}" ];then
+			memfree=${array[$i+1]}
+		elif [ "Buffers:" = "${array[$i]}" ];then
+			buffers=${array[$i+1]}
+		elif [ "Cached:" = "${array[$i]}" ];then
+			cached=${array[$i+1]}
+		elif [ "SwapTotal:" = "${array[$i]}" ];then
+			swaptotal=${array[$i+1]}
+		elif [ "SwapFree:" = "${array[$i]}" ];then
+			swapfree=${array[$i+1]}
+		fi
+	done
+	memused=$(($memtotal-$memfree-$buffers-$cached))
+	memusage=$(($memused*100/$memtotal))
+	swapused=$(($swaptotal-$swapfree))
+	swapusage=$(($swapused*100/$swaptotal))
+	if [ $memtotal -gt 1000000 ];then
+		gb=$(($memtotal/1000000))
+		memtotal="${gb}GB"
+	elif [ $memtotal -gt 10000 ];then
+		mb=$(($memtotal/1000))
+		memtotal="${mb}MB"
+	else
+		memtotal="${memtotal}KB"
+	fi
+	if [ $memfree -gt 1000000 ];then
+		gb=$(($memfree/1000000))
+		memfree="${gb}GB"
+	elif [ $memfree -gt 10000 ];then
+		mb=$(($memfree/1000))
+		memfree="${mb}MB"
+	else
+		memfree="${memfree}KB"
+	fi
+	if [ $buffers -gt 1000000 ];then
+		gb=$(($buffers/1000000))
+		buffers="${gb}GB"
+	elif [ $buffers -gt 10000 ];then
+		mb=$(($buffers/1000))
+		buffers="${mb}MB"
+	else
+		buffers="${memfree}KB"
+	fi
+	if [ $cached -gt 1000000 ];then
+		gb=$(($cached/1000000))
+	 	cached="${gb}GB"
+	elif [ $cached -gt 10000 ];then
+		mb=$(($cached/1000))
+		cached="${mb}MB"
+	else
+		cached="${cached}KB"
+	fi
+	if [ $swaptotal -gt 1000000 ];then
+		gb=$(($swaptotal/1000000))
+		swaptotal="${gb}GB"
+	elif [ $swaptotal -gt 10000 ];then
+		mb=$(($swaptotal/1000))
+		swaptotal="${mb}MB"
+	else
+		swaptotal="${swaptotal}KB"
+	fi
+	if [ $swapfree -gt 1000000 ];then
+		gb=$(($swapfree/1000000))
+		swapfree="${gb}GB"
+	elif [ $swapfree -gt 10000 ];then
+		mb=$(($swapfree/1000))
+		swapfree="${mb}MB"
+	else
+		swapfree="${memfree}KB"
+	fi
+	echo "Memory usage: $memusage%, Total: ${memtotal}, Free: ${memfree}, Buffers: ${buffers}, Cached: ${cached}"
+	echo ""
+	echo "Swap usage: $swapusage%, Total: ${swaptotal}, Free: ${swapfree}"
+elif [ "$uname" = "Darwin" ]; then
+	usage=`top -l 1 | grep "PhysMem"`
+	echo "$usage"
+else
+	echo "no data"
+fi
+
+

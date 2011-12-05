@@ -1,0 +1,51 @@
+#!/bin/bash
+
+uname=`uname`
+
+if [ "$uname" = "Linux" ]; then
+	descr=`uname -a`
+	echo "Host: ${descr}"
+	cpunum=`cat /proc/cpuinfo | grep processor | wc -l`
+	cpumodel=`cat /proc/cpuinfo | grep "model name" | head -n 1 | cut -d: -f2`
+	echo ""
+	echo "CPU Cores: $cpunum, CPU Model: $cpumodel"
+	
+	array=(`cat /proc/meminfo | awk "{print $1 $2}"`)
+	for (( i=0; i<${#array[*]};++i ))
+	do
+		if [ "MemTotal:" = "${array[$i]}" ];then
+			memtotal=${array[$i+1]}
+		elif [ "SwapTotal:" = "${array[$i]}" ];then
+			swaptotal=${array[$i+1]}
+		fi
+	done
+	if [ $memtotal -gt 1000000 ];then
+		gb=$(($memtotal/1000000))
+		memtotal="${gb}GB"
+	elif [ $memtotal -gt 10000 ];then
+		mb=$(($memtotal/1000))
+		memtotal="${mb}MB"
+	else
+		memtotal="${memtotal}KB"
+	fi
+	if [ $swaptotal -gt 1000000 ];then
+		gb=$(($swaptotal/1000000))
+		swaptotal="${gb}GB"
+	elif [ $swaptotal -gt 10000 ];then
+		mb=$(($swaptotal/1000))
+		swaptotal="${mb}MB"
+	else
+		swaptotal="${swaptotal}KB"
+	fi
+	echo ""
+	echo "Memory: $memtotal, Swap: $swaptotal"
+	echo ""
+	df -h
+	echo ""
+	ifconfig | grep -B 2 inet
+	echo ""
+else
+	descr=`uname -a`
+	echo "Host: ${descr}"
+fi
+

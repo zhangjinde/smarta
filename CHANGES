@@ -1,0 +1,22 @@
+Changes with smarta 0.4.6                                        04 Dec 2011
+
+    *) Feature: tls support
+
+    *) Feature: passive sensor support
+
+    *) Feature: add bin/show_cpu, bin/show_mem scripts
+
+    *) Feature: support to report host config information
+	
+    *) Bugfix: ./smarta to start
+
+Changes with smarta 0.4.5                                        02 Dec 2011
+
+    *) Feature: rewrite configure and makefile
+
+    *) Feature: add ctl.c to support 'status' and 'stop' command
+	
+	*) Feature: add 'show status' command
+
+    *) Bugfix: master/slave cascade
+

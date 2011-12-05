@@ -1,0 +1,19 @@
+#!/bin/bash
+
+uname=`uname`
+
+hostname=`hostname`
+
+if [ "$uname" = "Linux" ]; then
+	top=`top -b -n 1 | head -n 5`
+	echo "$uname $hostname $top"
+elif [ "$uname" = "Darwin" ]; then
+	top=`top -l 1 | head -n 8`
+	echo "$uname $hostname - $top"
+	
+else
+	uptime=`uptime`
+	echo "$uname $hostname - $uptime"
+fi
+
+
