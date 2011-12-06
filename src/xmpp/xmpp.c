@@ -18,78 +18,143 @@
 #include "logger.h"
 #include "zmalloc.h"
 
+#define MAX_RETRIES 3
+
+#define HEARTBEAT 120000
+
+#define HEARTBEAT_TIMEOUT 20000
+
 static void xmpp_read(aeEventLoop *el, int fd, void *privdata, int mask);
 
-static void _xmpp_stream_starttls(XmppStream *stream, XmppStanza *tlsFeature);
+static void _xmpp_stream_starttls(Xmpp *xmpp, Stanza *tlsFeature);
 
-static XmppStanza *_make_starttls(XmppStream *stream);
+static Stanza *_make_starttls(Xmpp *xmpp);
 
-static void _handle_tls_opened(XmppStream *stream);
+//static void _handle_tls_opened(Xmpp *xmpp);
 
-static void _xmpp_stream_auth(XmppStream *const stream, XmppStanza *mechanisms);
+static void _xmpp_stream_auth(Xmpp *const xmpp, Stanza *mechanisms);
 
-static XmppStanza *_make_sasl_auth(const char *mechanism);
+static Stanza *_make_sasl_auth(const char *mechanism);
 
-static void _xmpp_stream_bind(XmppStream *stream, XmppStanza *bind); 
+static void _xmpp_stream_bind(Xmpp *xmpp, Stanza *bind); 
 
-static void _xmpp_stream_bind_callback(XmppStream *stream, XmppStanza *iq); 
+static void _xmpp_stream_bind_callback(Xmpp *xmpp, Stanza *iq); 
 
-static void _xmpp_stream_session_callback(XmppStream *stream, XmppStanza *iq);
+static void _xmpp_stream_session_callback(Xmpp *xmpp, Stanza *iq);
 
-static void _xmpp_stream_session(XmppStream *stream);
+static void _xmpp_stream_session(Xmpp *xmpp);
 
-static void _xmpp_stream_closed(XmppStream *stream);
+static void _xmpp_stream_closed(Xmpp *xmpp);
 
 static void _handle_stream_start(char *name, char **attrs, void *userdata);
 
-static void _handle_stream_stanza( XmppStanza *stanza, void *userdata);
+static void _handle_stream_stanza( Stanza *stanza, void *userdata);
 
-static void _handle_stream_features(XmppStream *stream, XmppStanza *stanza);
+static void _handle_stream_features(Xmpp *xmpp, Stanza *stanza);
 
-static void _handle_stream_errors(XmppStream *stream, XmppStanza *stanza);
+static void _handle_stream_errors(Xmpp *xmpp, Stanza *stanza);
 
-static void _handle_xmpp_iq(XmppStream *stream, XmppStanza *iq); 
+static void _handle_xmpp_iq(Xmpp *xmpp, Stanza *iq); 
 
-static void _handle_xmpp_message(XmppStream *stream, XmppStanza *message);
+static void _handle_xmpp_message(Xmpp *xmpp, Stanza *message);
 
-static void _handle_auth_success(XmppStream *stream, XmppStanza *stanza);
+static void _handle_auth_success(Xmpp *xmpp, Stanza *stanza);
 
-static void _handle_auth_failure(XmppStream *stream, XmppStanza *stanza); 
+static void _handle_auth_failure(Xmpp *xmpp, Stanza *stanza); 
 
-static void _handle_xmpp_presence(XmppStream *stream, XmppStanza *presence); 
+static void _handle_xmpp_presence(Xmpp *xmpp, Stanza *presence); 
 
 static void _handle_stream_end(char *name, void *userdata);
 
 static void _remove_callback_from_list(list *callbacks, void *callback);
 
-static void _xmpp_stream_roster(XmppStream *stream); 
+static void _xmpp_stream_roster(Xmpp *xmpp); 
 
-static void _xmpp_stream_roster_callback(XmppStream *stream, XmppStanza *stanza); 
+static void _xmpp_stream_roster_callback(Xmpp *xmpp, Stanza *stanza); 
+
+static void _xmpp_heartbeat_handler(Xmpp *xmpp, 
+    XmppStreamState state);
+
+static int xmpp_heartbeat(aeEventLoop *el, 
+    long long id, void *clientData); 
+
+static int xmpp_heartbeat_timeout(aeEventLoop *el, 
+    long long id, void *clientData);
+
+static void xmpp_heartbeat_callback(Xmpp *xmpp, Stanza *stanza);
 
 static int strequal(const char* s1, const char *s2); 
 
 static int strmatch(void *s1, void *s2);
 
-#define MAX_RETRIES 3
+Xmpp *xmpp_new(aeEventLoop *el) 
+{
+    Xmpp *xmpp = NULL;
+    xmpp = zmalloc(sizeof(Xmpp));
 
-int xmpp_connect(aeEventLoop *el, XmppStream *stream)
+	xmpp->el = el;
+
+    xmpp->retries = 0;
+
+    xmpp->jid = NULL;
+
+    xmpp->domain = NULL;
+
+    xmpp->server = NULL;
+
+    xmpp->port = 5222;
+
+    xmpp->stream_id = NULL;
+
+    xmpp->state = XMPP_STREAM_DISCONNECTED;
+
+    xmpp->presences = listCreate();
+
+    listSetMatchMethod(xmpp->presences, strmatch); 
+
+    xmpp->conn_callbacks = listCreate();
+    
+    xmpp->message_callbacks = listCreate();
+
+    xmpp->presence_callbacks = listCreate();
+
+    xmpp->roster = hash_new(8, buddy_release);
+
+    xmpp->iq_ns_callbacks = hash_new(8, NULL);
+
+    xmpp->iq_id_callbacks = hash_new(8, NULL);
+
+    xmpp->prepare_reset = 0;
+
+    xmpp->parser = parser_new(_handle_stream_start,
+          _handle_stream_end,
+          _handle_stream_stanza,
+          xmpp);
+
+	//TODO: ok?
+	xmpp_add_conn_callback(xmpp, (conn_callback)_xmpp_heartbeat_handler);
+
+    return xmpp;
+}
+
+int xmpp_connect(Xmpp *xmpp)
 {
     char err[1024];
     char server[1024];
-    if(anetResolve(err, stream->server, server) != ANET_OK) {
-        logger_error("XMPP", "cannot resolve %s, error: %s", stream->server, err);
+    if(anetResolve(err, xmpp->server, server) != ANET_OK) {
+        logger_error("XMPP", "cannot resolve %s, error: %s", xmpp->server, err);
         exit(-1);
     } 
     logger_debug("XMPP", "connect to %s", server);
-    int fd = anetTcpConnect(err, server, stream->port);
+    int fd = anetTcpConnect(err, server, xmpp->port);
     if (fd < 0) {
-        logger_error("SOCKET", "failed to connect %s: %s\n", stream->server, err);
+        logger_error("SOCKET", "failed to connect %s: %s\n", xmpp->server, err);
         return fd;
     }
-    stream->fd = fd;
-    aeCreateFileEvent(el, fd, AE_READABLE, xmpp_read, stream); //| AE_WRITABLE
-    xmpp_stream_set_state(stream, XMPP_STREAM_CONNECTING);
-    xmpp_stream_open(stream);
+    xmpp->fd = fd;
+    aeCreateFileEvent(xmpp->el, fd, AE_READABLE, xmpp_read, xmpp); //| AE_WRITABLE
+    xmpp_set_state(xmpp, XMPP_STREAM_CONNECTING);
+    xmpp_stream_open(xmpp);
     return fd;
 }
 
@@ -98,10 +163,10 @@ static void xmpp_read(aeEventLoop *el, int fd, void *privdata, int mask) {
     int timeout;
     char buf[4096] = {0};
 
-    XmppStream *stream = (XmppStream *)privdata;
+    Xmpp *xmpp = (Xmpp *)privdata;
 
-	//if(stream->tls) {
-	//		nread = tls_read(stream->tls, buf, 4096);
+	//if(xmpp->tls) {
+	//		nread = tls_read(xmpp->tls, buf, 4096);
 	//} else {
 		nread = read(fd, buf, 4096);
 	//}
@@ -111,275 +176,230 @@ static void xmpp_read(aeEventLoop *el, int fd, void *privdata, int mask) {
             return;
         }
         logger_error("XMPP", "xmpp server is disconnected.");
-        xmpp_disconnect(el, stream);
-        timeout = (random() % 120) * 1000,
-        logger_info("XMPP", "reconnect after %d seconds", timeout/1000);
-        aeCreateTimeEvent(el, timeout, xmpp_reconnect, stream, NULL);
+        xmpp_disconnect(xmpp);
+		timeout = (random() % 120) * 1000,
+		logger_info("XMPP", "reconnect after %d seconds", timeout/1000);
+		aeCreateTimeEvent(el, timeout, xmpp_reconnect, xmpp, NULL);
     } else {
         logger_debug("SOCKET", "RECV: %s", buf);
-        xmpp_stream_feed(stream, buf, nread);
+        xmpp_stream_feed(xmpp, buf, nread);
     }
 }
 
-int xmpp_reconnect(aeEventLoop *el, long long id, void *clientData) 
+int xmpp_reconnect(aeEventLoop *el, long long id, void *clientData)
 {
     int fd;
     int timeout;
-    XmppStream *stream = (XmppStream *)clientData;
-    fd = xmpp_connect(el, (XmppStream *)clientData);
+    Xmpp *xmpp = (Xmpp *)clientData;
+    fd = xmpp_connect((Xmpp *)clientData);
     if(fd < 0) {
-        if(stream->retries > MAX_RETRIES) {
-            stream->retries = 1;
+        if(xmpp->retries > MAX_RETRIES) {
+            xmpp->retries = 1;
         } 
-        timeout = ((2 * stream->retries) * 60) * 1000;
+        timeout = ((2 * xmpp->retries) * 60) * 1000;
         logger_debug("XMPP", "reconnect after %d seconds", timeout/1000);
-        aeCreateTimeEvent(el, timeout, xmpp_reconnect, stream, NULL);
-        stream->retries++;
+        aeCreateTimeEvent(el, timeout, xmpp_reconnect, xmpp, NULL);
+        xmpp->retries++;
     } else {
-        stream->retries = 1;
+        xmpp->retries = 1;
     }
     return AE_NOMORE;
 }
 
-void xmpp_disconnect(aeEventLoop *el, XmppStream *stream) 
+void xmpp_disconnect(Xmpp *xmpp) 
 {
     logger_debug("XMPP", "xmpp is disconnected");
-	//if(stream->tls) {
-	//		tls_free(stream->tls);
-	//	stream->tls = NULL;
+	//if(xmpp->tls) {
+	//		tls_free(xmpp->tls);
+	//	xmpp->tls = NULL;
 	//}
-    if(stream->fd > 0) {
-        aeDeleteFileEvent(el, stream->fd, AE_READABLE);
-        close(stream->fd);
-        stream->fd = -1;
+    if(xmpp->fd > 0) {
+        aeDeleteFileEvent(xmpp->el, xmpp->fd, AE_READABLE);
+        close(xmpp->fd);
+        xmpp->fd = -1;
     }
-    xmpp_stream_set_state(stream, XMPP_STREAM_DISCONNECTED);
+    xmpp_set_state(xmpp, XMPP_STREAM_DISCONNECTED);
 
-    if(stream->presences) {
-        listRelease(stream->presences);
-        stream->presences = listCreate();
-        listSetMatchMethod(stream->presences, strmatch); 
-    }
-
-    if(stream->roster) {
-        hash_release(stream->roster);
-        stream->roster = hash_new(8, buddy_release);
+    if(xmpp->presences) {
+        listRelease(xmpp->presences);
+        xmpp->presences = listCreate();
+        listSetMatchMethod(xmpp->presences, strmatch); 
     }
 
-    if(stream->iq_id_callbacks) {
-        hash_release(stream->iq_id_callbacks);
-        stream->iq_id_callbacks = hash_new(8, NULL);
+    if(xmpp->roster) {
+        hash_release(xmpp->roster);
+        xmpp->roster = hash_new(8, buddy_release);
     }
 
-    if(stream->iq_ns_callbacks) {
-        hash_release(stream->iq_ns_callbacks);
-        stream->iq_ns_callbacks = hash_new(8, NULL);
+    if(xmpp->iq_id_callbacks) {
+        hash_release(xmpp->iq_id_callbacks);
+        xmpp->iq_id_callbacks = hash_new(8, NULL);
+    }
+
+    if(xmpp->iq_ns_callbacks) {
+        hash_release(xmpp->iq_ns_callbacks);
+        xmpp->iq_ns_callbacks = hash_new(8, NULL);
     }
     
-    stream->prepare_reset = 0;
+    xmpp->prepare_reset = 0;
 
 }
 
-char *xmpp_send_ping(XmppStream *stream)
+char *xmpp_send_ping(Xmpp *xmpp)
 {
-    XmppStanza *iq, *ping;
+    Stanza *iq, *ping;
     char *id = sdscatprintf(sdsempty(), "ping_%ld", random());
 
-	iq = xmpp_stanza_tag("iq");
-	xmpp_stanza_set_type(iq, "get");
-	xmpp_stanza_set_id(iq, id); 
+	iq = stanza_tag("iq");
+	stanza_set_type(iq, "get");
+	stanza_set_id(iq, id); 
 
-	ping = xmpp_stanza_tag("ping");
-	xmpp_stanza_set_ns(ping, XMPP_NS_PING);
+	ping = stanza_tag("ping");
+	stanza_set_ns(ping, XMPP_NS_PING);
 
-	xmpp_stanza_add_child(iq, ping);
-	xmpp_stanza_release(ping);
+	stanza_add_child(iq, ping);
+	stanza_release(ping);
 
-    xmpp_send_stanza(stream, iq);
-    xmpp_stanza_release(iq);
+    xmpp_send_stanza(xmpp, iq);
+    stanza_release(iq);
     return id;
 }
 
-void xmpp_send_message(XmppStream *stream, const char *to, const char *data)
+void xmpp_send_message(Xmpp *xmpp, const char *to, const char *data)
 {
-    XmppStanza *message, *body, *text; 
+    Stanza *message, *body, *text; 
 
-	message = xmpp_stanza_tag("message");
-	xmpp_stanza_set_type(message, "chat");
-	xmpp_stanza_set_attribute(message, "to", to);
+	message = stanza_tag("message");
+	stanza_set_type(message, "chat");
+	stanza_set_attribute(message, "to", to);
 	
-	body = xmpp_stanza_tag("body");
-	text = xmpp_stanza_cdata(zstrdup(data));
-	xmpp_stanza_add_child(body, text);
-	xmpp_stanza_add_child(message, body);
+	body = stanza_tag("body");
+	text = stanza_cdata(zstrdup(data));
+	stanza_add_child(body, text);
+	stanza_add_child(message, body);
 	
-	xmpp_send_stanza(stream, message);
-	xmpp_stanza_release(message);
+	xmpp_send_stanza(xmpp, message);
+	stanza_release(message);
 }
 
-XmppStream *xmpp_stream_new() 
-{
-    XmppStream *stream = NULL;
-    stream = zmalloc(sizeof(XmppStream));
-
-    stream->retries = 0;
-
-    stream->jid = NULL;
-
-    stream->domain = NULL;
-
-    stream->server = NULL;
-
-    stream->port = 5222;
-
-    stream->stream_id = NULL;
-
-    stream->state = XMPP_STREAM_DISCONNECTED;
-
-    stream->presences = listCreate();
-
-    listSetMatchMethod(stream->presences, strmatch); 
-
-    stream->conn_callbacks = listCreate();
-    
-    stream->message_callbacks = listCreate();
-
-    stream->presence_callbacks = listCreate();
-
-    stream->roster = hash_new(8, buddy_release);
-
-    stream->iq_ns_callbacks = hash_new(8, NULL);
-
-    stream->iq_id_callbacks = hash_new(8, NULL);
-
-    stream->prepare_reset = 0;
-
-    stream->parser = parser_new(_handle_stream_start,
-          _handle_stream_end,
-          _handle_stream_stanza,
-          stream);
-
-    return stream;
-}
-
-void xmpp_stream_set_state(XmppStream *stream, int state)  
+void xmpp_set_state(Xmpp *xmpp, int state)  
 {
     listNode *node;
     listIter *iter;
     conn_callback callback;
-    if(stream->state != state) {
-        stream->state = state;
-        iter = listGetIterator(stream->conn_callbacks, AL_START_HEAD);
+    if(xmpp->state != state) {
+        xmpp->state = state;
+        iter = listGetIterator(xmpp->conn_callbacks, AL_START_HEAD);
         while((node = listNext(iter))) {
             callback = (conn_callback)node->value;
-            callback(stream, state);
+            callback(xmpp, state);
         }
         listReleaseIterator(iter);
     }
 }
 
-char *xmpp_stream_get_jid(XmppStream *stream) 
+char *xmpp_get_jid(Xmpp *xmpp) 
 {
-    return stream->jid;
+    return xmpp->jid;
 }
 
-void xmpp_stream_set_jid(XmppStream *stream, const char *jid) 
+void xmpp_set_jid(Xmpp *xmpp, const char *jid) 
 {
-    stream->jid = zstrdup(jid);
-    stream->domain = xmpp_jid_domain(jid);
-    xmpp_stream_set_server(stream, stream->domain);
+    xmpp->jid = zstrdup(jid);
+    xmpp->domain = jid_domain(jid);
+    xmpp_set_server(xmpp, xmpp->domain);
 }
 
-void xmpp_stream_set_server(XmppStream *stream, const char *server) 
+void xmpp_set_server(Xmpp *xmpp, const char *server) 
 { 
-    if(stream->server) zfree(stream->server);
-    stream->server = zstrdup(server);
+    if(xmpp->server) zfree(xmpp->server);
+    xmpp->server = zstrdup(server);
 }
 
-void xmpp_stream_set_port(XmppStream *stream, int port) {
-    stream->port = port;
+void xmpp_set_port(Xmpp *xmpp, int port) {
+    xmpp->port = port;
 }
 
-char *xmpp_stream_get_pass(XmppStream *stream) {
-    return stream->pass;
+char *xmpp_get_pass(Xmpp *xmpp) {
+    return xmpp->pass;
 }
 
-void xmpp_stream_set_pass(XmppStream *stream, const char *pass) {
-    stream->pass = zstrdup(pass);
+void xmpp_set_pass(Xmpp *xmpp, const char *pass) {
+    xmpp->pass = zstrdup(pass);
 }
 
-void xmpp_add_conn_callback(XmppStream *stream, conn_callback callback) 
+void xmpp_add_conn_callback(Xmpp *xmpp, conn_callback callback) 
 {
-    listAddNodeHead(stream->conn_callbacks, callback);
+    listAddNodeHead(xmpp->conn_callbacks, callback);
 }
 
-void xmpp_remove_conn_callback(XmppStream *stream, conn_callback callback) 
+void xmpp_remove_conn_callback(Xmpp *xmpp, conn_callback callback) 
 {
-    _remove_callback_from_list(stream->conn_callbacks, callback);
+    _remove_callback_from_list(xmpp->conn_callbacks, callback);
 }
 
-void xmpp_add_message_callback(XmppStream *stream, message_callback callback){
-    listAddNodeHead(stream->message_callbacks, callback);
+void xmpp_add_message_callback(Xmpp *xmpp, message_callback callback){
+    listAddNodeHead(xmpp->message_callbacks, callback);
 }
 
-void xmpp_remove_message_callback(XmppStream *stream, message_callback callback) 
+void xmpp_remove_message_callback(Xmpp *xmpp, message_callback callback) 
 {
-    _remove_callback_from_list(stream->message_callbacks, callback);
+    _remove_callback_from_list(xmpp->message_callbacks, callback);
 }
 
-void xmpp_add_presence_callback(XmppStream *stream, presence_callback callback) 
+void xmpp_add_presence_callback(Xmpp *xmpp, presence_callback callback) 
 {
-    listAddNodeHead(stream->presence_callbacks, callback);
+    listAddNodeHead(xmpp->presence_callbacks, callback);
 }
 
-void xmpp_remove_presence_callback(XmppStream *stream, presence_callback callback) 
+void xmpp_remove_presence_callback(Xmpp *xmpp, presence_callback callback) 
 {
-    _remove_callback_from_list(stream->presence_callbacks, callback);
+    _remove_callback_from_list(xmpp->presence_callbacks, callback);
 }
 
-iq_callback xmpp_get_iq_ns_callback(XmppStream *stream, char *ns) 
+iq_callback xmpp_get_iq_ns_callback(Xmpp *xmpp, char *ns) 
 {
-    return hash_get(stream->iq_ns_callbacks, ns);
+    return hash_get(xmpp->iq_ns_callbacks, ns);
 }
 
-void xmpp_add_iq_ns_callback(XmppStream *stream, char *iq_ns, iq_callback callback) 
+void xmpp_add_iq_ns_callback(Xmpp *xmpp, char *iq_ns, iq_callback callback) 
 {
-    hash_add(stream->iq_ns_callbacks, iq_ns, callback);
+    hash_add(xmpp->iq_ns_callbacks, iq_ns, callback);
 }
 
-void xmpp_remove_iq_ns_callback(XmppStream *stream, char *iq_ns) 
+void xmpp_remove_iq_ns_callback(Xmpp *xmpp, char *iq_ns) 
 {
-    hash_drop(stream->iq_ns_callbacks, iq_ns);
+    hash_drop(xmpp->iq_ns_callbacks, iq_ns);
 }
 
-void xmpp_remove_iq_id_callback(XmppStream *stream, char *iq_id) 
+void xmpp_remove_iq_id_callback(Xmpp *xmpp, char *iq_id) 
 {
-    hash_drop(stream->iq_id_callbacks, iq_id);
+    hash_drop(xmpp->iq_id_callbacks, iq_id);
 }
 
-iq_callback xmpp_get_iq_id_callback(XmppStream *stream, char *id) 
+iq_callback xmpp_get_iq_id_callback(Xmpp *xmpp, char *id) 
 {
-    return hash_get(stream->iq_id_callbacks, id);
+    return hash_get(xmpp->iq_id_callbacks, id);
 }
 
-void xmpp_add_iq_id_callback(XmppStream *stream, char *iq_id, iq_callback callback) 
+void xmpp_add_iq_id_callback(Xmpp *xmpp, char *iq_id, iq_callback callback) 
 {
-    hash_add(stream->iq_id_callbacks, iq_id, callback);
+    hash_add(xmpp->iq_id_callbacks, iq_id, callback);
 }
 
-int xmpp_stream_open(XmppStream *stream) 
+int xmpp_stream_open(Xmpp *xmpp) 
 {
 
-    stream->prepare_reset = 1;
+    xmpp->prepare_reset = 1;
     
-    xmpp_send_format(stream, 
+    xmpp_send_format(xmpp, 
 			 "<?xml version=\"1.0\"?>"			\
 			 "<stream:stream to=\"%s\" "			\
 			 "xml:lang=\"%s\" "				\
 			 "version=\"1.0\" "				\
 			 "xmlns=\"%s\" "				\
 			 "xmlns:stream=\"%s\">", 
-			 stream->domain,
+			 xmpp->domain,
 			 "en",
 			 XMPP_NS_CLIENT,
 			 XMPP_NS_STREAMS);
@@ -388,7 +408,7 @@ int xmpp_stream_open(XmppStream *stream)
 
 }
 
-void xmpp_send_format(XmppStream *stream, char *fmt, ...) 
+void xmpp_send_format(Xmpp *xmpp, char *fmt, ...) 
 {
     va_list ap;
     size_t len;
@@ -403,112 +423,111 @@ void xmpp_send_format(XmppStream *stream, char *fmt, ...)
         return;
     }
 
-	xmpp_send_string(stream, buf, len);
+	xmpp_send_string(xmpp, buf, len);
 }
 
-void xmpp_send_string(XmppStream *stream, char *data, size_t len)
+void xmpp_send_string(Xmpp *xmpp, char *data, size_t len)
 {
-    if (stream->state == XMPP_STREAM_DISCONNECTED) {
+    if (xmpp->state == XMPP_STREAM_DISCONNECTED) {
         return;
     }
 	logger_debug("XMPP", "SENT: %s", data);
-	//if(stream->tls) {
-//		tls_write(stream->tls, data, len);
+	//if(xmpp->tls) {
+//		tls_write(xmpp->tls, data, len);
 //	} else {
-		anetWrite(stream->fd, data, len);
+		anetWrite(xmpp->fd, data, len);
 //	}
 }
 
-void xmpp_send_stanza(XmppStream *stream, XmppStanza *stanza) 
+void xmpp_send_stanza(Xmpp *xmpp, Stanza *stanza) 
 {
     int ret;
     char *buf;
     size_t len;
 
-	if ((ret = xmpp_stanza_to_text(stanza, &buf, &len)) == 0) {
-	    xmpp_send_string(stream, buf, len);
+	if ((ret = stanza_to_text(stanza, &buf, &len)) == 0) {
+	    xmpp_send_string(xmpp, buf, len);
 	    zfree(buf);
 	}
 }
 
-int xmpp_stream_feed(XmppStream *stream, char *buffer, int len) 
+int xmpp_stream_feed(Xmpp *xmpp, char *buffer, int len) 
 {
-    return parser_feed(stream->parser, buffer, len);
+    return parser_feed(xmpp->parser, buffer, len);
 }
 
 static void _handle_stream_start(char *name, char **attrs, void *userdata) 
 {
     char *id;
 
-    XmppStream *stream = (XmppStream *)userdata;
+    Xmpp *xmpp = (Xmpp *)userdata;
 
     if (strcmp(name, "stream:stream") != 0) {
         logger_fatal("xmpp", "server did not open valid stream.");
         exit(1);
     }
-    if (stream->stream_id) {
-        zfree(stream->stream_id);
+    if (xmpp->stream_id) {
+        zfree(xmpp->stream_id);
     }
-    id = xmpp_attrs_get_value(attrs, "id");
+    id = stanza_attrs_get_value(attrs, "id");
     if (id) {
-        stream->stream_id = zstrdup(id);
+        xmpp->stream_id = zstrdup(id);
     }
 }
 
-static void _handle_stream_stanza(XmppStanza * const stanza, void * const userdata) 
+static void _handle_stream_stanza(Stanza * const stanza, void * const userdata) 
 {
-	int ret;
     char *buf;
     size_t len;
     char *xmlns, *name;
-    XmppStream *stream = (XmppStream *)userdata;
+    Xmpp *xmpp = (Xmpp *)userdata;
 
-    if (xmpp_stanza_to_text(stanza, &buf, &len) == 0) {
+    if (stanza_to_text(stanza, &buf, &len) == 0) {
         logger_debug("XMPP", "RECV: %s", buf);
         zfree(buf);
     }
     
-    xmlns = xmpp_stanza_get_ns(stanza);
-    name = xmpp_stanza_get_name(stanza);
+    xmlns = stanza_get_ns(stanza);
+    name = stanza_get_name(stanza);
 
     logger_debug("XMPP", "xmlns: %s, name: %s", xmlns, name);
 
     if(strequal(name, "iq")) {
-        _handle_xmpp_iq(stream, stanza);
+        _handle_xmpp_iq(xmpp, stanza);
     } else if(strequal(name, "presence")) {
-        _handle_xmpp_presence(stream, stanza);
+        _handle_xmpp_presence(xmpp, stanza);
     } else if(strequal(name, "message")) {
-        _handle_xmpp_message(stream, stanza);
+        _handle_xmpp_message(xmpp, stanza);
     } else if(strequal(name, "stream:features")) {
-            _handle_stream_features(stream, stanza);
+            _handle_stream_features(xmpp, stanza);
     } else if(strequal(name, "stream:error")) {
-            _handle_stream_errors(stream, stanza);
+            _handle_stream_errors(xmpp, stanza);
     } else if(strequal(xmlns, XMPP_NS_SASL)) {
-        if(stream->state != XMPP_STREAM_SASL_AUTHENTICATING) {
+        if(xmpp->state != XMPP_STREAM_SASL_AUTHENTICATING) {
             logger_error("XMPP", "Ignoring suprios SASL stanza %s", name);
         } else {
 			if (strequal(name, "challenge")) {
                 logger_error("XMPP", "Challenge is not supported %s", name);
-				//handle_auth_challenge(stream, stnaza);
+				//handle_auth_challenge(xmpp, stnaza);
             } else if (strequal(name, "success")) {
-				_handle_auth_success(stream, stanza);
+				_handle_auth_success(xmpp, stanza);
             } else if (strequal(name, "failure")) {
-				_handle_auth_failure(stream, stanza);
+				_handle_auth_failure(xmpp, stanza);
             }
         }
     } else if(strequal(xmlns, XMPP_NS_TLS)) {
-        if(stream->state != XMPP_STREAM_TLS_NEGOTIATING) {
+        if(xmpp->state != XMPP_STREAM_TLS_NEGOTIATING) {
             logger_error("XMPP", "Ignoreing spurios %s", name);
         } else {
             if(strequal(name, "proceed")) {
-				//stream->tls = tls_new(stream->fd);
-				//ret = tls_start(stream->tls);
+				//xmpp->tls = tls_new(xmpp->fd);
+				//ret = tls_start(xmpp->tls);
 				//if(ret <= 0) {
 			//		logger_error("XMPP", "Couldn't start TLS, exit now! error: %d", ret);
-		//			tls_free(stream->tls);
+		//			tls_free(xmpp->tls);
 		//			exit(-1);
 		//		}
-		//		_handle_tls_opened(stream); 
+		//		_handle_tls_opened(xmpp); 
             }
         }
     } else {
@@ -517,53 +536,53 @@ static void _handle_stream_stanza(XmppStanza * const stanza, void * const userda
 
 }
 
-static void _handle_tls_opened(XmppStream *stream) 
-{
-    xmpp_stream_set_state(stream, XMPP_STREAM_TSL_OPENED);
-    xmpp_stream_open(stream);
-}
+//static void _handle_tls_opened(Xmpp *xmpp) 
+//{
+//    xmpp_set_state(xmpp, XMPP_STREAM_TSL_OPENED);
+//    xmpp_stream_open(xmpp);
+//}
 
-static int is_buddy(XmppStream *stream, char *jid) 
+static int is_buddy(Xmpp *xmpp, char *jid) 
 {
-    char *bare_jid = xmpp_jid_bare(jid);
-    if(hash_get(stream->roster, bare_jid)){
+    char *bare_jid = jid_bare(jid);
+    if(hash_get(xmpp->roster, bare_jid)){
         return 1;
     }
     return 0;
 }
 
-static void _handle_xmpp_presence(XmppStream *stream, XmppStanza *presence) 
+static void _handle_xmpp_presence(Xmpp *xmpp, Stanza *presence) 
 {
     listNode *node;
     int changed = 0;
     char *from, *type = NULL;
     presence_callback callback;
 
-    type = xmpp_stanza_get_type(presence);
-    from = xmpp_stanza_get_attribute(presence, "from");
+    type = stanza_get_type(presence);
+    from = stanza_get_attribute(presence, "from");
 
     //from self
-    if(xmpp_jid_bare_compare(stream->jid, from)) {
+    if(jid_bare_compare(xmpp->jid, from) == 0) {
         return;
     }
     
-    if(!is_buddy(stream, from)) {
+    if(!is_buddy(xmpp, from)) {
         logger_warning("ROSTER", "%s is not buddy", from);
         return;
     }
 
     if(!type || strcmp(type, "available") ==0 ||
         strcmp(type, "probe") == 0) { //available
-        node = listSearchKey(stream->presences, from);
+        node = listSearchKey(xmpp->presences, from);
         if(!node) {
             logger_info("ROSTER", "%s is available", from);
-            listAddNodeHead(stream->presences, zstrdup(from));
+            listAddNodeHead(xmpp->presences, zstrdup(from));
             changed = 1;
         }
     } else if(strcmp(type, "unavailable") == 0) {
-        node = listSearchKey(stream->presences, from);
+        node = listSearchKey(xmpp->presences, from);
         if(node) {
-            listDelNode(stream->presences, node);
+            listDelNode(xmpp->presences, node);
             changed = 1;
         }
     } else {
@@ -572,72 +591,72 @@ static void _handle_xmpp_presence(XmppStream *stream, XmppStanza *presence)
     
     if(changed) {
         /* callbacks */    
-        listIter *iter = listGetIterator(stream->presence_callbacks, AL_START_HEAD);
+        listIter *iter = listGetIterator(xmpp->presence_callbacks, AL_START_HEAD);
         while((node = listNext(iter))) {
             callback = (presence_callback)node->value;
-            callback(stream, presence);
+            callback(xmpp, presence);
         }
         listReleaseIterator(iter);
     }
 }
 
-static void _handle_xmpp_message(XmppStream *stream, XmppStanza *message) 
+static void _handle_xmpp_message(Xmpp *xmpp, Stanza *message) 
 {
-    char *from = xmpp_stanza_get_attribute(message, "from");
+    char *from = stanza_get_attribute(message, "from");
 
-    if(!is_buddy(stream, from)) {
+    if(!is_buddy(xmpp, from)) {
         logger_warning("ROSTER", "%s is not buddy", from);
         return;
     }
 
     listNode *node;
     message_callback callback;
-    listIter *iter = listGetIterator(stream->message_callbacks, AL_START_HEAD);
+    listIter *iter = listGetIterator(xmpp->message_callbacks, AL_START_HEAD);
     while( (node = listNext(iter)) ) {
         callback = (message_callback)node->value;
-        callback(stream, message);
+        callback(xmpp, message);
     }
     listReleaseIterator(iter);
 }
 
-static void _handle_stream_features(XmppStream *stream, XmppStanza *stanza) 
+static void _handle_stream_features(Xmpp *xmpp, Stanza *stanza) 
 {
-    XmppStanza *mechanisms, *bind, *session, *starttls;
-    mechanisms = xmpp_stanza_get_child_by_name(stanza, "mechanisms");
+    Stanza *mechanisms, *bind, *session, *starttls;
+    mechanisms = stanza_get_child_by_name(stanza, "mechanisms");
     if(mechanisms) {
-        _xmpp_stream_auth(stream, mechanisms);
+        _xmpp_stream_auth(xmpp, mechanisms);
         return;
     }
-    starttls = xmpp_stanza_get_child_by_name(stanza, "starttls");
+    starttls = stanza_get_child_by_name(stanza, "starttls");
     if(starttls) {
-        _xmpp_stream_starttls(stream, starttls);
+        _xmpp_stream_starttls(xmpp, starttls);
         return;
     }
-    bind = xmpp_stanza_get_child_by_name(stanza, "bind");
+    bind = stanza_get_child_by_name(stanza, "bind");
     if(bind) {
-        _xmpp_stream_bind(stream, bind);
+        _xmpp_stream_bind(xmpp, bind);
         return;
     }
-    session = xmpp_stanza_get_child_by_name(stanza, "session");
+    session = stanza_get_child_by_name(stanza, "session");
     if(session) {
-        _xmpp_stream_session(stream);
+        _xmpp_stream_session(xmpp);
         return;
     }
 }
 
-static void _handle_stream_errors(XmppStream *stream, XmppStanza *stanza)
+static void _handle_stream_errors(Xmpp *xmpp, Stanza *stanza)
 {
     logger_error("XMPP", "stream error.");
     //exit(1);
 }
 
-static void _handle_auth_success(XmppStream *stream, XmppStanza *stanza) 
+static void _handle_auth_success(Xmpp *xmpp, Stanza *stanza) 
 {
-    xmpp_stream_set_state(stream, XMPP_STREAM_SASL_AUTHED);
-    xmpp_stream_open(stream);
+    xmpp_set_state(xmpp, XMPP_STREAM_SASL_AUTHED);
+    xmpp_stream_open(xmpp);
 }
 
-static void _handle_auth_failure(XmppStream *stream, XmppStanza *stanza) 
+static void _handle_auth_failure(Xmpp *xmpp, Stanza *stanza) 
 {
     logger_error("SMARTA", "authentication failure.\n");
     logger_error("SMARTA", "smarta name or apikey is wrong.\n");
@@ -645,186 +664,186 @@ static void _handle_auth_failure(XmppStream *stream, XmppStanza *stanza)
     exit(1);
 }
 
-static void _handle_xmpp_iq(XmppStream *stream, XmppStanza *iq) 
+static void _handle_xmpp_iq(Xmpp *xmpp, Stanza *iq) 
 {
     char *id, *xmlns;
-    XmppStanza *query;
+    Stanza *query;
     iq_callback callback;
     
-    id = xmpp_stanza_get_id(iq);
+    id = stanza_get_id(iq);
     if(id) {
-        callback = xmpp_get_iq_id_callback(stream, id);
-        if(callback) callback(stream, iq);
-        xmpp_remove_iq_id_callback(stream, id);
+        callback = xmpp_get_iq_id_callback(xmpp, id);
+        if(callback) callback(xmpp, iq);
+        xmpp_remove_iq_id_callback(xmpp, id);
     }
 
-    query = xmpp_stanza_get_child_by_name(iq, "query");
+    query = stanza_get_child_by_name(iq, "query");
     if(query) {
-        xmlns = xmpp_stanza_get_ns(query);
+        xmlns = stanza_get_ns(query);
         if(xmlns) {
-            callback = xmpp_get_iq_ns_callback(stream, xmlns);
-            if(callback) callback(stream, iq);
+            callback = xmpp_get_iq_ns_callback(xmpp, xmlns);
+            if(callback) callback(xmpp, iq);
         }
     }
 }
 
 static void _handle_stream_end(char *name, void * const userdata) 
 {
-    XmppStream *stream = (XmppStream *)userdata;
+    Xmpp *xmpp = (Xmpp *)userdata;
     //FIXME LATER
-    logger_info("xmpp", "RECV: </stream:stream>");
-    _xmpp_stream_closed(stream);
+    logger_warning("xmpp", "RECV: </stream:stream>");
+    _xmpp_stream_closed(xmpp);
 }
 
-static void _xmpp_stream_closed(XmppStream *stream) 
+static void _xmpp_stream_closed(Xmpp *xmpp) 
 {
     //TODO: WHAT'S HERE    
     //how to handle this??
 }
 
-static void _xmpp_stream_starttls(XmppStream *stream, XmppStanza *tlsFeature) 
+static void _xmpp_stream_starttls(Xmpp *xmpp, Stanza *tlsFeature) 
 {
-    XmppStanza *startTLS;
-    startTLS = _make_starttls(stream);
-    xmpp_stream_set_state(stream, XMPP_STREAM_TLS_NEGOTIATING);
-    xmpp_send_stanza(stream, startTLS);
-    xmpp_stanza_release(startTLS);
+    Stanza *startTLS;
+    startTLS = _make_starttls(xmpp);
+    xmpp_set_state(xmpp, XMPP_STREAM_TLS_NEGOTIATING);
+    xmpp_send_stanza(xmpp, startTLS);
+    stanza_release(startTLS);
 }
 
-static XmppStanza *_make_starttls(XmppStream *stream) 
+static Stanza *_make_starttls(Xmpp *xmpp) 
 {
-    XmppStanza *starttls = xmpp_stanza_tag("starttls");
-    xmpp_stanza_set_ns(starttls, XMPP_NS_TLS);
+    Stanza *starttls = stanza_tag("starttls");
+    stanza_set_ns(starttls, XMPP_NS_TLS);
     return starttls;
 }
 
-static void _xmpp_stream_auth(XmppStream * const stream, XmppStanza *mechanisms) 
+static void _xmpp_stream_auth(Xmpp * const xmpp, Stanza *mechanisms) 
 {
     char *str;
-    XmppStanza *auth, *authdata;
+    Stanza *auth, *authdata;
     auth = _make_sasl_auth("PLAIN");
 
-    str = sasl_plain(stream->jid, stream->pass);
-    authdata = xmpp_stanza_text(str);
+    str = sasl_plain(xmpp->jid, xmpp->pass);
+    authdata = stanza_text(str);
 
     zfree(str);
 
-    xmpp_stanza_add_child(auth, authdata);
-    xmpp_stanza_release(authdata);
+    stanza_add_child(auth, authdata);
+    stanza_release(authdata);
 
-    xmpp_send_stanza(stream, auth);
+    xmpp_send_stanza(xmpp, auth);
 
-    xmpp_stream_set_state(stream, XMPP_STREAM_SASL_AUTHENTICATING);
+    xmpp_set_state(xmpp, XMPP_STREAM_SASL_AUTHENTICATING);
 
-    xmpp_stanza_release(auth);
+    stanza_release(auth);
 }
 
-static XmppStanza *_make_sasl_auth(const char *mechanism) 
+static Stanza *_make_sasl_auth(const char *mechanism) 
 {
-    XmppStanza *auth = xmpp_stanza_new();
-	xmpp_stanza_set_name(auth, "auth");
-	xmpp_stanza_set_ns(auth, XMPP_NS_SASL);
-	xmpp_stanza_set_attribute(auth, "mechanism", mechanism);
+    Stanza *auth = stanza_new();
+	stanza_set_name(auth, "auth");
+	stanza_set_ns(auth, XMPP_NS_SASL);
+	stanza_set_attribute(auth, "mechanism", mechanism);
     return auth;
 }
 
-static void _xmpp_stream_bind(XmppStream *stream, XmppStanza *bind) 
+static void _xmpp_stream_bind(Xmpp *xmpp, Stanza *bind) 
 {
     char *bind_id = "_xmpp_bind";
-    XmppStanza *iq, *res, *text;
+    Stanza *iq, *res, *text;
 
     //iq element
-	iq = xmpp_stanza_tag("iq");
-	xmpp_stanza_set_type(iq, "set");
-	xmpp_stanza_set_id(iq, bind_id);
+	iq = stanza_tag("iq");
+	stanza_set_type(iq, "set");
+	stanza_set_id(iq, bind_id);
 
-    xmpp_add_iq_id_callback(stream, bind_id, _xmpp_stream_bind_callback);
+    xmpp_add_iq_id_callback(xmpp, bind_id, _xmpp_stream_bind_callback);
 
     //bind element
-	bind = xmpp_stanza_copy(bind);
+	bind = stanza_copy(bind);
 
     //res element
-    res = xmpp_stanza_tag("resource");
+    res = stanza_tag("resource");
 
     //res text
-    text = xmpp_stanza_text("smarta");
+    text = stanza_text("smarta");
 
-    xmpp_stanza_add_child(res, text);
-    xmpp_stanza_add_child(bind, res);
-	xmpp_stanza_add_child(iq, bind);
+    stanza_add_child(res, text);
+    stanza_add_child(bind, res);
+	stanza_add_child(iq, bind);
 
 	/* send bind request */
-	xmpp_send_stanza(stream, iq);
+	xmpp_send_stanza(xmpp, iq);
 
-    xmpp_stream_set_state(stream, XMPP_STREAM_BINDING);
+    xmpp_set_state(xmpp, XMPP_STREAM_BINDING);
 
-	xmpp_stanza_release(text);
-	xmpp_stanza_release(res);
-	xmpp_stanza_release(bind);
-	xmpp_stanza_release(iq);
+	stanza_release(text);
+	stanza_release(res);
+	stanza_release(bind);
+	stanza_release(iq);
 }
 
-static void _xmpp_stream_bind_callback(XmppStream *stream, XmppStanza *iq) {
-    xmpp_stream_set_state(stream, XMPP_STREAM_BINDED);
+static void _xmpp_stream_bind_callback(Xmpp *xmpp, Stanza *iq) {
+    xmpp_set_state(xmpp, XMPP_STREAM_BINDED);
     //TODO: parse iq to get bind jid?
-    _xmpp_stream_session(stream);
+    _xmpp_stream_session(xmpp);
 }
 
-static void _xmpp_stream_session(XmppStream *stream) 
+static void _xmpp_stream_session(Xmpp *xmpp) 
 {
     char *session_id = "_xmpp_session";
-    XmppStanza *iq, *session;
+    Stanza *iq, *session;
 
-    iq = xmpp_stanza_new();
+    iq = stanza_new();
 
-    xmpp_stanza_set_name(iq, "iq");
-    xmpp_stanza_set_type(iq, "set");
-    xmpp_stanza_set_id(iq, session_id);
+    stanza_set_name(iq, "iq");
+    stanza_set_type(iq, "set");
+    stanza_set_id(iq, session_id);
 
-    session = xmpp_stanza_new();
-    xmpp_stanza_set_name(session, "session");
-    xmpp_stanza_set_ns(session, XMPP_NS_SESSION);
-    xmpp_stanza_add_child(iq, session);
-    xmpp_stanza_release(session);
+    session = stanza_new();
+    stanza_set_name(session, "session");
+    stanza_set_ns(session, XMPP_NS_SESSION);
+    stanza_add_child(iq, session);
+    stanza_release(session);
 
-    xmpp_add_iq_id_callback(stream, session_id, _xmpp_stream_session_callback);
-    xmpp_send_stanza(stream, iq);
-    xmpp_stream_set_state(stream, XMPP_STREAM_SESSION_NEGOTIATING);
+    xmpp_add_iq_id_callback(xmpp, session_id, _xmpp_stream_session_callback);
+    xmpp_send_stanza(xmpp, iq);
+    xmpp_set_state(xmpp, XMPP_STREAM_SESSION_NEGOTIATING);
 
-    xmpp_stanza_release(iq);
+    stanza_release(iq);
 }
 
-static void _xmpp_stream_session_callback(XmppStream *stream, XmppStanza *iq) 
+static void _xmpp_stream_session_callback(Xmpp *xmpp, Stanza *iq) 
 {
     //not sent presence but roster, OK?
-    _xmpp_stream_roster(stream);
+    _xmpp_stream_roster(xmpp);
 }
 
-static void _xmpp_stream_roster(XmppStream *stream) 
+static void _xmpp_stream_roster(Xmpp *xmpp) 
 {
 
     char *iq_id = "roster1";
-    XmppStanza *iq, *query;
+    Stanza *iq, *query;
 
 	/* create iq stanza for request */
-	iq = xmpp_stanza_tag("iq");
-	xmpp_stanza_set_type(iq, "get");
-	xmpp_stanza_set_id(iq, iq_id);
+	iq = stanza_tag("iq");
+	stanza_set_type(iq, "get");
+	stanza_set_id(iq, iq_id);
 
-	query = xmpp_stanza_tag("query");
-	xmpp_stanza_set_ns(query, XMPP_NS_ROSTER);
+	query = stanza_tag("query");
+	stanza_set_ns(query, XMPP_NS_ROSTER);
 
-	xmpp_stanza_add_child(iq, query);
-	xmpp_stanza_release(query);
+	stanza_add_child(iq, query);
+	stanza_release(query);
 
 	/* set up reply handler */
-	xmpp_add_iq_id_callback(stream, iq_id, _xmpp_stream_roster_callback);
+	xmpp_add_iq_id_callback(xmpp, iq_id, _xmpp_stream_roster_callback);
 
 	/* send out the stanza */
-	xmpp_send_stanza(stream, iq);
+	xmpp_send_stanza(xmpp, iq);
 
 	/* release the stanza */
-	xmpp_stanza_release(iq);
+	stanza_release(iq);
     
 }
 
@@ -844,29 +863,29 @@ void buddy_release(void *p)
     zfree(buddy);
 }
 
-static void _add_buddies_to_roster(XmppStream *stream, XmppStanza *stanza) 
+static void _add_buddies_to_roster(Xmpp *xmpp, Stanza *stanza) 
 {
     Buddy *buddy;
     char *jid, *name, *type, *sub;
-    XmppStanza *query, *item;
-    type = xmpp_stanza_get_type(stanza);
+    Stanza *query, *item;
+    type = stanza_get_type(stanza);
 
     if (strcmp(type, "error") == 0) {
         logger_error("XMPP", "roster query failed.");
         return;
     }
 
-	query = xmpp_stanza_get_child_by_name(stanza, "query");
-	for (item = xmpp_stanza_get_children(query);
-        item; item = xmpp_stanza_get_next(item)) {
+	query = stanza_get_child_by_name(stanza, "query");
+	for (item = stanza_get_children(query);
+        item; item = stanza_get_next(item)) {
         buddy = buddy_new();
-        name = xmpp_stanza_get_attribute(item, "name");
+        name = stanza_get_attribute(item, "name");
         if(name) {
             buddy->name = zstrdup(name);
         }
-        jid = xmpp_stanza_get_attribute(item, "jid");
+        jid = stanza_get_attribute(item, "jid");
         buddy->jid = zstrdup(jid);
-        sub = xmpp_stanza_get_attribute(item, "subscription");
+        sub = stanza_get_attribute(item, "subscription");
         if(strcmp(sub, "both") == 0) {
             buddy->sub = SUB_BOTH;
         } else if(strcmp(sub, "to") == 0) {
@@ -874,29 +893,89 @@ static void _add_buddies_to_roster(XmppStream *stream, XmppStanza *stanza)
         } else if(strcmp(sub, "from") == 0) { 
             buddy->sub = SUB_FROM; 
         }
-        hash_add(stream->roster, buddy->jid, buddy);
+        hash_add(xmpp->roster, buddy->jid, buddy);
     }
 }
 
-static void _xmpp_stream_roster_callback(XmppStream *stream, XmppStanza *stanza) 
+static void _xmpp_stream_roster_callback(Xmpp *xmpp, Stanza *stanza) 
 {
-    XmppStanza *presence, *status, *text;
+    Stanza *presence, *status, *text;
 
-    _add_buddies_to_roster(stream, stanza);
+    _add_buddies_to_roster(xmpp, stanza);
 
-    xmpp_stream_set_state(stream, XMPP_STREAM_ESTABLISHED),
+    xmpp_set_state(xmpp, XMPP_STREAM_ESTABLISHED),
 
-    presence = xmpp_stanza_tag("presence");
+    presence = stanza_tag("presence");
 
-    status = xmpp_stanza_tag("status");
-    text = xmpp_stanza_text("Online");
-    xmpp_stanza_add_child(status, text);
+    status = stanza_tag("status");
+    text = stanza_text("Online");
+    stanza_add_child(status, text);
 
-    xmpp_stanza_add_child(presence, status);
+    stanza_add_child(presence, status);
 
-    xmpp_send_stanza(stream, presence);
-    xmpp_stanza_release(presence);
+    xmpp_send_stanza(xmpp, presence);
+    stanza_release(presence);
 }
+
+static void _xmpp_heartbeat_handler(Xmpp *xmpp, 
+    XmppStreamState state)
+{
+    if(state == XMPP_STREAM_DISCONNECTED) {
+
+        if(xmpp->heartbeat) aeDeleteTimeEvent(xmpp->el, xmpp->heartbeat);
+
+        if(xmpp->heartbeat_timeout) aeDeleteTimeEvent(xmpp->el, xmpp->heartbeat_timeout);
+
+    } else if(state == XMPP_STREAM_ESTABLISHED) {
+		//heartbeat	
+        if(xmpp->heartbeat)  aeDeleteTimeEvent(xmpp->el, xmpp->heartbeat);
+
+        if(xmpp->heartbeat_timeout) aeDeleteTimeEvent(xmpp->el, xmpp->heartbeat_timeout);
+
+        xmpp->heartbeat = aeCreateTimeEvent(xmpp->el, HEARTBEAT, xmpp_heartbeat, xmpp, NULL);
+    } else {
+        //IGNORE
+    }
+
+}
+
+static int xmpp_heartbeat(aeEventLoop *el, long long id, void *clientData)
+{
+    char *ping_id;
+    Xmpp *xmpp = (Xmpp *)clientData;
+
+    ping_id = xmpp_send_ping(xmpp);
+
+    xmpp_add_iq_id_callback(xmpp, ping_id, xmpp_heartbeat_callback);
+
+    xmpp->heartbeat_timeout = aeCreateTimeEvent(el, 
+        HEARTBEAT_TIMEOUT, xmpp_heartbeat_timeout, xmpp, NULL);
+
+    sdsfree(ping_id);
+
+    return HEARTBEAT;
+}
+
+static int xmpp_heartbeat_timeout(aeEventLoop *el, long long id, void *clientData)
+{
+    Xmpp *xmpp = (Xmpp *)clientData;
+    long timeout = (random() % 180) * 1000;
+    logger_info("XMPP", "heartbeat timeout.");
+	if(xmpp->state == XMPP_STREAM_ESTABLISHED) { //confirm established?
+		xmpp_disconnect(xmpp);
+		logger_info("XMPP", "reconnect after %d seconds", timeout/1000);
+		aeCreateTimeEvent(el, timeout, xmpp_reconnect, xmpp, NULL);
+	}
+    return AE_NOMORE;
+}
+
+static void xmpp_heartbeat_callback(Xmpp *xmpp, Stanza *stanza)
+{
+    logger_debug("XMPP", "pong received");
+    if(xmpp->heartbeat_timeout != 0) {
+        aeDeleteTimeEvent(xmpp->el, xmpp->heartbeat_timeout);
+    }
+} 
 
 static void _remove_callback_from_list(list *callbacks, void *callback) 
 {
@@ -921,6 +1000,4 @@ static int strmatch(void *s1, void *s2)
         return 0;
     }
 }
-
-
 

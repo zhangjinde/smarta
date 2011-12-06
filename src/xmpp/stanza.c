@@ -1,14 +1,5 @@
-/* stanza.c - XMPP stanza object and utilities
-**
-** Copyright (C) 2005-2009 Collecta, Inc. 
-**
-** This software is provided AS-IS with no warranty, either express
-** or implied.
-**
-** This software is distributed under license and may not be copied,
-** modified or distributed except as expressly authorized under the
-** terms of the license contained in the file LICENSE.txt in this
-** distribution.
+/* 
+** stanza.c - XMPP stanza object
 */
 
 #include <stdio.h>
@@ -20,22 +11,15 @@
 #include "logger.h"
 #include "zmalloc.h"
 
-/** Create a stanza object.
- *  This function allocates and initializes and blank stanza object.
- *  The stanza will have a reference count of one, so the caller does not
- *  need to clone it.
- *
- *  @return a stanza object
- *
- *  @ingroup Stanza
- */
-XmppStanza *xmpp_stanza_new() {
-    XmppStanza *stanza;
+Stanza *stanza_new()
+{
 
-    stanza = zmalloc(sizeof(XmppStanza));
+    Stanza *stanza;
+
+    stanza = zmalloc(sizeof(Stanza));
 
 	stanza->ref = 1;
-	stanza->type = XMPP_STANZA_UNKNOWN;
+	stanza->type = STANZA_UNKNOWN;
 	stanza->prev = NULL;
 	stanza->next = NULL;
 	stanza->children = NULL;
@@ -46,65 +30,44 @@ XmppStanza *xmpp_stanza_new() {
     return stanza; 
 }
 
-XmppStanza *xmpp_stanza_tag(const char *name) 
+Stanza *stanza_tag(const char *name) 
 {
-    XmppStanza *stanza = xmpp_stanza_new();
-    stanza->type = XMPP_STANZA_TAG;
+    Stanza *stanza = stanza_new();
+    stanza->type = STANZA_TAG;
     stanza->data = zstrdup(name);
     return stanza;
 }
 
-XmppStanza *xmpp_stanza_text(const char *text) 
+Stanza *stanza_text(const char *text) 
 {
-    XmppStanza *stanza = xmpp_stanza_new();
-    stanza->type = XMPP_STANZA_TEXT;
+    Stanza *stanza = stanza_new();
+    stanza->type = STANZA_TEXT;
     stanza->data = zstrdup(text);
     return stanza;
 }
 
-XmppStanza *xmpp_stanza_cdata(const char *data) 
+Stanza *stanza_cdata(const char *data) 
 {
-    XmppStanza *stanza = xmpp_stanza_new();
-    stanza->type = XMPP_STANZA_CDATA;
+    Stanza *stanza = stanza_new();
+    stanza->type = STANZA_CDATA;
     stanza->data = zstrdup(data);
     return stanza;
 }
 
-/** Clone a stanza object.
- *  This function increments the reference count of the stanza object.
- *  
- *  @param stanza a Strophe stanza object
- *
- *  @return the stanza object with it's reference count incremented
- *
- *  @ingroup Stanza
- */
-XmppStanza *xmpp_stanza_clone(XmppStanza *  stanza) {
+Stanza *stanza_clone(Stanza *  stanza) {
 
     stanza->ref++;
 
     return stanza;
 }
 
-/** Copy a stanza and its children.
- *  This function copies a stanza along with all its children and returns
- *  the new stanza and children with a reference count of 1.  The returned
- *  stanza will have no parent and no siblings.  This function is useful
- *  for extracting a child stanza for inclusion in another tree.
- *
- *  @param stanza a Strophe stanza object
- *
- *  @return a new Strophe stanza object
- *
- *  @ingroup Stanza
- */
-XmppStanza *xmpp_stanza_copy(XmppStanza * stanza) {
-    XmppStanza *copy, *child, *copychild, *tail;
+Stanza *stanza_copy(Stanza * stanza) {
+    Stanza *copy, *child, *copychild, *tail;
     hash_iterator_t *iter;
     const char *key;
     void *val;
 
-    copy = xmpp_stanza_new();
+    copy = stanza_new();
 
     copy->type = stanza->type;
 
@@ -124,7 +87,7 @@ XmppStanza *xmpp_stanza_copy(XmppStanza * stanza) {
 
     tail = copy->children;
     for (child = stanza->children; child; child = child->next) {
-        copychild = xmpp_stanza_copy(child);
+        copychild = stanza_copy(child);
         copychild->parent = copy;
 
         if (tail) {
@@ -140,19 +103,9 @@ XmppStanza *xmpp_stanza_copy(XmppStanza * stanza) {
 
 }
 
-/** Release a stanza object and all of its children.
- *  This function releases a stanza object and potentially all of its 
- *  children, which may cause the object(s) to be freed.
- *
- *  @param stanza a Strophe stanza object
- *
- *  @return TRUE if the object was freed and FALSE otherwise
- *
- *  @ingroup Stanza
- */
-int xmpp_stanza_release(XmppStanza *stanza) {
+int stanza_release(Stanza *stanza) {
     int released = 0;
-    XmppStanza *child, *tchild;
+    Stanza *child, *tchild;
     
     /* release stanza */
     if (stanza->ref > 1) {
@@ -163,7 +116,7 @@ int xmpp_stanza_release(XmppStanza *stanza) {
         while (child) {
             tchild = child;
             child = child->next;
-            xmpp_stanza_release(tchild);
+            stanza_release(tchild);
         }
 
         if (stanza->attributes) {
@@ -179,28 +132,12 @@ int xmpp_stanza_release(XmppStanza *stanza) {
     return released;
 }
 
-/** Determine if a stanza is a text node.
- *  
- *  @param stanza a Strophe stanza object
- *
- *  @return TRUE if the stanza is a text node, FALSE otherwise
- * 
- *  @ingroup Stanza
- */
-int xmpp_stanza_is_text(XmppStanza *stanza) {
-    return (stanza && stanza->type == XMPP_STANZA_TEXT);
+int stanza_is_text(Stanza *stanza) {
+    return (stanza && stanza->type == STANZA_TEXT);
 }
 
-/** Determine if a stanza is a tag node.
- *  
- *  @param stanza a Strophe stanza object
- *
- *  @return TRUE if the stanza is a tag node, FALSE otherwise
- * 
- *  @ingroup Stanza
- */
-int xmpp_stanza_is_tag(XmppStanza *stanza) {
-    return (stanza && stanza->type == XMPP_STANZA_TAG);
+int stanza_is_tag(Stanza *stanza) {
+    return (stanza && stanza->type == STANZA_TAG);
 }
 
 /* small helper function */
@@ -221,41 +158,36 @@ static inline void _render_update(
     }
 }
 
-/* always returns number of bytes written or that would have been
- * written if the buffer was large enough
- * return values < 0 indicate some error occured,
- * and return values > buflen indicate buffer was not large enough
- */
-static int _render_stanza_recursive(XmppStanza *stanza,
+static int _render_stanza_recursive(Stanza *stanza,
 			     char *buf, size_t buflen) {
     char *ptr = buf;
     size_t left = buflen;
     int ret, written;
-    XmppStanza *child;
+    Stanza *child;
     hash_iterator_t *iter;
     const char *key;
 
     written = 0;
 
-    if (stanza->type == XMPP_STANZA_UNKNOWN) return XMPP_EINVOP;
+    if (stanza->type == STANZA_UNKNOWN) return -2;
 
-    if (stanza->type == XMPP_STANZA_TEXT) {
-        if (!stanza->data) return XMPP_EINVOP;
+    if (stanza->type == STANZA_TEXT) {
+        if (!stanza->data) return -2;
         ret = snprintf(ptr, left, "%s", stanza->data);
-        if (ret < 0) return XMPP_EMEM;
+        if (ret < 0) return -1;
         _render_update(&written, buflen, ret, &left, &ptr);
-    } else if (stanza->type == XMPP_STANZA_CDATA) {
-        if (!stanza->data) return XMPP_EINVOP;
+    } else if (stanza->type == STANZA_CDATA) {
+        if (!stanza->data) return -2;
         ret = snprintf(ptr, left, "<![CDATA[%s]]>", stanza->data);
-        if (ret < 0) return XMPP_EMEM;
+        if (ret < 0) return -1;
         _render_update(&written, buflen, ret, &left, &ptr);
-    } else if (stanza->type == XMPP_STANZA_TAG) {
+    } else if (stanza->type == STANZA_TAG) {
         if (!stanza->data) { 
-            return XMPP_EINVOP; 
+            return -2; 
         }
         /* write begining of tag and attributes */
         ret = snprintf(ptr, left, "<%s", stanza->data);
-        if (ret < 0) return XMPP_EMEM;
+        if (ret < 0) return -1;
         _render_update(&written, buflen, ret, &left, &ptr);
 
         if (stanza->attributes && hash_num_keys(stanza->attributes) > 0) {
@@ -263,7 +195,7 @@ static int _render_stanza_recursive(XmppStanza *stanza,
             while ((key = hash_iter_next(iter))) {
             ret = snprintf(ptr, left, " %s=\"%s\"", key,
                        (char *)hash_get(stanza->attributes, key));
-            if (ret < 0) return XMPP_EMEM;
+            if (ret < 0) return -1;
             _render_update(&written, buflen, ret, &left, &ptr);
             }
             hash_iter_release(iter);
@@ -272,14 +204,14 @@ static int _render_stanza_recursive(XmppStanza *stanza,
         if (!stanza->children) {
             /* write end if singleton tag */
             ret = snprintf(ptr, left, "/>");
-            if (ret < 0) return XMPP_EMEM;
+            if (ret < 0) return -1;
             _render_update(&written, buflen, ret, &left, &ptr);
         } else {
             /* this stanza has child stanzas */
 
             /* write end of start tag */
             ret = snprintf(ptr, left, ">");
-            if (ret < 0) return XMPP_EMEM;
+            if (ret < 0) return -1;
             _render_update(&written, buflen, ret, &left, &ptr);
             
             /* iterate and recurse over child stanzas */
@@ -295,35 +227,20 @@ static int _render_stanza_recursive(XmppStanza *stanza,
 
             /* write end tag */
             ret = snprintf(ptr, left, "</%s>", stanza->data);
-            if (ret < 0) return XMPP_EMEM;
+            if (ret < 0) return -1;
             
             _render_update(&written, buflen, ret, &left, &ptr);
         }
-    } else { /* stanza->type == XMPP_STANZA_UNKNOWN*/
+    } else { /* stanza->type == STANZA_UNKNOWN*/
         logger_fatal("STANZA", "unknown xml stanza");
-        return XMPP_EINT;
+        return -3;
     }
 
     return written;
 }
 
-/** Render a stanza object to text.
- *  This function renders a given stanza object, along with its
- *  children, to text.  The text is returned in an allocated,
- *  null-terminated buffer.  It starts by allocating a 1024 byte buffer
- *  and reallocates more memory if that is not large enough.
- *
- *  @param stanza a Strophe stanza object
- *  @param buf a reference to a string pointer
- *  @param buflen a reference to a size_t
- *
- *  @return 0 on success (XMPP_OK), and a number less than 0 on failure
- *      (MPP_EINVOP)
- *
- *  @ingroup Stanza
- */
-int xmpp_stanza_to_text(
-    XmppStanza * stanza,
+int stanza_to_text(
+    Stanza * stanza,
     char **buf,
     size_t *buflen) {
 
@@ -344,7 +261,7 @@ int xmpp_stanza_to_text(
         buffer = tmp;
 
         ret = _render_stanza_recursive(stanza, buffer, length);
-        if (ret > length - 1) return XMPP_EMEM;
+        if (ret > length - 1) return -1;
     }
     
     buffer[length - 1] = 0;
@@ -352,76 +269,35 @@ int xmpp_stanza_to_text(
     *buf = buffer;
     *buflen = ret;
 
-    return XMPP_OK;
+    return 0;
 }
 
-/** Set the name of a stanza.
- *  
- *  @param stanza a Strophe stanza object
- *  @param name a string with the name of the stanza
- *
- *  @return XMPP_OK on success, a number less than 0 on failure (
- *      XMPP_EINVOP)
- *
- *  @ingroup Stanza
- */
-int xmpp_stanza_set_name(XmppStanza *stanza, const char *name) {
-    if (stanza->type == XMPP_STANZA_UNKNOWN) stanza->type = XMPP_STANZA_TAG;
-    if (stanza->type != XMPP_STANZA_TAG) return XMPP_EINVOP;
+int stanza_set_name(Stanza *stanza, const char *name) {
+    if (stanza->type == STANZA_UNKNOWN) stanza->type = STANZA_TAG;
+    if (stanza->type != STANZA_TAG) return -2;
 
     if (stanza->data) zfree(stanza->data);
 
     stanza->data = zstrdup(name);
 
-    return XMPP_OK;
+    return 0;
 }
 
-/** Get the stanza name.
- *  This function returns a pointer to the stanza name.  If the caller needs
- *  to store this data, it must make a copy.
- *
- *  @param stanza a Strophe stanza object
- *
- *  @return a string with the stanza name
- *
- *  @ingroup Stanza
- */
-char *xmpp_stanza_get_name(XmppStanza *stanza) {
-    if (stanza->type == XMPP_STANZA_TEXT) return NULL;
+char *stanza_get_name(Stanza *stanza) 
+{
+    if (stanza->type == STANZA_TEXT) return NULL;
     return stanza->data;
 }
 
-/** Count the attributes in a stanza object.
- *
- *  @param stanza a Strophe stanza object
- *
- *  @return the number of attributes for the stanza object
- *
- *  @ingroup Stanza
- */
-int xmpp_stanza_get_attribute_count(XmppStanza *stanza) {
+int stanza_get_attribute_count(Stanza *stanza) 
+{
     if (stanza->attributes == NULL) {
         return 0;
     }
-
     return hash_num_keys(stanza->attributes);
 }
 
-/** Get all attributes for a stanza object.
- *  This function populates the array with attributes from the stanza.  The
- *  attr array will be in the format:  attr[i] = attribute name, 
- *  attr[i+1] = attribute value.
- *
- *  @param stanza a Strophe stanza object
- *  @param attr the string array to populate
- *  @param attrlen the size of the array
- *
- *  @return the number of slots used in the array, which will be 2 times the 
- *      number of attributes in the stanza
- *
- *  @ingroup Stanza
- */
-int xmpp_stanza_get_attributes(XmppStanza * const stanza,
+int stanza_get_attributes(Stanza * const stanza,
 			      const char **attr, int attrlen) {
     hash_iterator_t *iter;
     const char *key;
@@ -451,22 +327,12 @@ int xmpp_stanza_get_attributes(XmppStanza * const stanza,
     return num;
 }
 
-/** Set an attribute for a stanza object.
- *  
- *  @param stanza a Strophe stanza object
- *  @param key a string with the attribute name
- *  @param value a string with the attribute value
- *
- *  @return XMPP_OK (0) on success or a number less than 0 on failure
- *
- *  @ingroup Stanza
- */
-int xmpp_stanza_set_attribute(XmppStanza *stanza,
+int stanza_set_attribute(Stanza *stanza,
 			     const char *key,
 			     const char *value) {
     char *val;
 
-    if (stanza->type != XMPP_STANZA_TAG) return XMPP_EINVOP;
+    if (stanza->type != STANZA_TAG) return -2;
 
     if (!stanza->attributes) {
         stanza->attributes = hash_new(8, zfree);
@@ -476,40 +342,19 @@ int xmpp_stanza_set_attribute(XmppStanza *stanza,
 
     hash_add(stanza->attributes, key, val);
 
-    return XMPP_OK;
+    return 0;
 }
 
-/** Set the stanza namespace.
- *  This is a convenience function equivalent to calling:
- *  xmpp_stanza_set_attribute(stanza, "xmlns", ns);
- *
- *  @param stanza a Strophe stanza object
- *  @param ns a string with the namespace
- *
- *  @return XMPP_OK (0) on success or a number less than 0 on failure
- *
- *  @ingroup Stanza
- */
-int xmpp_stanza_set_ns(XmppStanza *stanza, char *ns) {
-    return xmpp_stanza_set_attribute(stanza, "xmlns", ns);
+int stanza_set_ns(Stanza *stanza, char *ns) {
+    return stanza_set_attribute(stanza, "xmlns", ns);
 }
 
-/** Add a child stanza to a stanza object.
- *  This function clones the child and appends it to the stanza object's
- *  children.
- *
- *  @param stanza a Strophe stanza object
- *  @param child the child stanza object
- *
- *  @return XMPP_OK (0) on success or a number less than 0 on failure
- *
- *  @ingroup Stanza
- */
-int xmpp_stanza_add_child(XmppStanza *stanza, XmppStanza *child) {
-    XmppStanza *s;
+void stanza_add_child(Stanza *stanza, Stanza *child) 
+{
+	Stanza *s;
 
     /* get a reference to the child */
-    xmpp_stanza_clone(child);
+    stanza_clone(child);
 
     child->parent = stanza;
 
@@ -521,27 +366,12 @@ int xmpp_stanza_add_child(XmppStanza *stanza, XmppStanza *child) {
         s->next = child;
         child->prev = s;
     }
-
-    return XMPP_OK;
 }
 
-/** Set the text data for a text stanza.
- *  This function copies the text given and sets the stanza object's text to
- *  it.  Attempting to use this function on a stanza that has a name will
- *  fail with XMPP_EINVOP.  This function takes the text as a null-terminated
- *  string.
- *
- *  @param stanza a Strophe stanza object
- *  @param text a string with the text
- *
- *  @return XMPP_OK (0) on success or a number less than zero on failure
- *
- *  @ingroup Stanza
- */
-int xmpp_stanza_set_text(XmppStanza *stanza, char *text) {
+int stanza_set_text(Stanza *stanza, char *text) {
     
-    if(stanza->type == XMPP_STANZA_UNKNOWN) stanza->type = XMPP_STANZA_TEXT;
-    if (stanza->type != XMPP_STANZA_TEXT) return XMPP_EINVOP;
+    if(stanza->type == STANZA_UNKNOWN) stanza->type = STANZA_TEXT;
+    if (stanza->type != STANZA_TEXT) return -2;
 
     if (stanza->data) { 
         zfree(stanza->data);
@@ -549,29 +379,15 @@ int xmpp_stanza_set_text(XmppStanza *stanza, char *text) {
 
     stanza->data = zstrdup(text);
 
-    return XMPP_OK;
+    return 0;
 }
 
-/** Set the text data for a text stanza.
- *  This function copies the text given and sets teh stanza object's text to
- *  it.  Attempting to use this function on a stanza that has a name will
- *  fail with XMPP_EINVOP.  This function takes the text as buffer and a length
- *  as opposed to a null-terminated string.
- *
- *  @param stanza a Strophe stanza object
- *  @param text a buffer with the text
- *  @param size the length of the text
- *
- *  @return XMPP_OK (0) on success and a number less than 0 on failure
- * 
- *  @ingroup Stanza
- */
-int xmpp_stanza_set_text_with_size(XmppStanza *stanza,
+int stanza_set_text_with_size(Stanza *stanza,
 				  const char *text,
 				  size_t size)
 {
-    if(stanza->type == XMPP_STANZA_UNKNOWN) stanza->type = XMPP_STANZA_TEXT;
-    if (stanza->type != XMPP_STANZA_TEXT) return XMPP_EINVOP;
+    if(stanza->type == STANZA_UNKNOWN) stanza->type = STANZA_TEXT;
+    if (stanza->type != STANZA_TEXT) return -2;
 
     if (stanza->data) zfree(stanza->data);
     stanza->data = zmalloc(size + 1);
@@ -579,43 +395,21 @@ int xmpp_stanza_set_text_with_size(XmppStanza *stanza,
     memcpy(stanza->data, text, size);
     stanza->data[size] = 0;
 
-    return XMPP_OK;
+    return 0;
 }
 
-/** Get the 'id' attribute of the stanza object.
- *  This is a convenience function equivalent to:
- *  xmpp_stanza_get_attribute(stanza, "id");
- *
- *  @param stanza a Strophe stanza object
- *
- *  @return a string with the 'id' attribute value
- *
- *  @ingroup Stanza
- */
-char *xmpp_stanza_get_id(XmppStanza *stanza)
+char *stanza_get_id(Stanza *stanza)
 {
-    if (stanza->type != XMPP_STANZA_TAG)
-	return NULL;
+    if (stanza->type != STANZA_TAG) return NULL;
 
-    if (!stanza->attributes)
-	return NULL;
+    if (!stanza->attributes) return NULL;
 
     return (char *)hash_get(stanza->attributes, "id");
 }
 
-/** Get the namespace attribute of the stanza object.
- *  This is a convenience function equivalent to:
- *  xmpp_stanza_get_attribute(stanza, "xmlns");
- *
- *  @param stanza a Strophe stanza object
- *
- *  @return a string with the 'xmlns' attribute value
- *
- *  @ingroup Stanza
- */
-char *xmpp_stanza_get_ns(XmppStanza *stanza)
+char *stanza_get_ns(Stanza *stanza)
 {
-    if (stanza->type != XMPP_STANZA_TAG)
+    if (stanza->type != STANZA_TAG)
 	return NULL;
 
     if (!stanza->attributes)
@@ -624,19 +418,9 @@ char *xmpp_stanza_get_ns(XmppStanza *stanza)
     return (char *)hash_get(stanza->attributes, "xmlns");
 }
 
-/** Get the 'type' attribute of the stanza object.
- *  This is a convenience function equivalent to:
- *  xmpp_stanza_get_attribute(stanza, "type");
- *
- *  @param stanza a Strophe stanza object
- *
- *  @return a string with the 'type' attribute value
- *
- *  @ingroup Stanza
- */
-char *xmpp_stanza_get_type(XmppStanza *stanza)
+char *stanza_get_type(Stanza *stanza)
 {
-    if (stanza->type != XMPP_STANZA_TAG)
+    if (stanza->type != STANZA_TAG)
 	return NULL;
     
     if (!stanza->attributes)
@@ -645,102 +429,49 @@ char *xmpp_stanza_get_type(XmppStanza *stanza)
     return (char *)hash_get(stanza->attributes, "type");
 }
 
-/** Get the first child of stanza with name.
- *  This function searches all the immediate children of stanza for a child
- *  stanza that matches the name.  The first matching child is returned.
- *  
- *  @param stanza a Strophe stanza object
- *  @param name a string with the name to match
- *
- *  @return the matching child stanza object or NULL if no match was found
- *
- *  @ingroup Stanza
- */
-XmppStanza *xmpp_stanza_get_child_by_name(XmppStanza *stanza, char *name)
+Stanza *stanza_get_child_by_name(Stanza *stanza, char *name)
 {
-    XmppStanza *child;
+    Stanza *child;
     
     for (child = stanza->children; child; child = child->next) {
-	if (child->type == XMPP_STANZA_TAG &&
-	    (strcmp(name, xmpp_stanza_get_name(child)) == 0))
+	if (child->type == STANZA_TAG &&
+	    (strcmp(name, stanza_get_name(child)) == 0))
 	    break;
     }
 
     return child;
 }
 
-/** Get the first child of a stanza with a given namespace.
- *  This function searches all the immediate children of a stanza for a child
- *  stanza that matches the namespace provided.  The first matching child
- *  is returned.
- * 
- *  @param stanza a Strophe stanza object
- *  @param ns a string with the namespace to match
- *
- *  @return the matching child stanza object or NULL if no match was found
- *
- *  @ingroup Stanza
- */
-XmppStanza *xmpp_stanza_get_child_by_ns(XmppStanza *stanza, char *ns)
+Stanza *stanza_get_child_by_ns(Stanza *stanza, char *ns)
 {
-    XmppStanza *child;
+    Stanza *child;
 
     for (child = stanza->children; child; child = child->next) {
-	if (xmpp_stanza_get_ns(child) &&
-	    strcmp(ns, xmpp_stanza_get_ns(child)) == 0)
+	if (stanza_get_ns(child) &&
+	    strcmp(ns, stanza_get_ns(child)) == 0)
 	    break;
     }
     
     return child;
 }
 
-/** Get the list of children.
- *  This function returns the first child of the stanza object.  The rest
- *  of the children can be obtained by calling xmpp_stanza_get_next() to
- *  iterate over the siblings.
- *
- *  @param stanza a Strophe stanza object
- *
- *  @return the first child stanza or NULL if there are no children
- *
- *  @ingroup Stanza
- */
-XmppStanza *xmpp_stanza_get_children(XmppStanza *stanza) 
+Stanza *stanza_get_children(Stanza *stanza) 
 {
     return stanza->children;
 }
 
-/** Get the next sibling of a stanza.
- *  
- *  @param stanza a Strophe stanza object
- *
- *  @return the next sibling stanza or NULL if there are no more siblings
- *
- *  @ingroup Stanza
- */
-XmppStanza *xmpp_stanza_get_next(XmppStanza *stanza)
+Stanza *stanza_get_next(Stanza *stanza)
 {
     return stanza->next;
 }
 
-/** Get the text data for a text stanza.
- *  This function copies the text data from a stanza and returns the new
- *  allocated string.  The caller is responsible for freeing this string
- *  with free().
- *
- *  @param stanza a Strophe stanza object
- *
- *  @return an allocated string with the text data
- *
- *  @ingroup Stanza
- */
-char *xmpp_stanza_get_text(XmppStanza *stanza)
+char *stanza_get_text(Stanza *stanza)
 {
     size_t len, clen;
-    XmppStanza *child;
+    Stanza *child;
     char *text;
 
-    if (stanza->type == XMPP_STANZA_TEXT) {
+    if (stanza->type == STANZA_TEXT) {
 	if (stanza->data)
 	    return zstrdup(stanza->data);
 	else
@@ -749,7 +480,7 @@ char *xmpp_stanza_get_text(XmppStanza *stanza)
 
     len = 0;
     for (child = stanza->children; child; child = child->next)
-	if (child->type == XMPP_STANZA_TEXT)
+	if (child->type == STANZA_TEXT)
 	    len += strlen(child->data);
 
     if (len == 0) return NULL;
@@ -759,7 +490,7 @@ char *xmpp_stanza_get_text(XmppStanza *stanza)
 
     len = 0;
     for (child = stanza->children; child; child = child->next)
-	if (child->type == XMPP_STANZA_TEXT) {
+	if (child->type == STANZA_TEXT) {
 	    clen = strlen(child->data);
 	    memcpy(&text[len], child->data, clen);
 	    len += clen;
@@ -770,83 +501,35 @@ char *xmpp_stanza_get_text(XmppStanza *stanza)
     return text;
 }
 
-/** Get the text data pointer for a text stanza.
- *  This function copies returns the raw pointer to the text data in the
- *  stanza.  This should only be used in very special cases where the 
- *  caller needs to translate the datatype as this will save a double
- *  allocation.  The caller should not hold onto this pointer, and is
- *  responsible for allocating a copy if it needs one.
- *
- *  @param stanza a Strophe stanza object
- *
- *  @return an string pointer to the data or NULL
- *
- *  @ingroup Stanza
- */
-char *xmpp_stanza_get_text_ptr(XmppStanza *stanza)
+char *stanza_get_text_ptr(Stanza *stanza)
 {
-    if (stanza->type == XMPP_STANZA_TEXT)
+    if (stanza->type == STANZA_TEXT)
 	return stanza->data;
     return NULL;
 }
 
-/** Set the 'id' attribute of a stanza.
- *
- *  This is a convenience function for:
- *  xmpp_stanza_set_attribute(stanza, 'id', id);
- *
- *  @param stanza a Strophe stanza object
- *  @param id a string containing the 'id' value
- *
- *  @return XMPP_OK (0) on success or a number less than 0 on failure
- *
- *  @ingroup Stanza
- */
-int xmpp_stanza_set_id(XmppStanza *stanza, char *id) {
-    return xmpp_stanza_set_attribute(stanza, "id", id);
+int stanza_set_id(Stanza *stanza, char *id) 
+{
+    return stanza_set_attribute(stanza, "id", id);
 }
 
-/** Set the 'type' attribute of a stanza.
- *  This is a convenience function for:
- *  xmpp_stanza_set_attribute(stanza, 'type', type);
- *
- *  @param stanza a Strophe stanza object
- *  @param type a string containing the 'type' value
- *
- *  @return XMPP_OK (0) on success or a number less than 0 on failure
- *
- *  @ingroup Stanza
- */
-int xmpp_stanza_set_type(XmppStanza *stanza,
+int stanza_set_type(Stanza *stanza,
 			char * const type)
 {
-    return xmpp_stanza_set_attribute(stanza, "type", type);
+    return stanza_set_attribute(stanza, "type", type);
 }
 
-/** Get an attribute from a stanza.
- *  This function returns a pointer to the attribute value.  If the caller
- *  wishes to save this value it must make its own copy.
- *
- *  @param stanza a Strophe stanza object
- *  @param name a string containing attribute name
- *
- *  @return a string with the attribute value or NULL on an error
- *
- *  @ingroup Stanza
- */
-char *xmpp_stanza_get_attribute(XmppStanza *stanza,
+char *stanza_get_attribute(Stanza *stanza,
 				const char *name)
 {
-    if (stanza->type != XMPP_STANZA_TAG)
-	return NULL;
+    if (stanza->type != STANZA_TAG) return NULL;
     
-    if (!stanza->attributes)
-	return NULL;
+    if (!stanza->attributes) return NULL;
 
     return hash_get(stanza->attributes, name);
 }
 
-char *xmpp_attrs_get_value(char **attrs, char *name) 
+char *stanza_attrs_get_value(char **attrs, char *name) 
 {
     int i;
 
@@ -860,3 +543,4 @@ char *xmpp_attrs_get_value(char **attrs, char *name)
 
     return NULL;
 }
+
