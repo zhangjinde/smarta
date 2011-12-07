@@ -45,9 +45,6 @@
 #define IN_SENSOR_BLOCK 2
 #define IN_COMMAND_BLOCK 3
 
-#define HEARTBEAT 120000
-#define HEARTBEAT_TIMEOUT 20000
-
 Smarta smarta;
 
 extern int log_level;
@@ -68,6 +65,8 @@ static void smarta_masterd_start(void);
 
 static void smarta_proxy_start(void);
 
+static void smarta_presence_update();
+
 static void sched_checks(void);
 
 static char *cn(int status);
@@ -78,26 +77,17 @@ static int smarta_cron(aeEventLoop *eventLoop,
 static int smarta_system_status(aeEventLoop *eventLoop,
     long long id, void *clientData);
 
-static int smarta_heartbeat(aeEventLoop *el, 
-    long long id, void *clientData); 
-
-static int smarta_heartbeat_timeout(aeEventLoop *el, 
-    long long id, void *clientData);
-
-static void smarta_heartbeat_callback(XmppStream *stream, 
-    XmppStanza *stanza);
-
-static void conn_handler(XmppStream *stream, 
+static void conn_handler(Xmpp *xmpp, 
     XmppStreamState state); 
 
-static void presence_handler(XmppStream *stream,
-    XmppStanza *presence);
+static void presence_handler(Xmpp *xmpp,
+    Stanza *presence);
 
-static void command_handler(XmppStream *stream, 
-    XmppStanza *stanza); 
+static void command_handler(Xmpp *xmpp, 
+    Stanza *stanza); 
 
-static void roster_handler(XmppStream *stream,
-    XmppStanza *iq);
+static void roster_handler(Xmpp *xmpp,
+    Stanza *iq);
 
 static void handle_check_result(aeEventLoop *el,
     int fd, void *privdata, int mask);
@@ -105,7 +95,7 @@ static void handle_check_result(aeEventLoop *el,
 static int check_sensor(struct aeEventLoop *el,
     long long id, void *clientdata);
 
-static void smarta_emit_event(XmppStream *stream,
+static void smarta_emit_event(Xmpp *xmpp,
      Event *event);
 
 #ifndef __CYGWIN__
@@ -233,7 +223,7 @@ static void smarta_config(char *filename) {
             } else {
                 smarta.name = sdscat(sdsnew(argv[1]), "@nodebus.com");
             }
-            smarta.server = xmpp_jid_domain(smarta.name);
+            smarta.server = jid_domain(smarta.name);
         } else if ((state == IN_SMARTA_BLOCK) && !strcasecmp(argv[0],"server") && argc == 2) {
             if(smarta.server) {
                 zfree(smarta.server);
@@ -448,32 +438,33 @@ int main(int argc, char **argv) {
 
 static void smarta_xmpp_connect(void) 
 {
-    /* create stream */
-    smarta.stream = xmpp_stream_new();
-    xmpp_stream_set_jid(smarta.stream, smarta.name);
-    xmpp_stream_set_pass(smarta.stream, smarta.apikey);
+    /* create xmpp */
+	Xmpp *xmpp = NULL;
+    smarta.xmpp = xmpp = xmpp_new(smarta.el);
+    xmpp_set_jid(xmpp, smarta.name);
+    xmpp_set_pass(xmpp, smarta.apikey);
     if(smarta.server) {
-        xmpp_stream_set_server(smarta.stream, smarta.server);
+        xmpp_set_server(xmpp, smarta.server);
     }
 
     if(smarta.slaveip) {
-        xmpp_stream_set_server(smarta.stream, smarta.slaveip);
-        xmpp_stream_set_port(smarta.stream, smarta.slaveport);
+        xmpp_set_server(xmpp, smarta.slaveip);
+        xmpp_set_port(xmpp, smarta.slaveport);
     }
 
-    /* open stream */
-    if(xmpp_connect(smarta.el, smarta.stream) < 0) {
+    /* xmpp connect */
+    if(xmpp_connect(smarta.xmpp) < 0) {
         logger_error("SMARTA", "xmpp connect failed.");
         exit(-1);
     }
 
-    xmpp_add_conn_callback(smarta.stream, (conn_callback)conn_handler);
+    xmpp_add_conn_callback(xmpp, (conn_callback)conn_handler);
     
-    xmpp_add_presence_callback(smarta.stream, (presence_callback)presence_handler);
+    xmpp_add_presence_callback(xmpp, (presence_callback)presence_handler);
     
-    xmpp_add_message_callback(smarta.stream, (message_callback)command_handler);
+    xmpp_add_message_callback(xmpp, (message_callback)command_handler);
 
-    xmpp_add_iq_ns_callback(smarta.stream, "nodebus:iq:roster", (iq_callback)roster_handler);
+    xmpp_add_iq_ns_callback(xmpp, "nodebus:iq:roster", (iq_callback)roster_handler);
 }
 
 static void smarta_collectd_start(void)
@@ -502,7 +493,7 @@ static void smarta_collectd_start(void)
         smarta.collectd_port = ntohs(sa.sin_port);
     }
 
-    aeCreateFileEvent(smarta.el, smarta.collectd, AE_READABLE, handle_check_result, smarta.stream);
+    aeCreateFileEvent(smarta.el, smarta.collectd, AE_READABLE, handle_check_result, smarta.xmpp);
 }
 
 static void smarta_proxy_start(void) 
@@ -529,48 +520,9 @@ static void smarta_masterd_start(void)
     aeCreateFileEvent(smarta.el, smarta.masterfd, AE_READABLE, slave_accept_handler, NULL);
 }
 
-static int smarta_heartbeat(aeEventLoop *el, long long id, void *clientData)
-{
-    char *ping_id;
-    XmppStream *stream = (XmppStream *)clientData;
-
-    ping_id = xmpp_send_ping(stream);
-
-    xmpp_add_iq_id_callback(stream, ping_id, smarta_heartbeat_callback);
-
-    smarta.heartbeat_timeout = aeCreateTimeEvent(smarta.el, 
-        HEARTBEAT_TIMEOUT, smarta_heartbeat_timeout, stream, NULL);
-
-    sdsfree(ping_id);
-
-    return HEARTBEAT;
-}
-
-static int smarta_heartbeat_timeout(aeEventLoop *el, long long id, void *clientData)
-{
-    long timeout = (random() % 180) * 1000;
-    XmppStream *stream = (XmppStream *)clientData;
-    logger_info("XMPP", "heartbeat timeout.");
-	if(stream->state == XMPP_STREAM_ESTABLISHED) {//confirm established?
-		xmpp_disconnect(el, stream);
-		logger_info("XMPP", "reconnect after %d seconds", timeout/1000);
-		aeCreateTimeEvent(el, timeout, xmpp_reconnect, stream, NULL);
-	}
-    return AE_NOMORE;
-}
-
-static void smarta_heartbeat_callback(XmppStream *stream, XmppStanza *stanza)
-{
-    logger_debug("XMPP", "pong received");
-    if(smarta.heartbeat_timeout != 0) {
-        aeDeleteTimeEvent(smarta.el, smarta.heartbeat_timeout);
-    }
-} 
-
-static void conn_handler(XmppStream *stream, XmppStreamState state) 
+static void conn_handler(Xmpp *xmpp, XmppStreamState state) 
 {
     if(state == XMPP_STREAM_DISCONNECTED) {
-        if(smarta.heartbeat) aeDeleteTimeEvent(smarta.el, smarta.heartbeat);
         logger_error("SMARTA", "disconnected from server.");
     } else if(state == XMPP_STREAM_CONNECTING) {
         logger_info("SMARTA", "connecting to server...");
@@ -592,20 +544,11 @@ static void conn_handler(XmppStream *stream, XmppStreamState state)
 			while(fgets(output, 1023, fp)) {
 				result = sdscat(result, output);
 			}
-			xmpp_send_message(stream, "info@status.nodebus.com", result);
+			xmpp_send_message(xmpp, "info@status.nodebus.com", result);
         }else {
             logger_error("SMARTA", "failed to open bin/show_cfg.");
 		}
 		sdsfree(result);
-		//heartbeat	
-        if(smarta.heartbeat != 0) {
-            aeDeleteTimeEvent(smarta.el, smarta.heartbeat);
-        }
-        if(smarta.heartbeat_timeout != 0) {
-            aeDeleteTimeEvent(smarta.el, smarta.heartbeat_timeout);
-        }
-        smarta.heartbeat = aeCreateTimeEvent(smarta.el, HEARTBEAT,
-            smarta_heartbeat, stream, NULL);
         logger_info("SMARTA", "session established.");
         logger_info("SMARTA", "smarta is started successfully.");
     } else {
@@ -613,15 +556,15 @@ static void conn_handler(XmppStream *stream, XmppStreamState state)
     }
 }
 
-static void roster_handler(XmppStream *stream, XmppStanza *iq) 
+static void roster_handler(Xmpp *xmpp, Stanza *iq) 
 {
     Buddy *buddy;
-    XmppStanza *presence;
-    XmppStanza *query, *item;
+    Stanza *presence;
+    Stanza *query, *item;
     char *from, *jid, *type, *sub;
 
-    type = xmpp_stanza_get_type(iq);
-    from = xmpp_stanza_get_attribute(iq, "from");
+    type = stanza_get_type(iq);
+    from = stanza_get_attribute(iq, "from");
 
     if (strcmp(type, "error") == 0) {
         logger_error("XMPP", "error roster stanza.");
@@ -633,29 +576,29 @@ static void roster_handler(XmppStream *stream, XmppStanza *iq)
         return;
     }
 
-	query = xmpp_stanza_get_child_by_name(iq, "query");
-	for (item = xmpp_stanza_get_children(query);
-        item; item = xmpp_stanza_get_next(item)) {
-        jid = xmpp_stanza_get_attribute(item, "jid");
-        sub = xmpp_stanza_get_attribute(item, "subscription");
+	query = stanza_get_child_by_name(iq, "query");
+	for (item = stanza_get_children(query);
+        item; item = stanza_get_next(item)) {
+        jid = stanza_get_attribute(item, "jid");
+        sub = stanza_get_attribute(item, "subscription");
         if(strcmp(sub, "follow") == 0) {
             buddy = buddy_new();
             buddy->jid = zstrdup(jid);
             buddy->sub = SUB_BOTH;
             logger_info("SMARTA", "%s followed this node.", jid);
-            hash_add(stream->roster, buddy->jid, buddy);
-            presence = xmpp_stanza_tag("presence");
-            xmpp_stanza_set_type(presence, "subscribe");
-            xmpp_stanza_set_attribute(presence, "to", jid);
-            xmpp_send_stanza(stream, presence);
-            xmpp_stanza_release(presence);
+            hash_add(xmpp->roster, buddy->jid, buddy);
+            presence = stanza_tag("presence");
+            stanza_set_type(presence, "subscribe");
+            stanza_set_attribute(presence, "to", jid);
+            xmpp_send_stanza(xmpp, presence);
+            stanza_release(presence);
         } else if(strcmp(sub, "unfollow") == 0) {
             logger_info("SMARTA", "%s unfollowed this node.", jid);
             int i = 0, j = 0;
             listIter *iter;
             listNode *node;
-            listNode *nodes[listLength(stream->presences)];
-            iter = listGetIterator(stream->presences, AL_START_HEAD);
+            listNode *nodes[listLength(xmpp->presences)];
+            iter = listGetIterator(xmpp->presences, AL_START_HEAD);
             while((node = listNext(iter))) {
                 if(strncmp((char *)node->value, jid, strlen(jid)) == 0) {
                     nodes[i++] = node;
@@ -663,11 +606,11 @@ static void roster_handler(XmppStream *stream, XmppStanza *iq)
             }
             listReleaseIterator(iter);
             for(j = 0; j < i; j++) {
-                listDelNode(stream->presences, nodes[j]);
+                listDelNode(xmpp->presences, nodes[j]);
             }
-            hash_drop(stream->roster, jid);
+            hash_drop(xmpp->roster, jid);
             //FIXME:
-            //delete from stream->presences
+            //delete from xmpp->presences
         } else {
             logger_warning("XMPP", "unknown sub: '%s'", sub);
         }
@@ -675,14 +618,14 @@ static void roster_handler(XmppStream *stream, XmppStanza *iq)
     //FIXME: send result
 }
 
-static void presence_handler(XmppStream *stream, XmppStanza *presence) 
+static void presence_handler(Xmpp *xmpp, Stanza *presence) 
 {
-    XmppStanza *stanza;
+    Stanza *stanza;
     char *type, *from, *domain;
-    type = xmpp_stanza_get_type(presence);
-    from = xmpp_stanza_get_attribute(presence, "from");
+    type = stanza_get_type(presence);
+    from = stanza_get_attribute(presence, "from");
 
-    domain = xmpp_jid_domain(from);
+    domain = jid_domain(from);
     if(strcmp(domain, "nodebus.com")) { //not a buddy from nodebus.com
         return;
     }
@@ -714,25 +657,25 @@ static void presence_handler(XmppStream *stream, XmppStanza *presence)
             sdsfree(vector[i]);
         }
 
-        xmpp_send_message(smarta.stream, from, output);
+        xmpp_send_message(smarta.xmpp, from, output);
         
         sdsfree(output);
     } else if(strcmp(type, "probe") == 0) {
-        stanza = xmpp_stanza_tag("presence");
-        xmpp_send_stanza(stream, stanza);
-        xmpp_stanza_release(stanza);
+        stanza = stanza_tag("presence");
+        xmpp_send_stanza(xmpp, stanza);
+        stanza_release(stanza);
     }
 }
 
-static void command_handler(XmppStream *stream, XmppStanza *stanza) 
+static void command_handler(Xmpp *xmpp, Stanza *stanza) 
 {
 	char *incmd;
     sds output;
 	
-	if(!xmpp_stanza_get_child_by_name(stanza, "body")) return;
-	if(!strcmp(xmpp_stanza_get_attribute(stanza, "type"), "error")) return;
+	if(!stanza_get_child_by_name(stanza, "body")) return;
+	if(!strcmp(stanza_get_attribute(stanza, "type"), "error")) return;
 	
-	incmd = xmpp_stanza_get_text(xmpp_stanza_get_child_by_name(stanza, "body"));
+	incmd = stanza_get_text(stanza_get_child_by_name(stanza, "body"));
 
     if(!strlen(incmd)) return;
 
@@ -745,7 +688,7 @@ static void command_handler(XmppStream *stream, XmppStanza *stanza)
         return;
     }
 
-    xmpp_send_message(smarta.stream, xmpp_stanza_get_attribute(stanza, "from"), output);
+    xmpp_send_message(smarta.xmpp, stanza_get_attribute(stanza, "from"), output);
 	
 	sdsfree(output);
 }
@@ -884,10 +827,10 @@ static void daemonize(void) {
 }
 
 static void before_sleep(struct aeEventLoop *eventLoop) {
-    if(smarta.stream->prepare_reset == 1) {
+    if(smarta.xmpp->prepare_reset == 1) {
         logger_debug("SMARTA", "before sleep... reset parser");
-        parser_reset(smarta.stream->parser);
-        smarta.stream->prepare_reset = 0;
+        parser_reset(smarta.xmpp->parser);
+        smarta.xmpp->prepare_reset = 0;
     }
 }
 
@@ -1021,19 +964,42 @@ void handle_check_result(aeEventLoop *el, int fd, void *privdata, int mask) {
     Event *event;
     char buf[4096] = {0};
     nread = read(fd, buf, 4095);
-    XmppStream *stream = (XmppStream *)privdata;
+    Xmpp *xmpp = (Xmpp *)privdata;
     if(nread <= 0) {
         logger_debug("COLLECTD", "no data");
         return;
     }
     logger_debug("COLLECTD", "RECV: \n%s", buf);
-    if(stream->state == XMPP_STREAM_ESTABLISHED) {
+    if(xmpp->state == XMPP_STREAM_ESTABLISHED) {
         event = event_feed(buf);
         if(is_valid_event(event)) {
-            hash_add(smarta.events, zstrdup(event->sensor), event);
-            smarta_emit_event(stream, event);
+			if(event->sensortype == ACTIVE) {
+				hash_add(smarta.events, zstrdup(event->sensor), event);
+				smarta_presence_update();
+			}
+            smarta_emit_event(xmpp, event);
         }
     }
+}
+
+void smarta_presence_update()
+{
+	Event *event;
+	const char *key;
+	int presence = OK;
+	hash_iterator_t *iter = hash_iter_new(smarta.events);
+	while((key = hash_iter_next(iter))) {
+		event = hash_get(smarta.events, key);
+		if(event->status > OK) {
+			presence = event->status;
+		}
+	}
+	hash_iter_release(iter);
+	if(presence != smarta.presence) {
+		//send presence
+		xmpp_send_presence(smarta.xmpp, "xa", cn(presence));
+	}
+	smarta.presence = presence;
 }
 
 //FIXME: stupid...
@@ -1082,7 +1048,7 @@ Emitted *emitted_new(char *jid, char *sensor, int status)
     return e;
 }
 
-static int should_emit(XmppStream *stream, char *jid, Event *event) 
+static int should_emit(Xmpp *xmpp, char *jid, Event *event) 
 {
     int yes;
     int status = event->status;
@@ -1108,83 +1074,83 @@ static int should_emit(XmppStream *stream, char *jid, Event *event)
     return yes;
 }
 
-static void smarta_emit_event(XmppStream *stream, Event *event) 
+static void smarta_emit_event(Xmpp *xmpp, Event *event) 
 {
     char *buf;
     listNode *node;
     char *jid, *domain;
-    XmppStanza *message, *body, *text;
-    listIter *iter = listGetIterator(stream->presences, AL_START_HEAD);
+    Stanza *message, *body, *text;
+    listIter *iter = listGetIterator(xmpp->presences, AL_START_HEAD);
     while((node = listNext(iter)) != NULL) {
         jid = (char *)node->value;
-        domain =xmpp_jid_domain(jid); 
+        domain = jid_domain(jid); 
         if( !strcmp(domain, "nodebus.com") 
-            && should_emit(stream, jid, event) ) {
+            && should_emit(xmpp, jid, event) ) {
             buf = event_to_string(event);
-            message = xmpp_stanza_tag("message");
-            xmpp_stanza_set_type(message, "chat");
-            xmpp_stanza_set_attribute(message, "to", jid);
+            message = stanza_tag("message");
+            stanza_set_type(message, "chat");
+            stanza_set_attribute(message, "to", jid);
 
-            body = xmpp_stanza_tag("body");
-            text = xmpp_stanza_cdata(buf);
-            xmpp_stanza_add_child(body, text);
+            body = stanza_tag("body");
+            text = stanza_cdata(buf);
+            stanza_add_child(body, text);
 
-            xmpp_stanza_add_child(message, body);
+            stanza_add_child(message, body);
 
-            xmpp_send_stanza(stream, message);
-            xmpp_stanza_release(message);
+            xmpp_send_stanza(xmpp, message);
+            stanza_release(message);
             sdsfree(buf);
         } else if(!strcmp(domain, "event.nodebus.com") 
-            && should_emit(stream, jid, event)) {
-            sds title = sdscatprintf(sdsempty(), "%s %s - %s",
+            && should_emit(xmpp, jid, event)) {
+            sds title = sdscatprintf(sdsempty(), "#%s# %s - %s",
                 event->sensor, event_status(event),
                 event->title);
             if(event->body) {
                 buf = sdsnewlen(event->body, sdslen(event->body));
             }
-            XmppStanza *subject, *subject_text;
-            XmppStanza *thread, *thread_text;
+            Stanza *subject, *subject_text;
+            Stanza *thread, *thread_text;
 
-            message = xmpp_stanza_tag("message");
-            xmpp_stanza_set_type(message, "normal");
-            xmpp_stanza_set_attribute(message, "to", jid);
+            message = stanza_tag("message");
+            stanza_set_type(message, "normal");
+            stanza_set_attribute(message, "to", jid);
         
-            thread = xmpp_stanza_tag("thread");
-            thread_text = xmpp_stanza_text(event->sensor);
-            xmpp_stanza_add_child(thread, thread_text);
-            xmpp_stanza_add_child(message, thread);
+            thread = stanza_tag("thread");
+            thread_text = stanza_text(event->sensor);
+            stanza_add_child(thread, thread_text);
+            stanza_add_child(message, thread);
             
-            subject = xmpp_stanza_tag("subject");
-            subject_text = xmpp_stanza_text(title);
-            xmpp_stanza_add_child(subject, subject_text);
-            xmpp_stanza_add_child(message, subject);
+            subject = stanza_tag("subject");
+            subject_text = stanza_text(title);
+            stanza_add_child(subject, subject_text);
+            stanza_add_child(message, subject);
 
-            body = xmpp_stanza_tag("body");
-            text = xmpp_stanza_cdata(buf);
-            xmpp_stanza_add_child(body, text);
+            body = stanza_tag("body");
+            text = stanza_cdata(buf);
+            stanza_add_child(body, text);
 
-            xmpp_stanza_add_child(message, body);
+            stanza_add_child(message, body);
 
-            xmpp_send_stanza(stream, message);
-            xmpp_stanza_release(message);
+            xmpp_send_stanza(xmpp, message);
+            stanza_release(message);
             sdsfree(title);
             sdsfree(buf);
         } else if(!strcmp(domain, "metric.nodebus.com")
             && event_has_heads(event)) {
             buf = event_metrics_to_string(event);
             if(buf && sdslen(buf) > 0) {
-                message = xmpp_stanza_tag("message");
-                xmpp_stanza_set_type(message, "normal");
-                xmpp_stanza_set_attribute(message, "to", jid);
-                xmpp_stanza_set_attribute(message, "thread", event->sensor);
+                message = stanza_tag("message");
+                stanza_set_type(message, "normal");
+                stanza_set_attribute(message, "to", jid);
+                stanza_set_attribute(message, "thread", event->sensor);
 
-                body = xmpp_stanza_tag("body");
-                text = xmpp_stanza_text(buf);
-                xmpp_stanza_add_child(body, text);
-                xmpp_stanza_add_child(message, body);
+                body = stanza_tag("body");
+                text = stanza_text(buf);
+                stanza_add_child(body, text);
+                stanza_add_child(message, body);
 
-                xmpp_send_stanza(stream, message);
-                xmpp_stanza_release(message);
+                xmpp_send_stanza(xmpp, message);
+                stanza_release(message);
             }
             if(buf) sdsfree(buf);
         }

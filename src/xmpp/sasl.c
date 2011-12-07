@@ -234,8 +234,8 @@ char *sasl_digest_md5(const char *challenge,
 	return NULL;
     }
 
-    node = xmpp_jid_node(jid);
-    domain = xmpp_jid_domain(jid);
+    node = jid_node(jid);
+    domain = jid_domain(jid);
 
     /* generate default realm of domain if one didn't come from the
        server */

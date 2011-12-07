@@ -1,18 +1,18 @@
 #ifndef __JID_H
 #define __JID_H
 
-char *xmpp_jid_new(const char *node, 
+char *jid_new(const char *node, 
     const char *domain, 
     const char *resource);
 
-char *xmpp_jid_bare(const char *jid);
+char *jid_bare(const char *jid);
 
-char *xmpp_jid_node(const char *jid);
+char *jid_node(const char *jid);
 
-char *xmpp_jid_domain(const char *jid);
+char *jid_domain(const char *jid);
 
-char *xmpp_jid_resource(const char *jid);
+char *jid_resource(const char *jid);
 
-int xmpp_jid_bare_compare(const char *jid1, const char *jid2);
+int jid_bare_compare(const char *jid1, const char *jid2);
 
 #endif

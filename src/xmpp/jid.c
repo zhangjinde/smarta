@@ -1,37 +1,14 @@
-/* jid.c -- helper functions for parsing JIDs
-**
-** Copyright (C) 2005-2009 Collecta, Inc. 
-**
-**  This software is provided AS-IS with no warranty, either express
-**  or implied.
-**
-**  This software is distributed under license and may not be copied,
-**  modified or distributed except as expressly authorized under the
-**  terms of the license contained in the file LICENSE.txt in this
-**  distribution.
+/* 
+** jid.c 
 */
-
-/** @file
- *  JID creation and parsing.
- */
 
 #include <string.h>
 
-#include "xmpp.h"
 #include "zmalloc.h"
 
-/** Create a JID string from component parts node, domain, and resource.
- *
- *  @param node a string representing the node
- *  @param domain a string representing the domain.  Required.
- *  @param resource a string representing the resource
- *
- *  @return an allocated string with the full JID or NULL if no domain
- *      is specified
- */
-char *xmpp_jid_new(const char *node,
-				    const char *domain,
-				    const char *resource) {
+char *jid_new(const char *node,
+				   const char *domain,
+				   const char *resource) {
     char *result;
     int len,nlen,dlen,rlen;
 
@@ -68,7 +45,7 @@ char *xmpp_jid_new(const char *node,
  *
  *  @return an allocated string with the bare JID or NULL on an error
  */
-char *xmpp_jid_bare(const char *jid) {
+char *jid_bare(const char *jid) {
     char *result;
     const char *c;
 
@@ -91,7 +68,7 @@ char *xmpp_jid_bare(const char *jid) {
  *  @return an allocated string with the node or NULL if no node is found
  *      or an error occurs
  */
-char *xmpp_jid_node(const char *jid) {
+char *jid_node(const char *jid) {
     char *result = NULL;
     const char *c;
 
@@ -111,7 +88,7 @@ char *xmpp_jid_node(const char *jid) {
  *
  *  @return an allocated string with the domain or NULL on an error
  */
-char *xmpp_jid_domain(const char *jid) {
+char *jid_domain(const char *jid) {
     char *result = NULL;
     const char *c,*s;
 
@@ -142,7 +119,7 @@ char *xmpp_jid_domain(const char *jid) {
  *  @return an allocated string with the resource or NULL if no resource 
  *      is found or an error occurs
  */
-char *xmpp_jid_resource(const char *jid) {
+char *jid_resource(const char *jid) {
     char *result = NULL;
     const char *c;
     int len;
@@ -159,10 +136,8 @@ char *xmpp_jid_resource(const char *jid) {
     return result;
 }
 
-int xmpp_jid_bare_compare(const char *jid1, const char *jid2) 
+int jid_bare_compare(const char *jid1, const char *jid2) 
 {
-    if(strcmp(xmpp_jid_bare(jid1), xmpp_jid_bare(jid2)) == 0) {
-        return 1;
-    }
-    return 0;
+    return strcmp(jid_bare(jid1), jid_bare(jid2));
 }
+

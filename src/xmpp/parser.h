@@ -5,7 +5,8 @@
 #ifndef __PARSER_H
 #define __PARSER_H
 
-#include <expat.h>
+#include "expat.h"
+
 #include "stanza.h"
 
 typedef struct _Parser Parser;
@@ -20,7 +21,7 @@ typedef void (*parser_end_callback)(
     void * const userdata);
 
 typedef void (*parser_stanza_callback)(
-    XmppStanza * const stanza,
+    Stanza * const stanza,
     void * const userdata);
 
 struct _Parser {
@@ -30,7 +31,7 @@ struct _Parser {
     parser_stanza_callback stanzacb;
     void *userdata;
     int depth;
-    XmppStanza *stanza;
+    Stanza *stanza;
 };
 
 Parser *parser_new(parser_start_callback startcb,

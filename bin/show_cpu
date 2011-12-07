@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 uname=`uname`
 
@@ -10,11 +10,9 @@ if [ "$uname" = "Linux" ]; then
 	echo ""
 	echo "CPU Usage: $usage"
 elif [ "$uname" = "Darwin" ]; then
-	usage=`top -l 1 | grep "CPU usage"`
-	echo "$usage"
+	top -l 1 | grep "CPU usage"
 else
-	uptime=`uptime`
-	echo "uptime"
+	uptime
 fi
 
 

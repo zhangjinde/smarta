@@ -32,13 +32,12 @@ typedef struct _Smarta {
     char *name;
     char *server;
     char *apikey;
+	int presence; //0,1,2,3 
     int isslave;
     char *pidfile;
     int collectd;
     int collectd_port;
     int daemonize;
-    long long heartbeat;
-    long long heartbeat_timeout;
     int shutdown_asap;
     char *masterhost;
     char *masterauth;
@@ -49,7 +48,9 @@ typedef struct _Smarta {
     aeEventLoop *el;
     char *logfile;
     int verbosity;
-    XmppStream *stream;
+
+    Xmpp *xmpp;
+
     char neterr[1024];
     //global buddies
     list *buddies;

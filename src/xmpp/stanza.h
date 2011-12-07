@@ -4,108 +4,112 @@
 #include "hash.h"
 
 typedef enum {
-    XMPP_STANZA_UNKNOWN = -1,
-    XMPP_STANZA_TAG,
-    XMPP_STANZA_TEXT,
-    XMPP_STANZA_CDATA,
-} XmppStanzaType;
+    STANZA_UNKNOWN = -1,
+    STANZA_TAG,
+    STANZA_TEXT,
+    STANZA_CDATA,
+} StanzaType;
 
-typedef struct _XmppStanza {
+typedef struct _Stanza {
     int ref;
 
-    XmppStanzaType type;
+    StanzaType type;
     
-    struct _XmppStanza *prev;
-    struct _XmppStanza *next;
-    struct _XmppStanza *children;
-    struct _XmppStanza *parent;
+    struct _Stanza *prev;
+    struct _Stanza *next;
+    struct _Stanza *children;
+    struct _Stanza *parent;
 
     char *data;
 
     Hash *attributes;
-} XmppStanza;
+} Stanza;
 
 /*
 **create a blank stanza
 */
-XmppStanza *xmpp_stanza_new();
+Stanza *stanza_new();
 
 
 /*
 **create a tag stanza
 */
-XmppStanza *xmpp_stanza_tag(const char *name);
+Stanza *stanza_tag(const char *name);
 /*
 ** create a text stanza
 */
-XmppStanza *xmpp_stanza_text(const char *data);
+Stanza *stanza_text(const char *data);
 
 /*
 ** create a cdata stanza
 */
-XmppStanza *xmpp_stanza_cdata(const char *data);
+Stanza *stanza_cdata(const char *data);
 
 /** clone a stanza */
-XmppStanza *xmpp_stanza_clone(XmppStanza * stanza);
+Stanza *stanza_clone(Stanza * stanza);
 
 /** copies a stanza and all children */
-XmppStanza *xmpp_stanza_copy(XmppStanza * stanza);
+Stanza *stanza_copy(Stanza * stanza);
 
 /** free a stanza object and it's contents */
-int xmpp_stanza_release(XmppStanza * stanza);
+int stanza_release(Stanza * stanza);
 
-int xmpp_stanza_is_text(XmppStanza * stanza);
+int stanza_is_text(Stanza * stanza);
 
-int xmpp_stanza_is_tag(XmppStanza * stanza);
+int stanza_is_tag(Stanza * stanza);
 
 /** marshall a stanza into text for transmission or display **/
-int xmpp_stanza_to_text(XmppStanza *stanza, 
+int stanza_to_text(Stanza *stanza, 
     char ** buf, size_t * buflen);
 
-int xmpp_stanza_get_attributes(XmppStanza * const stanza,
+int stanza_get_attributes(Stanza * const stanza,
     const char **attr, int attrlen);
 
-XmppStanza *xmpp_stanza_get_children(XmppStanza * stanza);
-XmppStanza *xmpp_stanza_get_child_by_name(XmppStanza * stanza, 
+Stanza *stanza_get_children(Stanza * stanza);
+Stanza *stanza_get_child_by_name(Stanza * stanza, 
 					     char * name);
-XmppStanza *xmpp_stanza_get_child_by_ns(XmppStanza * stanza,
+Stanza *stanza_get_child_by_ns(Stanza * stanza,
 					   char * ns);
-XmppStanza *xmpp_stanza_get_next(XmppStanza * stanza);
-char *xmpp_stanza_get_attribute(XmppStanza * stanza,
+Stanza *stanza_get_next(Stanza * stanza);
+char *stanza_get_attribute(Stanza * stanza,
 				const char * name);
 
-char *xmpp_attrs_get_value(char **attrs, char *name);
+char *stanza_attrs_get_value(char **attrs, char *name);
 
-char * xmpp_stanza_get_ns(XmppStanza * stanza);
+char * stanza_get_ns(Stanza * stanza);
 /* concatenate all child text nodes.  this function
  * returns a string that must be freed by the caller */
 
-char *xmpp_stanza_get_text(XmppStanza * stanza);
-char *xmpp_stanza_get_text_ptr(XmppStanza * stanza);
-char *xmpp_stanza_get_name(XmppStanza * stanza);
+char *stanza_get_text(Stanza * stanza);
 
-int xmpp_stanza_add_child(XmppStanza *stanza, XmppStanza *child);
-int xmpp_stanza_set_ns(XmppStanza * stanza, char * ns);
+char *stanza_get_text_ptr(Stanza * stanza);
+
+char *stanza_get_name(Stanza * stanza);
+
+void stanza_add_child(Stanza *stanza, Stanza *child);
+
+int stanza_set_ns(Stanza * stanza, char * ns);
+
 /* set_attribute adds/replaces attributes */
-int xmpp_stanza_set_attribute(XmppStanza * stanza, 
+int stanza_set_attribute(Stanza * stanza, 
 			      const char * key,
 			      const char * value);
-int xmpp_stanza_set_name(XmppStanza *stanza,
+int stanza_set_name(Stanza *stanza,
 			 const char * name);
 
-int xmpp_stanza_set_text(XmppStanza *stanza,
+int stanza_set_text(Stanza *stanza,
 			 char * text);
 
-int xmpp_stanza_set_text_with_size(XmppStanza *stanza,
+int stanza_set_text_with_size(Stanza *stanza,
 				   const char *text, 
 				   size_t size);
 
 /* common stanza helpers */
-char *xmpp_stanza_get_type(XmppStanza * stanza);
-char *xmpp_stanza_get_id(XmppStanza * stanza);
-int xmpp_stanza_set_id(XmppStanza * stanza, 
+char *stanza_get_type(Stanza * stanza);
+char *stanza_get_id(Stanza * stanza);
+int stanza_set_id(Stanza * stanza, 
 		       char * id);
-int xmpp_stanza_set_type(XmppStanza * stanza, 
+int stanza_set_type(Stanza * stanza, 
 			 char * type);
 
 #endif /* _SMARTA_STANZA_H__ */
