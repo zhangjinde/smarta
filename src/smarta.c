@@ -406,7 +406,7 @@ int main(int argc, char **argv) {
     } 
 
     if(pidfile_existed()) {
-        fprintf(stderr, "ERROR: smarta.pid existed, kill it first.\n");
+        fprintf(stderr, "ERROR: %s is existed, kill it first.\n", smarta.pidfile);
         exit(1);
     }
 
