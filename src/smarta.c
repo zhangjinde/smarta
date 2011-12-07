@@ -65,6 +65,8 @@ static void smarta_masterd_start(void);
 
 static void smarta_proxy_start(void);
 
+static void smarta_presence_update();
+
 static void sched_checks(void);
 
 static char *cn(int status);
@@ -971,12 +973,33 @@ void handle_check_result(aeEventLoop *el, int fd, void *privdata, int mask) {
     if(xmpp->state == XMPP_STREAM_ESTABLISHED) {
         event = event_feed(buf);
         if(is_valid_event(event)) {
-			if(event->sensortype == ACTIVE) {//TODO:
+			if(event->sensortype == ACTIVE) {
 				hash_add(smarta.events, zstrdup(event->sensor), event);
+				smarta_presence_update();
 			}
             smarta_emit_event(xmpp, event);
         }
     }
+}
+
+void smarta_presence_update()
+{
+	Event *event;
+	const char *key;
+	int presence = OK;
+	hash_iterator_t *iter = hash_iter_new(smarta.events);
+	while((key = hash_iter_next(iter))) {
+		event = hash_get(smarta.events, key);
+		if(event->status > OK) {
+			presence = event->status;
+		}
+	}
+	hash_iter_release(iter);
+	if(presence != smarta.presence) {
+		//send presence
+		xmpp_send_presence(smarta.xmpp, "xa", cn(presence));
+	}
+	smarta.presence = presence;
 }
 
 //FIXME: stupid...

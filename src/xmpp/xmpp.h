@@ -174,6 +174,8 @@ Xmpp *xmpp_new(aeEventLoop *el);
 
 char *xmpp_send_ping(Xmpp *xmpp);
 
+void xmpp_send_presence(Xmpp *xmpp, char *show_text, char *status_text);
+
 void xmpp_send_message(Xmpp *xmpp, const char *to, const char *data);
 
 void xmpp_set_state(Xmpp *xmpp, int state);

@@ -266,6 +266,29 @@ char *xmpp_send_ping(Xmpp *xmpp)
     return id;
 }
 
+void xmpp_send_presence(Xmpp *xmpp, char *show_text, char *status_text)
+{
+    Stanza *presence, *show, *status, *text;
+
+    presence = stanza_tag("presence");
+
+	show = stanza_tag("show");
+    text = stanza_text(show_text);
+    stanza_add_child(show, text);
+
+    stanza_add_child(presence, show);
+
+    status = stanza_tag("status");
+    text = stanza_text(status_text);
+    stanza_add_child(status, text);
+
+    stanza_add_child(presence, status);
+
+    xmpp_send_stanza(xmpp, presence);
+
+    stanza_release(presence);
+}
+
 void xmpp_send_message(Xmpp *xmpp, const char *to, const char *data)
 {
     Stanza *message, *body, *text; 
