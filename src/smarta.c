@@ -1102,7 +1102,7 @@ static void smarta_emit_event(Xmpp *xmpp, Event *event)
             sdsfree(buf);
         } else if(!strcmp(domain, "event.nodebus.com") 
             && should_emit(xmpp, jid, event)) {
-            sds title = sdscatprintf(sdsempty(), "%s %s - %s",
+            sds title = sdscatprintf(sdsempty(), "#%s# %s - %s",
                 event->sensor, event_status(event),
                 event->title);
             if(event->body) {
