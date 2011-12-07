@@ -1,3 +1,13 @@
+Changes with smarta 0.4.7                                        07 Dec 2011
+
+    *) Feature: smarta 'xa' presence support
+
+	*) Feature: vCard photo support
+
+	*) Refactor: rewrite xmpp api
+
+	*) Feature: #title#
+
 Changes with smarta 0.4.6                                        04 Dec 2011
 
     *) Feature: tls support
