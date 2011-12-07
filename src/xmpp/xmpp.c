@@ -17,6 +17,7 @@
 #include "stanza.h"
 #include "logger.h"
 #include "zmalloc.h"
+#include "config.h"
 
 #define MAX_RETRIES 3
 
@@ -899,7 +900,7 @@ static void _add_buddies_to_roster(Xmpp *xmpp, Stanza *stanza)
 
 static void _xmpp_stream_roster_callback(Xmpp *xmpp, Stanza *stanza) 
 {
-    Stanza *presence, *status, *text;
+    Stanza *presence, *status, *text, *x, *photo;
 
     _add_buddies_to_roster(xmpp, stanza);
 
@@ -912,6 +913,15 @@ static void _xmpp_stream_roster_callback(Xmpp *xmpp, Stanza *stanza)
     stanza_add_child(status, text);
 
     stanza_add_child(presence, status);
+	
+	x = stanza_tag("x");
+	stanza_set_ns(x, "vcard-temp:x:update");
+	photo = stanza_tag("photo");
+	text = stanza_text(OSNAME); //FIXME:
+	stanza_add_child(photo, text);
+	stanza_add_child(x, photo);
+
+	stanza_add_child(presence, x);
 
     xmpp_send_stanza(xmpp, presence);
     stanza_release(presence);
