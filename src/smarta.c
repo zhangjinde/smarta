@@ -406,7 +406,7 @@ int main(int argc, char **argv) {
     } 
 
     if(pidfile_existed()) {
-        fprintf(stderr, "ERROR: smarta.pid existed, kill it first.\n");
+        fprintf(stderr, "ERROR: %s is existed, kill it first.\n", smarta.pidfile);
         exit(1);
     }
 
@@ -997,7 +997,11 @@ void smarta_presence_update()
 	hash_iter_release(iter);
 	if(presence != smarta.presence) {
 		//send presence
-		xmpp_send_presence(smarta.xmpp, "xa", cn(presence));
+		if(presence > OK) {
+			xmpp_send_presence(smarta.xmpp, "xa", cn(presence));
+		} else {
+			xmpp_send_presence(smarta.xmpp, "chat", cn(presence));
+		}
 	}
 	smarta.presence = presence;
 }
