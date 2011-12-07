@@ -997,7 +997,11 @@ void smarta_presence_update()
 	hash_iter_release(iter);
 	if(presence != smarta.presence) {
 		//send presence
-		xmpp_send_presence(smarta.xmpp, "xa", cn(presence));
+		if(presence > OK) {
+			xmpp_send_presence(smarta.xmpp, "xa", cn(presence));
+		} else {
+			xmpp_send_presence(smarta.xmpp, "chat", cn(presence));
+		}
 	}
 	smarta.presence = presence;
 }
