@@ -1,6 +1,6 @@
 /*
 **
-** plugins.h - plugin headers for windows
+** cmd.h - command headers
 **
 ** Copyright (c) 2011 nodebus.com.
 **
@@ -18,20 +18,34 @@
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
 */
+#ifndef __CMD_H
+#define __CMD_H
 
-#ifndef __PLUGIN_H
-#define __PLUGIN_H
+#include "sds.h"
 
-typedef int (*Check)(int argc, char **argv, char *result, int *size);
-
-typedef struct _Plugin {
-    char *name;
-    char *vsn;
+typedef struct _Command {
     char *usage;
-    Check check;
-} Plugin;
+    char *shell;
+    #ifdef __CYGWIN__
+    void *fun; 
+	#endif
+} Command;
 
-typedef Plugin* (*PluginInfo)();
+typedef struct _Request {
+	int id;
+	sds from;
+	Command *cmd;
+} Request;
+
+Request *reqnew(int id, char *from, Command *cmd);
+
+int reqcall(Request *req, int replyport);
+
+void reqfree(Request *req);
+
+char *rep_parse_id(char *buf, int *id);
+
+sds rep_parse(char *buf);
 
 #endif
 

@@ -28,8 +28,9 @@ smarta_SOURCES = src/core/ae.c \
 	src/core/hash.c src/core/zmalloc.c \
 	src/xmpp/sasl.c src/xmpp/jid.c \
 	src/xmpp/stanza.c src/xmpp/parser.c \
-	src/xmpp/xmpp.c src/event.c \
-	src/slave.c src/smarta.c src/ctl.c
+	src/xmpp/xmpp.c src/sensor.c \
+	src/slave.c src/smarta.c \
+	src/ctl.c src/cmd.c
 
 smarta_CFLAGS = $(SMARTA_FLAGS)
 smarta_LDADD = $(SMARTA_LIBS) 

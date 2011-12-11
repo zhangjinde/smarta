@@ -1,3 +1,24 @@
+/*
+**
+** smarta.h - smarta main headers
+**
+** Copyright (c) 2011 nodebus.com.
+**
+** This program is free software; you can redistribute it and/or modify
+** it under the terms of the GNU General Public License version 2 as
+** published by the Free Software Foundation.
+**
+** This program is distributed in the hope that it will be useful,
+** but WITHOUT ANY WARRANTY; without even the implied warranty of
+** MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+** GNU General Public License for more details.
+**
+** You should have received a copy of the GNU General Public License
+** along with this program; if not, write to the Free Software
+** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+**
+*/
+
 #ifndef __SMARTA_H
 #define __SMARTA_H
 
@@ -6,33 +27,22 @@
 #include "list.h"
 #include "hash.h"
 #include "xmpp.h"
-
-typedef struct _Sensor{
-    char *name;
-    long period;
-    char *command;
-    long taskid;
-} Sensor;
-
-typedef struct _Command {
-    char *usage;
-    char *shell;
-    #ifdef __CYGWIN__
-    void *fun; 
-	#endif
-} Command;
+#include "cmd.h"
 
 typedef struct _Emitted {
     char *jid;
-    char *sensor;
+    int sensor; //sensor id
     int status;
 } Emitted;
 
 typedef struct _Smarta {
+    aeEventLoop *el;
     char *name;
     char *server;
     char *apikey;
-	int presence; //0,1,2,3 
+	int lang;
+	//max status
+	int presence; 
     int isslave;
     char *pidfile;
     int collectd;
@@ -43,11 +53,13 @@ typedef struct _Smarta {
     char *masterauth;
     list *sensors;
     list *commands;
+	list *requests;
     char *cmdusage;
     list *slaves;
-    aeEventLoop *el;
     char *logfile;
     int verbosity;
+	//global sequnce no
+	int seqno;
 
     Xmpp *xmpp;
 
@@ -55,9 +67,6 @@ typedef struct _Smarta {
     //global buddies
     list *buddies;
 
-    //events cache
-    Hash *events;
-    
     //emitted
     list *emitted;
     
@@ -66,7 +75,7 @@ typedef struct _Smarta {
     int masterport;
     char *slaveip;
     int slaveport;
-    //proxy
+    //proxy deprecated
     int proxyfd;
     int proxyport;
     //stats

@@ -1,5 +1,24 @@
-/* 
-** xmpp.h
+/*
+**
+** xmpp.h - xmpp client headers
+**
+** Credits: This file come from libstrophe.
+**
+** Copyright (c) 2011 nodebus.com.
+**
+** This program is free software; you can redistribute it and/or modify
+** it under the terms of the GNU General Public License version 2 as
+** published by the Free Software Foundation.
+**
+** This program is distributed in the hope that it will be useful,
+** but WITHOUT ANY WARRANTY; without even the implied warranty of
+** MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+** GNU General Public License for more details.
+**
+** You should have received a copy of the GNU General Public License
+** along with this program; if not, write to the Free Software
+** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+**
 */
 
 #ifndef __XMPP_H
@@ -166,6 +185,17 @@ typedef struct _Buddy {
     Subscription sub;
 } Buddy;
 
+typedef struct _Message {
+	char *to;
+	char *thread;
+	char *subject;
+	char *body;
+} Message;
+
+Message *message_new();
+
+void message_free();
+
 Buddy *buddy_new();
     
 void buddy_release(void *buddy);
@@ -176,7 +206,9 @@ char *xmpp_send_ping(Xmpp *xmpp);
 
 void xmpp_send_presence(Xmpp *xmpp, char *show_text, char *status_text);
 
-void xmpp_send_message(Xmpp *xmpp, const char *to, const char *data);
+void xmpp_send_body(Xmpp *xmpp, char *to, char *body);
+
+void xmpp_send_message(Xmpp *xmpp, Message *msg);
 
 void xmpp_set_state(Xmpp *xmpp, int state);
 

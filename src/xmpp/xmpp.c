@@ -1,4 +1,25 @@
-
+/*
+**
+** xmpp.c - xmpp client functions
+**
+** Credits: This file come from libstrophe.
+**
+** Copyright (c) 2011 nodebus.com.
+**
+** This program is free software; you can redistribute it and/or modify
+** it under the terms of the GNU General Public License version 2 as
+** published by the Free Software Foundation.
+**
+** This program is distributed in the hope that it will be useful,
+** but WITHOUT ANY WARRANTY; without even the implied warranty of
+** MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+** GNU General Public License for more details.
+**
+** You should have received a copy of the GNU General Public License
+** along with this program; if not, write to the Free Software
+** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+**
+*/
 #include <stdlib.h>
 #include <stdio.h>
 #include <stdarg.h>
@@ -289,16 +310,35 @@ void xmpp_send_presence(Xmpp *xmpp, char *show_text, char *status_text)
     stanza_release(presence);
 }
 
-void xmpp_send_message(Xmpp *xmpp, const char *to, const char *data)
+void xmpp_send_body(Xmpp *xmpp, char *to, char *body)
 {
-    Stanza *message, *body, *text; 
+	Message *msg = message_new(to, body);
+	xmpp_send_message(xmpp, msg);
+	message_free(msg);
+}
+
+void xmpp_send_message(Xmpp *xmpp, Message *m)
+{
+    Stanza *message, *thread, 
+		*subject, *body, *text; 
 
 	message = stanza_tag("message");
 	stanza_set_type(message, "chat");
-	stanza_set_attribute(message, "to", to);
-	
+	stanza_set_attribute(message, "to", m->to);
+	if(m->thread) {
+		thread = stanza_tag("thread");
+		text = stanza_text(m->thread);
+		stanza_add_child(thread, text);
+		stanza_add_child(message, thread);
+	}
+	if(m->subject) {
+		subject = stanza_tag("subject");
+		text = stanza_text(m->subject);
+		stanza_add_child(subject, text);
+		stanza_add_child(message, subject);
+	}
 	body = stanza_tag("body");
-	text = stanza_cdata(zstrdup(data));
+	text = stanza_cdata(m->body);
 	stanza_add_child(body, text);
 	stanza_add_child(message, body);
 	
@@ -869,6 +909,21 @@ static void _xmpp_stream_roster(Xmpp *xmpp)
 	/* release the stanza */
 	stanza_release(iq);
     
+}
+
+Message *message_new(char *to , char *body)
+{
+	Message *m = zmalloc(sizeof(Message));
+	m->to = to;
+	m->thread = NULL;
+	m->subject = NULL;
+	m->body = body;
+	return m;
+}
+
+void message_free(Message *m)
+{
+	zfree(m);
 }
 
 Buddy *buddy_new() 
