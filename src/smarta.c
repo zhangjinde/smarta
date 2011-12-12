@@ -747,6 +747,7 @@ static void sortlines(void *lines, unsigned int len)
 
 static sds execute(char *from, char *incmd)
 {
+	int c = 0;
 	int count = 0;
     char buf[1024] = {0};
     Command *command;
@@ -826,12 +827,13 @@ static sds execute(char *from, char *incmd)
 		if(fp) {
             output = sdscatprintf(output, "command not found, try 'help' or '?'.\n\n"
 				"Smarta %s, system current status:\n\n", SMARTA_VERSION);
-			if( (count = fread(buf, sizeof(char *), 1023, fp)) > 0) {
-				buf[count-1] = '\0';
-				output = sdscat(output, buf);
+			while( ((c = fgetc(fp)) != EOF) && count < 1023 ) {
+				buf[count++] = c;
 			}
+			buf[count] = '\0';
+			output = sdscat(output, buf);
+			fclose(fp);
 		}
-		fclose(fp);
     }
     return output;
 }
