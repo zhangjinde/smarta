@@ -37,3 +37,4 @@ var/run/*
 var/data/*
 tags
 smarta.conf
+*.log
