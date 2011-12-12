@@ -57,6 +57,7 @@ Sensor *sensor_new(int type)
 	sensor->type = type;
 	sensor->period = 300;
 	sensor->taskid = 0;
+	sensor->command = NULL;
 	sensor->status = NULL;
 	return sensor;
 }
