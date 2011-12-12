@@ -77,7 +77,6 @@ int reqcall(Request *req, int replyport)
         }
 		output[len] = '\0';
         presult = pclose(fp);
-		logger_debug("FUCK", "\npresult: %d\n", presult);
         if(presult >= 0){
 			if(WEXITSTATUS(presult)==0 && WIFSIGNALED(presult)) {
 				presult=128+WTERMSIG(presult);
@@ -89,11 +88,10 @@ int reqcall(Request *req, int replyport)
 			reply = sdscatprintf(sdsnew("REPLY/"), "%d %d %s\ncommand '%s' not found.",
 				req->id, presult, req->from, sh);
 		} else {
-			logger_debug("CMD", "presult: %d, output: \n%s", presult, output);
 			reply = sdscatprintf(sdsnew("REPLY/"), "%d %d %s\n%s",
 				req->id, presult, req->from, output);
 		}	
-		logger_debug("FUCK", "\nsend to %d, reply: %s\n", replyport, reply);
+		logger_debug("CMD", "send cmd reply: %s", reply);
 		anetUdpSend("127.0.0.1", replyport, reply, sdslen(reply));
 		sdsfree(reply);
         exit(0);
