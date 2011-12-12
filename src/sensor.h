@@ -46,6 +46,7 @@ typedef struct _Status {
 	int code; 
 	/* short description */
 	char *phrase;
+	/* not use now*/
 	char *thread;
     char *title;
     list *heads;

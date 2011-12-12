@@ -1172,7 +1172,7 @@ static void smarta_emit_status(Xmpp *xmpp, Sensor *sensor)
 			msg = message_new(jid, body);
             sds subject = sdscatprintf(sdsnew("EVENT/1.0 "), 
 				"%d %s\n%s", status->code, phrase, status->title);
-			msg->thread = status->thread;
+			msg->thread = sensor->name;
 			msg->subject = subject;
             xmpp_send_message(xmpp, msg);
             message_free(msg);

@@ -52,6 +52,7 @@ Sensor *sensor_new(int type)
 {
 	Sensor *sensor = zmalloc(sizeof(Sensor));
 	sensor->id = 0;
+	sensor->name = NULL;
 	sensor->nagios = 0;
 	sensor->type = type;
 	sensor->period = 300;
