@@ -53,13 +53,16 @@ int reqcall(Request *req, int replyport)
     if(pid == -1) {
         logger_error("CMD", "fork error when cmd: %s", cmd->usage);
 		return -1;
-    } else if(pid == 0) { //subprocess
+    } else if(pid == 0) {
 		sds reply;
 		int c, len=0, presult=0;
 		char *sh = cmd->shell;
         char output[1024] = {0};
+
+		//to get pclose result, otherwise got -1 and ECHILD error
+		signal(SIGCHLD, SIG_DFL);
+
         FILE *fp = popen(sh, "r");
-		logger_debug("CMD", "shell: %s", sh);
         if(!fp) {
             logger_error("CMD", "failed to open %s", sh);
 			sds reply = sdscatprintf(sdsnew("REPLY/"), 
@@ -73,8 +76,8 @@ int reqcall(Request *req, int replyport)
 			output[len++] = c;
         }
 		output[len] = '\0';
-		logger_debug("CMD", "output: %s", output);
         presult = pclose(fp);
+		logger_debug("FUCK", "\npresult: %d\n", presult);
         if(presult >= 0){
 			if(WEXITSTATUS(presult)==0 && WIFSIGNALED(presult)) {
 				presult=128+WTERMSIG(presult);
@@ -90,6 +93,7 @@ int reqcall(Request *req, int replyport)
 			reply = sdscatprintf(sdsnew("REPLY/"), "%d %d %s\n%s",
 				req->id, presult, req->from, output);
 		}	
+		logger_debug("FUCK", "\nsend to %d, reply: %s\n", replyport, reply);
 		anetUdpSend("127.0.0.1", replyport, reply, sdslen(reply));
 		sdsfree(reply);
         exit(0);

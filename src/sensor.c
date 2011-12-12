@@ -141,6 +141,12 @@ void sensor_check(Sensor *sensor, int replyport)
         FILE *fp = NULL;
         char output[1024] = {0};
 		sds raw_command;
+
+		setpgid(0, 0);
+
+		//to get pclose result, otherwise got -1 and ECHILD error
+		signal(SIGCHLD, SIG_DFL);
+
 		if(sensor->nagios) {
 			raw_command = sdsdup(sensor->command);
 		} else {
@@ -240,16 +246,16 @@ Status *sensor_parse_status(char *buf)
 	status->code = atoi(code);
 	
 	eol = ++ptr;
-	while(eol && *buf && *eol != '\n') eol++;
+	while(eol && *eol && *eol != '\n') eol++;
 	if(!eol) goto error;
 	status->phrase = sdsnewlen(ptr, eol-ptr);
 	
-	ptr = ++eol;
-	while(eol && *buf && *eol != '\n') eol++;
+	if(*eol) ptr = ++eol;
+	while(eol && *eol && *eol != '\n') eol++;
 	if(!eol) goto error;
 	status->title = sdsnewlen(ptr, eol-ptr);
 
-	ptr = ++eol;
+	if(*eol) ptr = ++eol;
 	if(ptr && *ptr) {
 		ptr = parse_status_heads(status, ptr);
 	}

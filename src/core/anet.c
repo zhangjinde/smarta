@@ -306,7 +306,6 @@ int anetUdpServer(char *err, char *bindaddr, int port)
     sa.sin_family = AF_INET;
     sa.sin_addr.s_addr=htonl(INADDR_ANY);
     sa.sin_port= htons(port);
-
     if (bindaddr && inet_aton(bindaddr, &sa.sin_addr) == 0) {
         anetSetError(err, "invalid bind address");
         close(sockfd);

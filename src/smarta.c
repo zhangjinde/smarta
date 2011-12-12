@@ -490,8 +490,8 @@ static void smarta_xmpp_connect(void)
 static void smarta_collectd_start(void)
 {
     int ret = -1;
-    unsigned int size;
     struct sockaddr_in sa;
+	socklen_t size = sizeof(sa);
 
     smarta.collectd = anetUdpServer(smarta.neterr, "127.0.0.1", smarta.collectd_port);
 

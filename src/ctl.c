@@ -21,6 +21,8 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <signal.h>
+
 #include "smarta.h"
 
 extern Smarta smarta;
@@ -39,16 +41,16 @@ void smarta_ctl_status() {
 void smarta_ctl_stop() 
 {
 	int status;
+	char pid[20];
 	FILE *fp = fopen(smarta.pidfile, "r");
 	if(!fp) {
 		fprintf(stderr, "Smarta is not running.\n");
 		return;
 	}
-	sds cmd = sdscatprintf(sdsempty(), "kill `cat %s`", smarta.pidfile);
-	status = system(cmd);
+	fgets(pid, 20, fp);
+	status = kill( (pid_t)atoi(pid), SIGTERM); 
 	if(status == 0) {
 		printf("Smarta is stopped.\n");
 	}
-	sdsfree(cmd);
 }
 
