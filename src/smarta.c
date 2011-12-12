@@ -722,7 +722,7 @@ static void command_handler(Xmpp *xmpp, Stanza *stanza)
 static Command *find_command(char *usage)
 {
     listNode *node;
-	Command *retcmd;
+	Command *retcmd = NULL;
     listIter *iter = listGetIterator(smarta.commands, AL_START_HEAD);
     while((node = listNext(iter)) != NULL) {
         Command *cmd = (Command *)node->value;
