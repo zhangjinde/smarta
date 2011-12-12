@@ -1,1 +1,1 @@
-#define SMARTA_VERSION "0.5.0"
+#define SMARTA_VERSION "0.5.1"
