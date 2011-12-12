@@ -1,3 +1,17 @@
+Changes with smarta 0.4.8                                        11 Dec 2011
+
+	*) Feature: execute command asynchronously 
+
+	*) Refactor: redesign sensor and events
+
+	*) Feature: compatible with nagios plugins
+
+	*) Bugfix: fix plugins exit code
+
+	*) Bugfix: fix getsockname bug
+
+	*) Bugfix: signal(SIGCHLD, SIG_DFL)
+
 Changes with smarta 0.4.7                                        07 Dec 2011
 
     *) Feature: smarta 'xa' presence support

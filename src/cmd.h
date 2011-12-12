@@ -1,6 +1,6 @@
 /*
 **
-** ctl.h - smarta control functions
+** cmd.h - command headers
 **
 ** Copyright (c) 2011 nodebus.com.
 **
@@ -18,39 +18,34 @@
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
 */
+#ifndef __CMD_H
+#define __CMD_H
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <signal.h>
+#include "sds.h"
 
-#include "smarta.h"
+typedef struct _Command {
+    char *usage;
+    char *shell;
+    #ifdef __CYGWIN__
+    void *fun; 
+	#endif
+} Command;
 
-extern Smarta smarta;
+typedef struct _Request {
+	int id;
+	sds from;
+	Command *cmd;
+} Request;
 
-void smarta_ctl_status() {
-	char pid[20];
-	FILE *fp = fopen(smarta.pidfile, "r");
-	if(!fp) {
-		fprintf(stderr, "Smarta is not running.\n");
-		return;
-	}
-	fgets(pid, 20, fp);
-	printf("Smarta is running as pid %s\n", pid);
-}
+Request *reqnew(int id, char *from, Command *cmd);
 
-void smarta_ctl_stop() 
-{
-	int status;
-	char pid[20];
-	FILE *fp = fopen(smarta.pidfile, "r");
-	if(!fp) {
-		fprintf(stderr, "Smarta is not running.\n");
-		return;
-	}
-	fgets(pid, 20, fp);
-	status = kill( (pid_t)atoi(pid), SIGTERM); 
-	if(status == 0) {
-		printf("Smarta is stopped.\n");
-	}
-}
+int reqcall(Request *req, int replyport);
+
+void reqfree(Request *req);
+
+char *rep_parse_id(char *buf, int *id);
+
+sds rep_parse(char *buf);
+
+#endif
 
