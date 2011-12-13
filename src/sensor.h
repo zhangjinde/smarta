@@ -53,6 +53,10 @@ typedef struct _Status {
     char *body;
 } Status;
 
+#define CHANGES_SIZE 20
+
+#define FLAPPING_RATE 30
+
 typedef struct _Sensor{
 	int id;
 	//1: true; 0: false
@@ -65,6 +69,10 @@ typedef struct _Sensor{
     long taskid;
 	//last status
 	Status *status;
+	//flap detect
+	int chidx;
+	int flapping;
+	int changes[CHANGES_SIZE];
 } Sensor;
 
 Sensor *sensor_new();
@@ -82,6 +90,8 @@ sds status_heads_string(Status *status);
 sds status_metrics_string(Status *status);
 
 char *sensor_parse_id(char *buf, int *id);
+
+void sensor_flapping_detect(Sensor *sensor);
 
 Status *sensor_parse_status(char *buf);
 

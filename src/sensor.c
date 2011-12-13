@@ -59,6 +59,9 @@ Sensor *sensor_new(int type)
 	sensor->taskid = 0;
 	sensor->command = NULL;
 	sensor->status = NULL;
+	sensor->chidx = 0;
+	sensor->flapping = 0;
+	//sensor->changes = {0};
 	return sensor;
 }
 
@@ -224,11 +227,22 @@ char *sensor_parse_id(char *buf, int *id)
 	return NULL;
 }
 
+void sensor_flapping_detect(Sensor *sensor) 
+{
+	//TODO:			
+}
+
 void sensor_set_status(Sensor *sensor, Status *status) 
 {
-	if(sensor->status) {
+	int changed = 0; //for flapping
+	Status *last_status = sensor->status;
+	if(last_status) {
+		changed = (last_status->code == status->code) ? 0 : 1;
 		status_free(sensor->status);
 	}
+	sensor->changes[sensor->chidx] = changed;
+	if(++sensor->chidx >= CHANGES_SIZE) 
+		sensor->chidx = 0;
 	sensor->status = status;
 }
 
