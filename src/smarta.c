@@ -287,6 +287,8 @@ static void smarta_config(char *filename) {
             sensor->name = sdsjoin(argv+1, argc-1);
         } else if ((state == IN_SENSOR_BLOCK) && !strcasecmp(argv[0], "period") && argc == 2) {
             sensor->period = atoi(argv[1]) * 60 * 1000;
+        } else if ((state == IN_SENSOR_BLOCK) && !strcasecmp(argv[0], "compress") && argc == 2) {
+            sensor->compress = atoi(argv[1]);
         } else if ((state == IN_SENSOR_BLOCK) && !strcasecmp(argv[0], "nagios") && argc == 1) {
             sensor->nagios= 1;
         } else if ((state == IN_SENSOR_BLOCK) && !strcasecmp(argv[0], "command") && argc >= 2) {
@@ -752,7 +754,28 @@ static sds execute(char *from, char *incmd)
     char buf[1024] = {0};
     Command *command;
     sds output = sdsempty();
-    if(strcmp(incmd, "show events") == 0) {
+    if(strcmp(incmd, "show sensors") == 0) {
+		char *s;
+		struct tm * t;	
+		Sensor *sensor = NULL;
+		Status *status = NULL;
+		listNode *node = NULL;
+		listIter *iter = listGetIterator(smarta.sensors, AL_START_HEAD);
+		while((node = listNext(iter)) != NULL) {
+			sensor = (Sensor *)node->value;
+			status = sensor->status;
+			output = sdscatprintf(output, "\n%d. #%s", sensor->id, sensor->name);
+			if(status) {
+				t = localtime(&sensor->time);
+				s = i18n_status(smarta.lang, status->code);
+                output = sdscatprintf(output, "@%02d:%02d %s - %s\n",
+					t->tm_hour, t->tm_min, s, status->title);
+			} else {
+				output = sdscat(output, "\n");
+			}
+		}
+		listReleaseIterator(iter);
+	} else if(strcmp(incmd, "show events") == 0) {
         int i = 0;
         Status *status;
 		sds phrase = NULL;
@@ -763,7 +786,7 @@ static sds execute(char *from, char *incmd)
 		listIter *iter = listGetIterator(smarta.sensors, AL_START_HEAD);
 		while((node = listNext(iter)) != NULL) {
 			status = ((Sensor *)node->value)->status;
-			if(status && status->code >= STATUS_OK) {
+			if(status && status->code > STATUS_OK) {
 				phrase = i18n_phrase(smarta.lang, status);
                 vector[vlen++] = sdscatprintf(sdsempty(), 
 					"\n%s - %s\n", phrase, status->title);
@@ -788,7 +811,8 @@ static sds execute(char *from, char *incmd)
             output = sdscat(output, smarta.cmdusage);
         } else {
             listNode *node;
-            output = sdscatprintf(output, "Smarta %s, available commands:\nshow events\n", SMARTA_VERSION);
+            output = sdscatprintf(output, "Smarta %s, available commands:\n"
+				"show sensors\nshow events\n", SMARTA_VERSION);
             listIter *iter = listGetIterator(smarta.commands, AL_START_HEAD);
             while((node = listNext(iter)) != NULL) {
                 command = (Command *)node->value;
@@ -1005,7 +1029,7 @@ static void handle_sensor_result(Xmpp *xmpp, char *buf)
 
 	status = sensor_parse_status(ptr);
 	if(!status) { 
-		logger_warning("SENSOR", "failed to parse status");
+		logger_warning("SENSOR", "failed to parse status:\n%s", buf);
 		if(sensor->type == SENSOR_PASSIVE) sensor_free(sensor);
 		return;
 	}

@@ -24,6 +24,7 @@
 
 #include "sds.h"
 #include "list.h"
+#include "time.h"
 
 //status lang?
 #define LANG_EN 0
@@ -53,7 +54,7 @@ typedef struct _Status {
     char *body;
 } Status;
 
-#define CHANGES_SIZE 20
+#define HISTORY_SIZE 20
 
 #define FLAPPING_RATE 30
 
@@ -69,10 +70,13 @@ typedef struct _Sensor{
     long taskid;
 	//last status
 	Status *status;
+	time_t time;
+	//compress
+	int compress;
 	//flap detect
-	int chidx;
 	int flapping;
-	int changes[CHANGES_SIZE];
+	int hiscursor;
+	int history[HISTORY_SIZE];
 } Sensor;
 
 Sensor *sensor_new();

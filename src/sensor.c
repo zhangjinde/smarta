@@ -20,6 +20,7 @@
 */
 #include <stdio.h>
 #include <stdarg.h>
+#include <time.h>
 #include <ctype.h>
 #include <stdlib.h>
 #include <string.h>
@@ -59,9 +60,12 @@ Sensor *sensor_new(int type)
 	sensor->taskid = 0;
 	sensor->command = NULL;
 	sensor->status = NULL;
-	sensor->chidx = 0;
+	sensor->time = 0;
 	sensor->flapping = 0;
-	//sensor->changes = {0};
+	sensor->compress = 1;
+	sensor->hiscursor = 0;
+	memset(sensor->history, 0,
+		sizeof(sensor->history));
 	return sensor;
 }
 
@@ -234,15 +238,14 @@ void sensor_flapping_detect(Sensor *sensor)
 
 void sensor_set_status(Sensor *sensor, Status *status) 
 {
-	int changed = 0; //for flapping
 	Status *last_status = sensor->status;
 	if(last_status) {
-		changed = (last_status->code == status->code) ? 0 : 1;
 		status_free(sensor->status);
 	}
-	sensor->changes[sensor->chidx] = changed;
-	if(++sensor->chidx >= CHANGES_SIZE) 
-		sensor->chidx = 0;
+	sensor->history[sensor->hiscursor] = status->code;
+	if(++sensor->hiscursor >= HISTORY_SIZE) 
+		sensor->hiscursor = 0;
+	time(&sensor->time);
 	sensor->status = status;
 }
 
