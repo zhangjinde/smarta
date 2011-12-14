@@ -760,6 +760,7 @@ static sds execute(char *from, char *incmd)
     sds output = sdsempty();
     if(strcmp(incmd, "show sensors") == 0) {
 		char *s;
+		char *tag;
 		struct tm * t;	
 		Sensor *sensor = NULL;
 		Status *status = NULL;
@@ -768,7 +769,9 @@ static sds execute(char *from, char *incmd)
 		while((node = listNext(iter)) != NULL) {
 			sensor = (Sensor *)node->value;
 			status = sensor->status;
-			output = sdscatprintf(output, "\n%d. #%s", sensor->id, sensor->name);
+			tag = (sensor->type == SENSOR_PASSIVE) ? "P" : "";
+			output = sdscatprintf(output, "\n%d. %s#%s", 
+				sensor->id, tag, sensor->name);
 			if(status) {
 				t = localtime(&sensor->time);
 				s = i18n_status(smarta.lang, status->code);
@@ -781,6 +784,8 @@ static sds execute(char *from, char *incmd)
 		listReleaseIterator(iter);
 	} else if(strcmp(incmd, "show events") == 0) {
         int i = 0;
+		char *tag;
+		Sensor *sensor;
         Status *status;
 		sds phrase = NULL;
         int vlen = 0;
@@ -789,11 +794,13 @@ static sds execute(char *from, char *incmd)
 		listNode *node;
 		listIter *iter = listGetIterator(smarta.sensors, AL_START_HEAD);
 		while((node = listNext(iter)) != NULL) {
-			status = ((Sensor *)node->value)->status;
+			sensor = (Sensor *)node->value;
+			status = sensor->status;
 			if(status && status->code > STATUS_OK) {
 				phrase = i18n_phrase(smarta.lang, status);
+				tag = (sensor->type == SENSOR_PASSIVE) ? "P" : "";
                 vector[vlen++] = sdscatprintf(sdsempty(), 
-					"\n%s - %s\n", phrase, status->title);
+					"\n%s%s - %s\n", tag, phrase, status->title);
 				sdsfree(phrase);
                 if(vlen >= 1024) break;
 			}
