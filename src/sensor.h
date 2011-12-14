@@ -37,6 +37,9 @@
 #define STATUS_CRITICAL 3
 #define STATUS_UNKNOWN -1
 
+#define  STATE_TRANSIENT 1
+#define  STATE_PERMANENT 2
+
 //sensor type
 #define SENSOR_ACTIVE 1
 #define SENSOR_PASSIVE 2
@@ -65,14 +68,17 @@ typedef struct _Sensor{
 	//active or passive
 	int type;
     char *name;
-    long period;
+    long interval;
+	//attempt
+	int attempts;
+	int atp_interval;
     char *command;
     long taskid;
+	//transient or permanent
+	int state;
 	//last status
 	Status *status;
 	time_t time;
-	//compress
-	int compress;
 	//flap detect
 	int flapping;
 	int hiscursor;

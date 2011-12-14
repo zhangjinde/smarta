@@ -1,3 +1,13 @@
+Changes with smarta 0.5.2                                       16 Dec 2011
+	
+	*) Feature: 'show sensors' command
+
+	*) Feature: event compress
+
+	*) Featrue: flapping detect
+
+	*) Featrue: 'attempts' and 'attempt_interval' support
+
 Changes with smarta 0.5.1                                       12 Dec 2011
 
 	*) Bugfix: fix segment fault when receiving event from passive sensor

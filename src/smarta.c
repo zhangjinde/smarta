@@ -285,10 +285,14 @@ static void smarta_config(char *filename) {
             smarta.slaveport = atoi(argv[2]);
         } else if ((state == IN_SENSOR_BLOCK) && !strcasecmp(argv[0], "name") && argc >= 2) {
             sensor->name = sdsjoin(argv+1, argc-1);
-        } else if ((state == IN_SENSOR_BLOCK) && !strcasecmp(argv[0], "period") && argc == 2) {
-            sensor->period = atoi(argv[1]) * 60 * 1000;
-        } else if ((state == IN_SENSOR_BLOCK) && !strcasecmp(argv[0], "compress") && argc == 2) {
-            sensor->compress = atoi(argv[1]);
+        } else if ((state == IN_SENSOR_BLOCK) && !strcasecmp(argv[0], "period") && argc == 2) {//deprecated later
+            sensor->interval = atoi(argv[1]) * 60 * 1000;
+        } else if ((state == IN_SENSOR_BLOCK) && !strcasecmp(argv[0], "interval") && argc == 2) {
+            sensor->interval = atoi(argv[1]) * 60 * 1000;
+        } else if ((state == IN_SENSOR_BLOCK) && !strcasecmp(argv[0], "attempts") && argc == 2) {
+            sensor->attempts = atoi(argv[1]);
+        } else if ((state == IN_SENSOR_BLOCK) && !strcasecmp(argv[0], "attempt") && !strcasecmp(argv[1], "interval") && argc == 3) {
+            sensor->atp_interval = atoi(argv[2]);
         } else if ((state == IN_SENSOR_BLOCK) && !strcasecmp(argv[0], "nagios") && argc == 1) {
             sensor->nagios= 1;
         } else if ((state == IN_SENSOR_BLOCK) && !strcasecmp(argv[0], "command") && argc >= 2) {
@@ -976,7 +980,7 @@ int check_sensor(struct aeEventLoop *el, long long id, void *clientdata) {
 #else
 	sensor_check(sensor, smarta.collectd_port);
 #endif
-    return sensor->period;
+    return sensor->interval;
 }
 
 Sensor *smarta_find_sensor(int id)

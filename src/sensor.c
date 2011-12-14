@@ -56,13 +56,15 @@ Sensor *sensor_new(int type)
 	sensor->name = NULL;
 	sensor->nagios = 0;
 	sensor->type = type;
-	sensor->period = 300;
+	sensor->interval = 300;
+	sensor->attempts = 0;
+	sensor->atp_interval = -1;
 	sensor->taskid = 0;
 	sensor->command = NULL;
+	sensor->state = STATE_PERMANENT;
 	sensor->status = NULL;
 	sensor->time = 0;
 	sensor->flapping = 0;
-	sensor->compress = 1;
 	sensor->hiscursor = 0;
 	memset(sensor->history, 0,
 		sizeof(sensor->history));
