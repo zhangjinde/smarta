@@ -214,12 +214,28 @@ void sensor_check(Sensor *sensor, int replyport)
     }
 }
 
+char *sensor_parse_name(char *buf, char *retname)
+{
+	char *ptr = buf;
+
+	if( !(*ptr == '$') ) return NULL;
+	ptr++;
+	while(ptr && *ptr && (*ptr != '$'))	{
+		*retname++ = *ptr++;
+	}
+	*retname = '\0';
+	
+	if( ptr && *ptr ) ptr++;
+	
+	return ptr;
+}
+
 char *sensor_parse_id(char *buf, int *id)
 {
 	int i = 0;
 	char *ptr = buf;
 	char sid[10] = {0};
-	if(*ptr == 'p') {
+	if(!isdigit(*ptr)) {
 		*id = -1;
 		return ++ptr;
 	}

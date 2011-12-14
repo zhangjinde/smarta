@@ -51,6 +51,7 @@ typedef struct _Smarta {
     int shutdown_asap;
     char *masterhost;
     char *masterauth;
+	int sensorno;
     list *sensors;
     list *commands;
 	list *requests;

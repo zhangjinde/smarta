@@ -148,6 +148,7 @@ static void smarta_prepare()
     smarta.collectd_port = 0;
     smarta.shutdown_asap = 0;
     smarta.pidfile = "var/run/smarta.pid";
+	smarta.sensorno = 1;
     smarta.sensors = listCreate();
     smarta.commands = listCreate();
     smarta.cmdusage = NULL;
@@ -182,7 +183,6 @@ static void smarta_config(char *filename) {
     int linenum = 0;
     sds line = NULL;
     int state = 0;
-	int id = 1;
     Sensor *sensor;
     Command *command;
 
@@ -215,7 +215,7 @@ static void smarta_config(char *filename) {
         } else if ((state == IN_SMARTA_BLOCK) && !strcasecmp(argv[0], "}") && argc == 1) {
             state = 0;
         } else if ((state == IN_SENSOR_BLOCK) && !strcasecmp(argv[0], "}") && argc == 1) {
-			sensor->id = id++; //add a id
+			sensor->id = smarta.sensorno++; //add a id
             listAddNodeTail(smarta.sensors, sensor);
             state = 0;
         } else if ((state == IN_COMMAND_BLOCK) && !strcasecmp(argv[0], "}") && argc == 1) {
@@ -983,7 +983,23 @@ int check_sensor(struct aeEventLoop *el, long long id, void *clientdata) {
     return sensor->interval;
 }
 
-Sensor *smarta_find_sensor(int id)
+Sensor *smarta_find_sensor_by_name(char *name)
+{
+	listNode *node;
+	Sensor *sensor, *retsensor = NULL;
+	listIter *iter = listGetIterator(smarta.sensors, AL_START_HEAD);
+	while((node = listNext(iter)) != NULL) {
+		sensor =(Sensor *)node->value; 
+		if( !strcmp(sensor->name, name) ) {
+			retsensor = sensor;
+			break;
+		}
+	}
+	listReleaseIterator(iter);
+	return retsensor;
+}
+
+Sensor *smarta_find_sensor_by_id(int id)
 {
 	listNode *node;
 	Sensor *sensor = NULL;
@@ -1017,16 +1033,28 @@ static listNode *smarta_find_request(int reqid)
 
 static void handle_sensor_result(Xmpp *xmpp, char *buf)
 {
-	int id;
+	int id = -1;
+	char name[1024];
     Sensor *sensor;
 	Status *status;
 	char *ptr = buf;
-	ptr = sensor_parse_id(buf, &id);
+	if(*buf == '$') {//passive
+		ptr = sensor_parse_name(buf, name);
+	} else if(isdigit(*buf)) {//active
+		ptr = sensor_parse_id(buf, &id);
+	}	
 	if(!ptr) return;
+
 	if(id == -1) {//passive 
-		sensor = sensor_new(SENSOR_PASSIVE);
-	} else {
-		sensor = smarta_find_sensor(id);
+		sensor = smarta_find_sensor_by_name(name);
+		if(!sensor) {
+			sensor = sensor_new(SENSOR_PASSIVE);
+			sensor->id = smarta.sensorno++;
+			sensor->name = sdsnew(name);
+			listAddNodeTail(smarta.sensors, sensor);
+		}
+	} else { //active
+		sensor = smarta_find_sensor_by_id(id);
 	}
 
 	if(!sensor) return;
@@ -1034,7 +1062,6 @@ static void handle_sensor_result(Xmpp *xmpp, char *buf)
 	status = sensor_parse_status(ptr);
 	if(!status) { 
 		logger_warning("SENSOR", "failed to parse status:\n%s", buf);
-		if(sensor->type == SENSOR_PASSIVE) sensor_free(sensor);
 		return;
 	}
 
@@ -1046,9 +1073,9 @@ static void handle_sensor_result(Xmpp *xmpp, char *buf)
 		}
 		smarta_emit_status(xmpp, sensor);
 	}
-	if(sensor->type == SENSOR_PASSIVE) {
-		sensor_free(sensor);
-	}
+	//if(sensor->type == SENSOR_PASSIVE) {
+	//	sensor_free(sensor);
+	//}
 }
 
 static void handle_command_reply(Xmpp *xmpp, char *buf)

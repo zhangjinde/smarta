@@ -99,6 +99,8 @@ sds status_heads_string(Status *status);
 
 sds status_metrics_string(Status *status);
 
+char *sensor_parse_name(char *buf, char *retname);
+
 char *sensor_parse_id(char *buf, int *id);
 
 void sensor_flapping_detect(Sensor *sensor);
