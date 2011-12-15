@@ -82,7 +82,7 @@ static void smarta_proxy_start(void);
 
 static void smarta_presence_update();
 
-static void sched_checks(void);
+static void sched_sensors(void);
 
 static int smarta_cron(aeEventLoop *eventLoop, 
     long long id, void *clientData);
@@ -290,9 +290,9 @@ static void smarta_config(char *filename) {
         } else if ((state == IN_SENSOR_BLOCK) && !strcasecmp(argv[0], "interval") && argc == 2) {
             sensor->interval = atoi(argv[1]) * 60 * 1000;
         } else if ((state == IN_SENSOR_BLOCK) && !strcasecmp(argv[0], "attempts") && argc == 2) {
-            sensor->attempts = atoi(argv[1]);
+            sensor->max_attempts = atoi(argv[1]);
         } else if ((state == IN_SENSOR_BLOCK) && !strcasecmp(argv[0], "attempt") && !strcasecmp(argv[1], "interval") && argc == 3) {
-            sensor->atp_interval = atoi(argv[2]);
+            sensor->attempt_interval = atoi(argv[2]) * 60 * 1000;
         } else if ((state == IN_SENSOR_BLOCK) && !strcasecmp(argv[0], "nagios") && argc == 1) {
             sensor->nagios= 1;
         } else if ((state == IN_SENSOR_BLOCK) && !strcasecmp(argv[0], "command") && argc >= 2) {
@@ -455,7 +455,7 @@ int main(int argc, char **argv) {
 
     if(smarta.proxyport) smarta_proxy_start();
 
-    sched_checks();
+    sched_sensors();
 
     smarta_run();
 
@@ -940,19 +940,21 @@ static int smarta_system_status(aeEventLoop *eventLoop,
     return 60000;
 }
 
-static void sched_checks() {
+static void sched_sensors() {
     long taskid;
     int delay = 0;
-    listNode *node;
     Sensor *sensor;
+    listNode *node;
     listIter *iter = listGetIterator(smarta.sensors, AL_START_HEAD);
     while((node = listNext(iter)) != NULL) {
-        delay = (random() % 300) * 1000;
         sensor = (Sensor *)node->value;
-        logger_info("sched", "schedule sensor '%s' after %d seconds",
-            sensor->name, delay/1000);
-        taskid = aeCreateTimeEvent(smarta.el, delay, check_sensor, sensor, NULL);
-        sensor->taskid = taskid;
+		if(sensor->type == SENSOR_ACTIVE) {
+			delay = (random() % 300);
+			logger_info("SCHED", "schedule sensor '%s' after %d seconds",
+				sensor->name, delay);
+			taskid = aeCreateTimeEvent(smarta.el, delay*1000, check_sensor, sensor, NULL);
+			sensor->taskid = taskid;
+		}
     }
     listReleaseIterator(iter);
 }
@@ -987,7 +989,7 @@ int check_sensor(struct aeEventLoop *el, long long id, void *clientdata) {
 #else
 	sensor_check(sensor, smarta.collectd_port);
 #endif
-    return sensor->interval;
+    return AE_NOMORE;
 }
 
 Sensor *smarta_find_sensor_by_name(char *name)
@@ -1041,6 +1043,7 @@ static listNode *smarta_find_request(int reqid)
 static void handle_sensor_result(Xmpp *xmpp, char *buf)
 {
 	int id = -1;
+	int interval;
 	char name[1024];
     Sensor *sensor;
 	Status *status;
@@ -1052,7 +1055,7 @@ static void handle_sensor_result(Xmpp *xmpp, char *buf)
 	}	
 	if(!ptr) return;
 
-	if(id == -1) {//passive 
+	if(id == -1) { //passive 
 		sensor = smarta_find_sensor_by_name(name);
 		if(!sensor) {
 			sensor = sensor_new(SENSOR_PASSIVE);
@@ -1062,27 +1065,42 @@ static void handle_sensor_result(Xmpp *xmpp, char *buf)
 		}
 	} else { //active
 		sensor = smarta_find_sensor_by_id(id);
+		if(sensor) {
+			sensor->taskid = 0;
+			sensor->running = 0;
+			sensor->check_finish_at = time(NULL);
+		}
 	}
 
 	if(!sensor) return;
 
+	interval = sensor->interval;
+
 	status = sensor_parse_status(ptr);
+
 	if(!status) { 
 		logger_warning("SENSOR", "failed to parse status:\n%s", buf);
+		//reschedule
+		sensor->taskid = aeCreateTimeEvent(smarta.el, 
+			interval*1000, check_sensor, sensor, NULL);
 		return;
 	}
 
-	sensor_set_status(sensor, status);
+	interval = sensor_set_status(sensor, status);
 
 	if(xmpp->state == XMPP_STREAM_ESTABLISHED) {
 		if(sensor->type == SENSOR_ACTIVE) {
 			smarta_presence_update();
 		}
-		smarta_emit_status(xmpp, sensor);
+		logger_info("STATUS", "name: %s, attempts: %d, type: %d, code: %d",
+			sensor->name, sensor->current_attempts, status->type, status->code);
+		if(status->type == STATUS_PERMANENT) {
+			smarta_emit_status(xmpp, sensor);
+		}
 	}
-	//if(sensor->type == SENSOR_PASSIVE) {
-	//	sensor_free(sensor);
-	//}
+	//reschedule
+	sensor->taskid = aeCreateTimeEvent(smarta.el, 
+		interval, check_sensor, sensor, NULL);
 }
 
 static void handle_command_reply(Xmpp *xmpp, char *buf)
@@ -1135,7 +1153,8 @@ void smarta_presence_update()
     listIter *iter = listGetIterator(smarta.sensors, AL_START_HEAD);
     while((node = listNext(iter)) != NULL) {
 		status = ((Sensor *)node->value)->status;
-		if(status && status->code > presence) {
+		if(status && status->type == STATUS_PERMANENT 
+			&& status->code > presence) {
 			presence = status->code;
 		}
     }

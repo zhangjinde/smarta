@@ -30,6 +30,10 @@
 #define LANG_EN 0
 #define LANG_CN 1
 
+//status type
+#define STATUS_TRANSIENT 1
+#define STATUS_PERMANENT 2
+
 //status code
 #define STATUS_OK 0
 #define STATUS_INFO 1
@@ -37,15 +41,14 @@
 #define STATUS_CRITICAL 3
 #define STATUS_UNKNOWN -1
 
-#define  STATE_TRANSIENT 1
-#define  STATE_PERMANENT 2
-
 //sensor type
 #define SENSOR_ACTIVE 1
 #define SENSOR_PASSIVE 2
 
 //event emitted by sensor
 typedef struct _Status {
+	//transient or permanent
+	int type;
 	/*status code */
 	int code; 
 	/* short description */
@@ -69,15 +72,20 @@ typedef struct _Sensor{
 	int type;
     char *name;
     long interval;
-	//attempt
-	int attempts;
-	int atp_interval;
-    char *command;
+	//schedule
     long taskid;
-	//transient or permanent
-	int state;
+	int running;
+	time_t check_begin_at;
+	time_t check_finish_at;
+	//attempt
+	int max_attempts;
+	int current_attempts;
+	int attempt_interval;
+	//plugin command
+    char *command;
 	//last status
 	Status *status;
+	//update time
 	time_t time;
 	//flap detect
 	int flapping;
@@ -107,7 +115,8 @@ void sensor_flapping_detect(Sensor *sensor);
 
 Status *sensor_parse_status(char *buf);
 
-void sensor_set_status(Sensor *sensor, Status *status);
+//return next schedule interval
+int sensor_set_status(Sensor *sensor, Status *status);
 
 void status_free(Status *status);
 

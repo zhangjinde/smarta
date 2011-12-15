@@ -56,12 +56,12 @@ Sensor *sensor_new(int type)
 	sensor->name = NULL;
 	sensor->nagios = 0;
 	sensor->type = type;
-	sensor->interval = 300;
-	sensor->attempts = 0;
-	sensor->atp_interval = -1;
+	sensor->interval = 300*60*1000;
+	sensor->max_attempts = 0;
+	sensor->current_attempts = 0;
+	sensor->attempt_interval = 60*1000;
 	sensor->taskid = 0;
 	sensor->command = NULL;
-	sensor->state = STATE_PERMANENT;
 	sensor->status = NULL;
 	sensor->time = 0;
 	sensor->flapping = 0;
@@ -74,7 +74,8 @@ Sensor *sensor_new(int type)
 Status *status_new()
 {
 	Status *status = zmalloc(sizeof(Status));
-	status->code = 0;
+	status->type = STATUS_PERMANENT;
+	status->code = STATUS_OK;
 	status->thread = NULL;
 	status->phrase = NULL;
 	status->title = NULL;
@@ -145,13 +146,16 @@ void sensor_check(Sensor *sensor, int replyport)
     pid = fork();
     if(pid == -1) {
         logger_error("SCHED", "fork error when check %s", sensor->name);
-    } else if(pid == 0) { //subprocess
-		char *sep = NULL;
+    } else if(pid == 0) { //child process
 		int c = 0, len=0;
 		int presult = 0;
         FILE *fp = NULL;
+		sds data = NULL; 
+		char *sep = NULL;
+		char *title = NULL;
+		sds raw_command = NULL;
         char output[1024] = {0};
-		sds raw_command;
+		char status[1024] = {0}; 
 
 		setpgid(0, 0);
 
@@ -169,7 +173,7 @@ void sensor_check(Sensor *sensor, int replyport)
         fp = popen(raw_command, "r");
         if(!fp) {
             logger_error("SCHED", "failed to open %s", raw_command);
-            exit(-1);
+			goto internal_error;
         }
         while( ((c = fgetc(fp)) != EOF) && len < 1023 ) {
 			output[len++] = c;
@@ -193,24 +197,33 @@ void sensor_check(Sensor *sensor, int replyport)
 		//nagios unknown = 3
 		if(sensor->nagios && presult == 3) presult = -1;
 		logger_debug("SCHED", "presult: %d, output: \n%s", presult, output);
-		if( (presult >= STATUS_OK) && (presult <= STATUS_CRITICAL) && (len > 0) ) {
-			char *title;
-			char status[1024] = {0}; 
-			title = sensor_result_preparse(output, status);
-			if(title) {
-				if(sensor->nagios) presult++ ;
-				sds data = sdscatprintf(sdsnew("SENSOR/"), "%d %d #%s %s\n%s",
-					sensor->id, presult, sensor->name, status, title);
-				anetUdpSend("127.0.0.1", replyport, data, sdslen(data));
-				sdsfree(data);
-			} else {
-				logger_debug("SCHED", "failed to preparse result.");
-			}
+		if( !( (presult >= STATUS_OK) && (presult <= STATUS_CRITICAL) && (len > 0) ) ) {
+			goto internal_error;
 		}
+		
+		title = sensor_result_preparse(output, status);
+		if(!title) {
+			logger_warning("SCHED", "no title.");
+			goto internal_error;
+		}
+		if(sensor->nagios) presult++ ;
+		data = sdscatprintf(sdsnew("SENSOR/"), "%d %d #%s %s\n%s",
+			sensor->id, presult, sensor->name, status, title);
+		anetUdpSend("127.0.0.1", replyport, data, sdslen(data));
+		sdsfree(data);
         sdsfree(raw_command);
         exit(0);
-    } else {
-        //FIXME: later
+internal_error:
+		data = sdscatprintf(sdsnew("SENSOR/"), "%d %d #%s %s\n%s",
+			sensor->id, 127, sensor->name, "UNKNOWN", "Plugin Internal Error!");
+		logger_debug("SCHED", "internal error: \n%s", data);
+		anetUdpSend("127.0.0.1", replyport, data, sdslen(data));
+		if(data) sdsfree(data);
+		if(raw_command) sdsfree(raw_command);
+        exit(-1);
+    } else { //main process
+		sensor->running = 1;
+		sensor->check_begin_at = time(NULL);
     }
 }
 
@@ -254,17 +267,100 @@ void sensor_flapping_detect(Sensor *sensor)
 	//TODO:			
 }
 
-void sensor_set_status(Sensor *sensor, Status *status) 
+static int is_permanent_ok(Status *status) 
 {
+	return (status->type == STATUS_PERMANENT
+			&& status->code == STATUS_OK);
+}
+
+static int is_transient_ok(Status *status) 
+{
+	return (status->type == STATUS_TRANSIENT
+			&& status->code == STATUS_OK);
+}
+
+static int is_permanent_nonok(Status *status)
+{
+	return ( status->type == STATUS_PERMANENT && 
+			 (status->code > STATUS_OK ||
+			 status->code == STATUS_UNKNOWN) );
+}
+
+static int is_transient_nonok(Status *status)
+{
+	return ( status->type == STATUS_TRANSIENT && 
+			 (status->code > STATUS_OK ||
+			 status->code == STATUS_UNKNOWN) );
+}
+
+//FIXME: stupid
+static int status_transfer(Sensor *sensor, Status *old, Status *new)
+{
+	int ret = sensor->interval;
+
+	if(is_permanent_ok(old)) {
+		if(new->code == STATUS_OK) {
+			new->type = STATUS_PERMANENT;
+			ret = sensor->interval;
+		} else {
+			new->type = STATUS_TRANSIENT;
+			ret = sensor->attempt_interval;
+		}
+		sensor->current_attempts = 0;
+	} else if(is_transient_ok(old)) {
+		if(new->code == STATUS_OK) {
+			new->type = STATUS_PERMANENT;
+			ret = sensor->interval;
+			sensor->current_attempts = 0;
+		} else {
+			new->type = STATUS_TRANSIENT;
+		}
+	} else if(is_permanent_nonok(old)) {
+		new->type = STATUS_PERMANENT;
+		ret = sensor->interval;
+	} else if(is_transient_nonok(old)) {
+		if(new->code == STATUS_OK) {
+			new->type = STATUS_TRANSIENT;
+			ret = sensor->attempt_interval;
+		} else  {
+			if(sensor->current_attempts++ < sensor->max_attempts) {
+				new->type = STATUS_TRANSIENT;
+				ret = sensor->attempt_interval;
+			} else {
+				new->type = STATUS_PERMANENT;
+				ret = sensor->interval;
+			}
+		}
+	} else {
+		logger_error("SENSOR", "assert failure, "
+			"status code: %d type: %d", 
+			old->type, old->code);
+		new->type = STATUS_PERMANENT;
+		ret = sensor->interval;	
+	}
+
+	return ret;
+}
+
+int sensor_set_status(Sensor *sensor, Status *status) 
+{
+	int interval = sensor->interval;
 	Status *last_status = sensor->status;
 	if(last_status) {
+		interval = status_transfer(sensor, last_status, status);
 		status_free(sensor->status);
+	} else {
+		if(status->code == STATUS_WARNING) {
+			status->type = STATUS_TRANSIENT;
+			interval = sensor->attempt_interval;
+		}
 	}
 	sensor->history[sensor->hiscursor] = status->code;
 	if(++sensor->hiscursor >= HISTORY_SIZE) 
 		sensor->hiscursor = 0;
 	time(&sensor->time);
 	sensor->status = status;
+	return interval;
 }
 
 Status *sensor_parse_status(char *buf)

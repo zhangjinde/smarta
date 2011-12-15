@@ -1,10 +1,10 @@
-Changes with smarta 0.5.2                                       16 Dec 2011
+Changes with smarta 0.6.0                                       16 Dec 2011
+
+	*) Improved: rewrite passive sensor protocol
 	
 	*) Feature: 'show sensors' command
 
 	*) Feature: event compress
-
-	*) Featrue: flapping detect
 
 	*) Featrue: 'attempts' and 'attempt_interval' support
 
