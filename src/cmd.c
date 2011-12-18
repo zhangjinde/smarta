@@ -54,7 +54,7 @@ int reqcall(Request *req, int replyport)
         logger_error("CMD", "fork error when cmd: %s", cmd->usage);
 		return -1;
     } else if(pid == 0) {
-		sds reply;
+		sds reply = NULL;
 		int c, len=0, presult=0;
 		char *sh = cmd->shell;
         char output[1024] = {0};

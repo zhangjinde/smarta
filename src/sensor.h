@@ -24,10 +24,15 @@
 
 #include "sds.h"
 #include "list.h"
+#include "time.h"
 
 //status lang?
 #define LANG_EN 0
 #define LANG_CN 1
+
+//status type
+#define STATUS_TRANSIENT 1
+#define STATUS_PERMANENT 2
 
 //status code
 #define STATUS_OK 0
@@ -42,6 +47,8 @@
 
 //event emitted by sensor
 typedef struct _Status {
+	//transient or permanent
+	int type;
 	/*status code */
 	int code; 
 	/* short description */
@@ -53,6 +60,10 @@ typedef struct _Status {
     char *body;
 } Status;
 
+#define HISTORY_SIZE 20
+
+#define FLAPPING_RATE 30
+
 typedef struct _Sensor{
 	int id;
 	//1: true; 0: false
@@ -60,11 +71,26 @@ typedef struct _Sensor{
 	//active or passive
 	int type;
     char *name;
-    long period;
-    char *command;
+    long interval;
+	//schedule
     long taskid;
+	int running;
+	time_t check_begin_at;
+	time_t check_finish_at;
+	//attempt
+	int max_attempts;
+	int current_attempts;
+	int attempt_interval;
+	//plugin command
+    char *command;
 	//last status
 	Status *status;
+	//update time
+	time_t time;
+	//flap detect
+	int flapping;
+	int hiscursor;
+	int history[HISTORY_SIZE];
 } Sensor;
 
 Sensor *sensor_new();
@@ -81,11 +107,16 @@ sds status_heads_string(Status *status);
 
 sds status_metrics_string(Status *status);
 
+char *sensor_parse_name(char *buf, char *retname);
+
 char *sensor_parse_id(char *buf, int *id);
+
+void sensor_flapping_detect(Sensor *sensor);
 
 Status *sensor_parse_status(char *buf);
 
-void sensor_set_status(Sensor *sensor, Status *status);
+//return next schedule interval
+int sensor_set_status(Sensor *sensor, Status *status);
 
 void status_free(Status *status);
 

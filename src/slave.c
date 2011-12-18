@@ -44,7 +44,7 @@ static void slave_release(Slave *slave);
 
 void slave_accept_handler(aeEventLoop *el, int listenfd, void *privdata, int mask)
 {
-    char ip[128];
+    char ip[128] = {0};
     int port, fd, xmppfd;
     fd = anetTcpAccept(smarta.neterr, listenfd, ip, &port);
     if (fd == AE_ERR) {
@@ -131,7 +131,7 @@ static void read_from_xmpp(aeEventLoop *el, int fd, void *privdata, int mask)
 
 static void slave_release(Slave *slave) 
 {
-    listNode *node;
+    listNode *node = NULL;
     if(slave->xmppfd > 0) {
         aeDeleteFileEvent(smarta.el, slave->xmppfd, AE_READABLE);
         close(slave->xmppfd);

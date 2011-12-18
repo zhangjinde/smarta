@@ -1,3 +1,21 @@
+Changes with smarta 0.6.0                                       16 Dec 2011
+
+	*) Improved: rewrite passive sensor protocol
+	
+	*) Feature: 'show sensors' command
+
+	*) Feature: event compress
+
+	*) Featrue: 'attempts' and 'attempt_interval' support
+
+Changes with smarta 0.5.1                                       12 Dec 2011
+
+	*) Bugfix: fix segment fault when receiving event from passive sensor
+
+	*) Bugfix: set some char[] buf to {0}
+
+	*) Bugfix: set some char *pointer in heap to NULL
+
 Changes with smarta 0.5.0                                        12 Dec 2011
 
 	*) Feature: execute command asynchronously 

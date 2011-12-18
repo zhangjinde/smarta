@@ -161,8 +161,8 @@ Xmpp *xmpp_new(aeEventLoop *el)
 
 int xmpp_connect(Xmpp *xmpp)
 {
-    char err[1024];
-    char server[1024];
+    char err[1024] = {0};
+    char server[1024] = {0};
     if(anetResolve(err, xmpp->server, server) != ANET_OK) {
         logger_error("XMPP", "cannot resolve %s, error: %s", xmpp->server, err);
         exit(-1);
@@ -269,7 +269,7 @@ void xmpp_disconnect(Xmpp *xmpp)
 
 char *xmpp_send_ping(Xmpp *xmpp)
 {
-    Stanza *iq, *ping;
+    Stanza *iq = NULL, *ping = NULL;
     char *id = sdscatprintf(sdsempty(), "ping_%ld", random());
 
 	iq = stanza_tag("iq");
@@ -348,7 +348,7 @@ void xmpp_send_message(Xmpp *xmpp, Message *m)
 
 void xmpp_set_state(Xmpp *xmpp, int state)  
 {
-    listNode *node;
+    listNode *node = NULL;
     listIter *iter;
     conn_callback callback;
     if(xmpp->state != state) {
@@ -475,8 +475,8 @@ int xmpp_stream_open(Xmpp *xmpp)
 void xmpp_send_format(Xmpp *xmpp, char *fmt, ...) 
 {
     va_list ap;
-    size_t len;
-    char buf[4096]; /* small buffer for common case */
+    size_t len = 0;
+    char buf[4096]={0}; /* small buffer for common case */
 
     va_start(ap, fmt);
     len = vsnprintf(buf, 4096, fmt, ap);
@@ -506,8 +506,8 @@ void xmpp_send_string(Xmpp *xmpp, char *data, size_t len)
 void xmpp_send_stanza(Xmpp *xmpp, Stanza *stanza) 
 {
     int ret;
-    char *buf;
-    size_t len;
+    char *buf = NULL;
+    size_t len = 0;
 
 	if ((ret = stanza_to_text(stanza, &buf, &len)) == 0) {
 	    xmpp_send_string(xmpp, buf, len);
@@ -522,7 +522,7 @@ int xmpp_stream_feed(Xmpp *xmpp, char *buffer, int len)
 
 static void _handle_stream_start(char *name, char **attrs, void *userdata) 
 {
-    char *id;
+    char *id = NULL;
 
     Xmpp *xmpp = (Xmpp *)userdata;
 

@@ -28,7 +28,7 @@
 extern Smarta smarta;
 
 void smarta_ctl_status() {
-	char pid[20];
+	char pid[20] = {0};
 	FILE *fp = fopen(smarta.pidfile, "r");
 	if(!fp) {
 		fprintf(stderr, "Smarta is not running.\n");
@@ -40,8 +40,8 @@ void smarta_ctl_status() {
 
 void smarta_ctl_stop() 
 {
-	int status;
-	char pid[20];
+	int status = 0;
+	char pid[20] = {0};
 	FILE *fp = fopen(smarta.pidfile, "r");
 	if(!fp) {
 		fprintf(stderr, "Smarta is not running.\n");
