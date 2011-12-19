@@ -1266,7 +1266,7 @@ static void smarta_emit_status(Xmpp *xmpp, Sensor *sensor)
             body = status_metrics_string(status);
             if(body && sdslen(body) > 0) {
 				msg = message_new(jid, body);
-				msg->thread = status->thread;
+				msg->thread = sensor->name;
 				xmpp_send_message(xmpp, msg);
 				message_free(msg);
             }
