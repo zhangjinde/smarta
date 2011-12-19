@@ -293,9 +293,11 @@ static int is_transient_nonok(Status *status)
 			 status->code == STATUS_UNKNOWN) );
 }
 
-//FIXME: stupid
-static int status_transfer(Sensor *sensor, Status *old, Status *new)
+//FIXME: fsm
+static int status_transfer(Sensor *sensor, Status *new)
 {
+	Status *old = sensor->status;
+
 	int ret = sensor->interval;
 
 	if(is_permanent_ok(old)) {
@@ -345,9 +347,8 @@ static int status_transfer(Sensor *sensor, Status *old, Status *new)
 int sensor_set_status(Sensor *sensor, Status *status) 
 {
 	int interval = sensor->interval;
-	Status *last_status = sensor->status;
-	if(last_status) {
-		interval = status_transfer(sensor, last_status, status);
+	if(sensor->status) {
+		interval = status_transfer(sensor, status);
 		status_free(sensor->status);
 	} else {
 		if(status->code == STATUS_WARNING) {
