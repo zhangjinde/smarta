@@ -6,7 +6,7 @@ Changes with smarta 0.6.0                                       16 Dec 2011
 
 	*) Feature: event compress
 
-	*) Featrue: 'attempts' and 'attempt_interval' support
+	*) Featrue: 'attempts' and 'attempt interval' support
 
 Changes with smarta 0.5.1                                       12 Dec 2011
 

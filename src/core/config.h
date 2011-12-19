@@ -13,6 +13,10 @@
 
 	#define OSNAME "freebsd"
 
+#elif defined(__FreeBSD__)
+
+	#define OSNAME "freebsd"
+
 #endif
 
 #ifdef __APPLE__
