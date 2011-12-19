@@ -1134,7 +1134,7 @@ static void collectd_handler(aeEventLoop *el, int fd, void *privdata, int mask) 
         logger_warning("COLLECTD", "no data");
         return;
     }
-    logger_debug("COLLECTD", "RECV: \n%s", buf);
+    logger_info("COLLECTD", "RECV: \n%s", buf);
 	
 	if(strncasecmp(buf, "sensor/", 7) == 0) {//sensor 
 		handle_sensor_result(xmpp, buf+7);
