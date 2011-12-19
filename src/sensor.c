@@ -24,6 +24,7 @@
 #include <ctype.h>
 #include <stdlib.h>
 #include <string.h>
+#include <signal.h>
 #include <unistd.h>
 #include <sys/wait.h>
 
