@@ -1092,7 +1092,7 @@ static void handle_sensor_result(Xmpp *xmpp, char *buf)
 		if(sensor->type == SENSOR_ACTIVE) {
 			smarta_presence_update();
 		}
-		logger_info("STATUS", "name: %s, attempts: %d, type: %d, code: %d",
+		logger_debug("STATUS", "name: %s, attempts: %d, type: %d, code: %d",
 			sensor->name, sensor->current_attempts, status->type, status->code);
 		if(status->type == STATUS_PERMANENT) {
 			smarta_emit_status(xmpp, sensor);
