@@ -1088,9 +1088,11 @@ static void handle_sensor_result(Xmpp *xmpp, char *buf)
 
 	if(!status) { 
 		logger_warning("SENSOR", "failed to parse status:\n%s", buf);
-		//reschedule
-		sensor->taskid = aeCreateTimeEvent(smarta.el, 
-			interval*1000, check_sensor, sensor, NULL);
+		if(sensor->type == SENSOR_ACTIVE) {
+			//reschedule
+			sensor->taskid = aeCreateTimeEvent(smarta.el, 
+				interval*1000, check_sensor, sensor, NULL);
+		}
 		return;
 	}
 
@@ -1108,8 +1110,10 @@ static void handle_sensor_result(Xmpp *xmpp, char *buf)
 		smarta_emit_metrics(xmpp, sensor); 
 	}
 	//reschedule
-	sensor->taskid = aeCreateTimeEvent(smarta.el, 
-		interval, check_sensor, sensor, NULL);
+	if(sensor->type == SENSOR_ACTIVE) {
+		sensor->taskid = aeCreateTimeEvent(smarta.el, 
+			interval, check_sensor, sensor, NULL);
+	}
 }
 
 static void handle_command_reply(Xmpp *xmpp, char *buf)
