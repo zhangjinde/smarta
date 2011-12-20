@@ -108,7 +108,11 @@ static void collectd_handler(aeEventLoop *el,
 static int check_sensor(struct aeEventLoop *el,
     long long id, void *clientdata);
 
-static void smarta_emit_status(Xmpp *xmpp, Sensor *sensor);
+static void smarta_emit_status(Xmpp *xmpp, 
+	Sensor *sensor);
+
+static void smarta_emit_metrics(Xmpp *xmpp, 
+	Sensor *sensor);
 
 static sds execute(char *from, char *incmd);
 
@@ -174,6 +178,10 @@ static void smarta_init()
     smarta.el = aeCreateEventLoop();
     aeCreateTimeEvent(smarta.el, 100, smarta_cron, NULL, NULL);
 	aeCreateTimeEvent(smarta.el, 1000, smarta_system_status, NULL, NULL);
+
+	smarta.eventd = sdscat(sdsnew("event."), smarta.server);
+	smarta.metricd = sdscat(sdsnew("metric."), smarta.server);
+
     srand(time(NULL)^getpid());
 }
 
@@ -1097,6 +1105,7 @@ static void handle_sensor_result(Xmpp *xmpp, char *buf)
 		if(status->type == STATUS_PERMANENT) {
 			smarta_emit_status(xmpp, sensor);
 		}
+		smarta_emit_metrics(xmpp, sensor); 
 	}
 	//reschedule
 	sensor->taskid = aeCreateTimeEvent(smarta.el, 
@@ -1245,7 +1254,7 @@ static void smarta_emit_status(Xmpp *xmpp, Sensor *sensor)
 			}
 			xmpp_send_body(xmpp, jid, body);
             sdsfree(body);
-        } else if(!strcmp(domain, "event.nodebus.com") 
+        } else if(!strcmp(domain, smarta.eventd) 
             && should_emit(xmpp, jid, sensor)) {
             if(!status->body) {
 				body = sdsempty();
@@ -1261,21 +1270,29 @@ static void smarta_emit_status(Xmpp *xmpp, Sensor *sensor)
             message_free(msg);
             sdsfree(subject);
             sdsfree(body);
-        } else if(!strcmp(domain, "metric.nodebus.com")
-            && status_has_heads(status)) {
-            body = status_metrics_string(status);
-            if(body && sdslen(body) > 0) {
-				msg = message_new(jid, body);
-				msg->thread = sensor->name;
-				xmpp_send_message(xmpp, msg);
-				message_free(msg);
-            }
-            if(body) sdsfree(body);
         }
-        zfree(domain);
+         zfree(domain);
     }
     listReleaseIterator(iter);
 	sdsfree(phrase);
+}
+
+static void smarta_emit_metrics(Xmpp *xmpp, Sensor *sensor) 
+{
+    sds body = NULL;
+	Message *msg = NULL;
+	Status *status = sensor->status;
+    listNode *node = listSearchKey(xmpp->presences, smarta.metricd);
+	if(node && status_has_heads(status)) {
+		body = status_metrics_string(status);
+		if(body && sdslen(body) > 0) {
+			msg = message_new(smarta.metricd, body);
+			msg->thread = sensor->name;
+			xmpp_send_message(xmpp, msg);
+			message_free(msg);
+		}
+		if(body) sdsfree(body);
+	}
 }
 
 static void create_pid_file(void) {

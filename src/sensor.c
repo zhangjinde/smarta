@@ -146,7 +146,7 @@ void sensor_check(Sensor *sensor, int replyport)
     pid_t pid = 0;
     pid = fork();
     if(pid == -1) {
-        logger_error("SCHED", "fork error when check %s", sensor->name);
+        logger_error("SENSOR", "fork error when check %s", sensor->name);
     } else if(pid == 0) { //child process
 		int c = 0, len=0;
 		int presult = 0;
@@ -169,11 +169,11 @@ void sensor_check(Sensor *sensor, int replyport)
 			raw_command = sdscatprintf(sdsempty(), 
 				"cd plugins ; ./%s", sensor->command);
 		}
-        logger_debug("SCHED", "check sensor: '%s', command: '%s'", 
+        logger_debug("SENSOR", "check sensor: '%s', command: '%s'", 
 			sensor->name, raw_command);
         fp = popen(raw_command, "r");
         if(!fp) {
-            logger_error("SCHED", "failed to open %s", raw_command);
+            logger_error("SENSOR", "failed to open %s", raw_command);
 			goto internal_error;
         }
         while( ((c = fgetc(fp)) != EOF) && len < 1023 ) {
@@ -197,14 +197,15 @@ void sensor_check(Sensor *sensor, int replyport)
 		}
 		//nagios unknown = 3
 		if(sensor->nagios && presult == 3) presult = -1;
-		logger_debug("SCHED", "presult: %d, output: \n%s", presult, output);
+		logger_debug("SENSOR", "presult: %d, output: \n%s", presult, output);
 		if( !( (presult >= STATUS_OK) && (presult <= STATUS_CRITICAL) && (len > 0) ) ) {
+			logger_warning("SENSOR", "error sensor result: %d, output: \n%s", presult, output);
 			goto internal_error;
 		}
 		
 		title = sensor_result_preparse(output, status);
 		if(!title) {
-			logger_warning("SCHED", "no title.");
+			logger_warning("SENSOR", "no title.");
 			goto internal_error;
 		}
 		if(sensor->nagios) presult++ ;
@@ -217,7 +218,7 @@ void sensor_check(Sensor *sensor, int replyport)
 internal_error:
 		data = sdscatprintf(sdsnew("SENSOR/"), "%d %d #%s %s\n%s",
 			sensor->id, 127, sensor->name, "UNKNOWN", "Plugin Internal Error!");
-		logger_debug("SCHED", "internal error: \n%s", data);
+		logger_debug("SENSOR", "internal error: \n%s", data);
 		anetUdpSend("127.0.0.1", replyport, data, sdslen(data));
 		if(data) sdsfree(data);
 		if(raw_command) sdsfree(raw_command);

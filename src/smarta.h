@@ -81,6 +81,9 @@ typedef struct _Smarta {
     int proxyport;
     //stats
     int stat_slaves;
+	//services
+	char *eventd;
+	char *metricd;
 	#ifdef __CYGWIN__
 	list *plugins;
     #endif
