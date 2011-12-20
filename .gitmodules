@@ -1,3 +1,3 @@
 [submodule "plugins"]
 	path = plugins
-	url = git@github.com:nodebus/smarta-plugins.git
+	url = git://github.com/nodebus/smarta-plugins.git
