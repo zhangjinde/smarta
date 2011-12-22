@@ -1,3 +1,9 @@
+Changes with smarta 0.6.1                                       25 Dec 2011
+
+	*) Bugfix: 'xa' presence to show status title.
+	
+	*) Bugfix: 'xa' presence when "CRITICAL" event received.
+
 Changes with smarta 0.6.0                                       16 Dec 2011
 
 	*) Improved: rewrite passive sensor protocol

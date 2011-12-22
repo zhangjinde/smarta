@@ -1160,14 +1160,16 @@ static void collectd_handler(aeEventLoop *el, int fd, void *privdata, int mask) 
 
 void smarta_presence_update()
 {
+	sds s;
 	int presence = STATUS_OK;
-	Status *status;
+	Status *status, *last = NULL;
     listNode *node;
     listIter *iter = listGetIterator(smarta.sensors, AL_START_HEAD);
     while((node = listNext(iter)) != NULL) {
 		status = ((Sensor *)node->value)->status;
 		if(status && status->type == STATUS_PERMANENT 
 			&& status->code > presence) {
+			last = status;
 			presence = status->code;
 		}
     }
@@ -1175,8 +1177,11 @@ void smarta_presence_update()
 	if(presence != smarta.presence) {
 		//send presence
 		if(presence > STATUS_WARNING) {
-			xmpp_send_presence(smarta.xmpp, "xa", 
-				i18n_status(smarta.lang, presence));
+			s = sdscatprintf(sdsempty(), "%s - %s",
+				i18n_status(smarta.lang, presence),
+				status->title);
+			xmpp_send_presence(smarta.xmpp, "xa", s);
+			sdsfree(s);
 		} else {
 			xmpp_send_presence(smarta.xmpp, "chat", 
 				i18n_status(smarta.lang, presence));
