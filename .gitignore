@@ -38,3 +38,4 @@ var/data/*
 tags
 smarta.conf
 *.log
+.deps

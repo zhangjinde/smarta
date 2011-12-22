@@ -1174,7 +1174,7 @@ void smarta_presence_update()
     listReleaseIterator(iter);
 	if(presence != smarta.presence) {
 		//send presence
-		if(presence > STATUS_INFO) {
+		if(presence > STATUS_WARNING) {
 			xmpp_send_presence(smarta.xmpp, "xa", 
 				i18n_status(smarta.lang, presence));
 		} else {
