@@ -1162,11 +1162,15 @@ void smarta_presence_update()
 {
 	sds s;
 	int presence = STATUS_OK;
+	Sensor *sensor;
 	Status *status, *last = NULL;
     listNode *node;
     listIter *iter = listGetIterator(smarta.sensors, AL_START_HEAD);
     while((node = listNext(iter)) != NULL) {
-		status = ((Sensor *)node->value)->status;
+		sensor = (Sensor *)node->value;
+		if(sensor->type == SENSOR_PASSIVE) continue;
+
+		status = sensor->status;
 		if(status && status->type == STATUS_PERMANENT 
 			&& status->code > presence) {
 			last = status;
@@ -1179,7 +1183,7 @@ void smarta_presence_update()
 		if(presence > STATUS_WARNING) {
 			s = sdscatprintf(sdsempty(), "%s - %s",
 				i18n_status(smarta.lang, presence),
-				status->title);
+				last->title);
 			xmpp_send_presence(smarta.xmpp, "xa", s);
 			sdsfree(s);
 		} else {
