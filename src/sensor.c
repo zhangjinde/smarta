@@ -57,6 +57,7 @@ Sensor *sensor_new(int type)
 	sensor->name = NULL;
 	sensor->nagios = 0;
 	sensor->type = type;
+	sensor->sched_type = SCHED_PERIOD;
 	sensor->interval = 300*60*1000;
 	sensor->max_attempts = 0;
 	sensor->current_attempts = 0;
@@ -350,10 +351,12 @@ int sensor_set_status(Sensor *sensor, Status *status)
 {
 	int interval = sensor->interval;
 	if(sensor->status) {
-		interval = status_transfer(sensor, status);
+		if(sensor->sched_type == SCHED_PERIOD)
+			interval = status_transfer(sensor, status);
 		status_free(sensor->status);
 	} else {
-		if(status->code == STATUS_WARNING) {
+		if(status->code == STATUS_WARNING
+			&& sensor->sched_type == SCHED_PERIOD) {
 			status->type = STATUS_TRANSIENT;
 			interval = sensor->attempt_interval;
 		}

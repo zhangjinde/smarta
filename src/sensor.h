@@ -45,6 +45,10 @@
 #define SENSOR_ACTIVE 1
 #define SENSOR_PASSIVE 2
 
+//sensor sched
+#define SCHED_PERIOD 0
+#define SCHED_CRON 1
+
 //event emitted by sensor
 typedef struct _Status {
 	//transient or permanent
@@ -70,6 +74,8 @@ typedef struct _Sensor{
 	int nagios;
 	//active or passive
 	int type;
+	//peroid or cron
+	int sched_type;
     char *name;
     long interval;
 	//schedule

@@ -30,7 +30,7 @@ smarta_SOURCES = src/core/ae.c \
 	src/xmpp/stanza.c src/xmpp/parser.c \
 	src/xmpp/xmpp.c src/sensor.c \
 	src/slave.c src/smarta.c \
-	src/ctl.c src/cmd.c
+	src/ctl.c src/cmd.c src/cjob.c
 
 smarta_CFLAGS = $(SMARTA_FLAGS)
 smarta_LDADD = $(SMARTA_LIBS) 
