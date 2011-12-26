@@ -8,6 +8,8 @@ Changes with smarta 0.6.1                                       25 Dec 2011
 
 	*) Feature: support 'timeperiod' to define schedule period.
 
+	*) Feature: support 'graph' tag in plugins
+
 Changes with smarta 0.6.0                                       16 Dec 2011
 
 	*) Improved: rewrite passive sensor protocol
