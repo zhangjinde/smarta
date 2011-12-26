@@ -113,8 +113,9 @@ sds status_metrics_string(Status *status)
     sds buf = sdsempty();
     listIter *iter = listGetIterator(status->heads, AL_START_HEAD);
     while((node = listNext(iter)) != NULL) {
-        if(strncmp(node->value, "metric:", 7) == 0) {
-            buf = sdscat(buf, (char *)(node->value + 7));   
+        if( (strncmp(node->value, "graph:", 6) == 0) || 
+			(strncmp(node->value, "metric:", 7) == 0) ) {
+            buf = sdscat(buf, node->value);
         }
     }
     listReleaseIterator(iter);
