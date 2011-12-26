@@ -26,6 +26,8 @@
 #include "list.h"
 #include "time.h"
 
+#include "cjob.h"
+
 //status lang?
 #define LANG_EN 0
 #define LANG_CN 1
@@ -44,6 +46,10 @@
 //sensor type
 #define SENSOR_ACTIVE 1
 #define SENSOR_PASSIVE 2
+
+//sensor sched
+#define SCHED_PERIOD 0
+#define SCHED_CRON 1
 
 //event emitted by sensor
 typedef struct _Status {
@@ -70,6 +76,8 @@ typedef struct _Sensor{
 	int nagios;
 	//active or passive
 	int type;
+	//peroid or cron
+	int sched_type;
     char *name;
     long interval;
 	//schedule
@@ -87,6 +95,8 @@ typedef struct _Sensor{
 	Status *status;
 	//update time
 	time_t time;
+	//time period
+	TimePeriod *tp;
 	//flap detect
 	int flapping;
 	int hiscursor;
