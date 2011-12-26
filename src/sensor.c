@@ -66,6 +66,7 @@ Sensor *sensor_new(int type)
 	sensor->command = NULL;
 	sensor->status = NULL;
 	sensor->time = 0;
+	sensor->tp = NULL;
 	sensor->flapping = 0;
 	sensor->hiscursor = 0;
 	memset(sensor->history, 0,

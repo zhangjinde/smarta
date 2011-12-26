@@ -32,20 +32,20 @@ typedef int time_min;
 
 #define PPC_NULL        ((char **)NULL)
 
-#define CRON_OK         0
-#define CRON_ERR        (-1)
+#define TP_OK         0
+#define TP_ERR        (-1)
 
-typedef enum _CronErr {
-	CRON_ERR_NONE = 0,
-	CRON_ERR_MINUTE,
-	CRON_ERR_HOUR,
-	CRON_ERR_DOM,
-	CRON_ERR_MONTH,
-	CRON_ERR_DOW
-} CronErr;
+typedef enum _TpErr {
+	TP_ERR_NONE = 0,
+	TP_ERR_MINUTE,
+	TP_ERR_HOUR,
+	TP_ERR_DOM,
+	TP_ERR_MONTH,
+	TP_ERR_DOW
+} TpErr;
 
-typedef struct _CronJob {
-	int             sensorid;
+typedef struct _TimePeriod {
+	char			*name;
 	bitstr_t        bit_decl(minute, MINUTE_COUNT);
 	bitstr_t        bit_decl(hour,   HOUR_COUNT);
 	bitstr_t        bit_decl(dom,    DOM_COUNT);
@@ -57,15 +57,24 @@ typedef struct _CronJob {
 #define WHEN_REBOOT     0x04
 #define MIN_STAR        0x08
 #define HR_STAR         0x10
+} TimePeriod;
+
+typedef struct _CronJob {
+	int             sensorid;
+	TimePeriod		*tp;
 } CronJob;
 
 CronJob *cronjob_new();
 
-char *cronjob_err(int e);
+TimePeriod *timeperiod_new();
 
-int cronjob_feed(CronJob *job, int argc, sds *argv);
+void timeperiod_free();
 
-int cronjob_ready(CronJob *job);
+char *timeperiod_err(int e);
+
+int timeperiod_feed(TimePeriod *tp, int argc, sds *argv);
+
+int timeperiod_ready(TimePeriod *tp);
 
 void cronjob_free(CronJob *job);
 

@@ -26,6 +26,8 @@
 #include "list.h"
 #include "time.h"
 
+#include "cjob.h"
+
 //status lang?
 #define LANG_EN 0
 #define LANG_CN 1
@@ -93,6 +95,8 @@ typedef struct _Sensor{
 	Status *status;
 	//update time
 	time_t time;
+	//time period
+	TimePeriod *tp;
 	//flap detect
 	int flapping;
 	int hiscursor;

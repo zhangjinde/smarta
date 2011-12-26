@@ -42,6 +42,7 @@ typedef struct _Smarta {
     char *apikey;
 	int lang;
 	list *cronjobs;
+	list *timeperiods;
 	//max status
 	int presence; 
     int isslave;

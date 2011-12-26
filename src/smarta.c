@@ -57,9 +57,11 @@
 #endif
 
 #define CONFIGLINE_MAX 1024
+
 #define IN_SMARTA_BLOCK 1
-#define IN_SENSOR_BLOCK 2
-#define IN_COMMAND_BLOCK 3
+#define IN_TIMEPERIOD_BLOCK 2
+#define IN_SENSOR_BLOCK 3
+#define IN_COMMAND_BLOCK 4
 
 Smarta smarta;
 
@@ -95,6 +97,8 @@ static int smarta_sched_cronjobs(aeEventLoop *eventLoop,
     long long id, void *clientData);
 
 static Sensor *smarta_find_sensor_by_id(int id);
+
+TimePeriod *smarta_find_timeperiod(char *name);
 
 static void conn_handler(Xmpp *xmpp, 
     XmppStreamState state); 
@@ -159,6 +163,7 @@ static void smarta_prepare()
     smarta.shutdown_asap = 0;
     smarta.pidfile = "var/run/smarta.pid";
 	smarta.sensorno = 1;
+	smarta.timeperiods = listCreate();
 	smarta.cronjobs = listCreate();
     smarta.sensors = listCreate();
     smarta.commands = listCreate();
@@ -199,10 +204,11 @@ static void smarta_config(char *filename) {
     int linenum = 0;
     sds line = NULL;
     int state = 0;
+	TimePeriod *tp;
     Sensor *sensor;
     Command *command;
 	CronJob *cronjob;
-	CronErr cronerr;
+	TpErr tperr;
 
     if ((fp = fopen(filename,"r")) == NULL) {
         fprintf(stderr, "Fatal error, can't open config file '%s'", filename);
@@ -232,12 +238,18 @@ static void smarta_config(char *filename) {
             state = IN_SMARTA_BLOCK;
         } else if ((state == IN_SMARTA_BLOCK) && !strcasecmp(argv[0], "}") && argc == 1) {
             state = 0;
+        } else if ((state == IN_TIMEPERIOD_BLOCK) && !strcasecmp(argv[0], "}") && argc == 1) {
+            listAddNodeTail(smarta.timeperiods, tp);
+            state = 0;
         } else if ((state == IN_SENSOR_BLOCK) && !strcasecmp(argv[0], "}") && argc == 1) {
             listAddNodeTail(smarta.sensors, sensor);
             state = 0;
         } else if ((state == IN_COMMAND_BLOCK) && !strcasecmp(argv[0], "}") && argc == 1) {
             listAddNodeTail(smarta.commands, command);
             state = 0;
+        } else if (!strcasecmp(argv[0], "timeperiod") && !strcasecmp(argv[1],"{") && argc == 2) {
+            state = IN_TIMEPERIOD_BLOCK;
+            tp = timeperiod_new();
         } else if (!strcasecmp(argv[0],"sensor") && !strcasecmp(argv[1],"{") && argc == 2) {
             state = IN_SENSOR_BLOCK;
             sensor = sensor_new(SENSOR_ACTIVE);
@@ -301,18 +313,28 @@ static void smarta_config(char *filename) {
         } else if ((state == IN_SMARTA_BLOCK) && !strcasecmp(argv[0],"slaveof") && argc == 3) {
             smarta.slaveip= strdup(argv[1]);
             smarta.slaveport = atoi(argv[2]);
+        } else if ((state == IN_TIMEPERIOD_BLOCK) && !strcasecmp(argv[0], "name") && argc == 2) {
+            tp->name = sdsdup(argv[1]);
+        } else if ((state == IN_TIMEPERIOD_BLOCK) && !strcasecmp(argv[0], "period") && argc == 6) {
+            tperr = timeperiod_feed(tp, argc-1, argv+1);
+			if(TP_OK != tperr) {
+				timeperiod_free(tp);
+				err = timeperiod_err(tperr);
+				goto loaderr;
+			}
         } else if ((state == IN_SENSOR_BLOCK) && !strcasecmp(argv[0], "name") && argc >= 2) {
             sensor->name = sdsjoin(argv+1, argc-1);
         } else if ((state == IN_SENSOR_BLOCK) && ( !strcasecmp(argv[0], "period") || !strcasecmp(argv[0], "interval") ) && argc == 2) {// period
             sensor->interval = atoi(argv[1]) * 60 * 1000;
         } else if ((state == IN_SENSOR_BLOCK) && ( !strcasecmp(argv[0], "period") || !strcasecmp(argv[0], "interval") ) && argc == 6) {// cron
 			cronjob = cronjob_new();
+			cronjob->tp = timeperiod_new();
 			cronjob->sensorid = sensor->id;
 			sensor->sched_type = SCHED_CRON;
-			cronerr = cronjob_feed(cronjob, argc-1, argv+1);
-			if(CRON_OK != cronerr) {
+			tperr = timeperiod_feed(cronjob->tp, argc-1, argv+1);
+			if(TP_OK != tperr) {
 				cronjob_free(cronjob);
-				err = cronjob_err(cronerr);
+				err = timeperiod_err(tperr);
 				goto loaderr;
 			}
 			logger_info("SMARTA", "add cron job '%s'", sensor->name);
@@ -323,6 +345,13 @@ static void smarta_config(char *filename) {
             sensor->attempt_interval = atoi(argv[2]) * 60 * 1000;
         } else if ((state == IN_SENSOR_BLOCK) && !strcasecmp(argv[0], "nagios") && argc == 1) {
             sensor->nagios= 1;
+        } else if ((state == IN_SENSOR_BLOCK) && !strcasecmp(argv[0], "timeperiod") && argc == 2) {
+			tp = smarta_find_timeperiod(argv[1]);
+			if(!tp) {
+				err = "cannot find timeperiod defination!";
+				goto loaderr;
+			}
+            sensor->tp = tp;
         } else if ((state == IN_SENSOR_BLOCK) && !strcasecmp(argv[0], "command") && argc >= 2) {
             sensor->command = sdsjoin(argv+1, argc-1);
         } else if ((state == IN_COMMAND_BLOCK) && !strcasecmp(argv[0],"usage") && argc >= 2) {
@@ -977,9 +1006,12 @@ static int smarta_sched_cronjobs(aeEventLoop *eventLoop,
 	listIter *iter = listGetIterator(smarta.cronjobs, AL_START_HEAD);
 	while((node = listNext(iter)) != NULL) {
 		job = (CronJob *)node->value;
-		if(cronjob_ready(job)) {
+		if(timeperiod_ready(job->tp)) {
 			sensor = smarta_find_sensor_by_id(job->sensorid);
-			if(sensor) sensor_check(sensor, smarta.collectd_port);
+			if( sensor ) {
+				if( sensor->tp && !timeperiod_ready(sensor->tp) ) continue; 
+				sensor_check(sensor, smarta.collectd_port);
+			}
 		}
 	}
 	listReleaseIterator(iter);
@@ -1033,9 +1065,31 @@ int check_sensor(struct aeEventLoop *el, long long id, void *clientdata) {
 	}
 	zfree(argv);
 #else
+	if( sensor->tp && !timeperiod_ready(sensor->tp) ) {
+		logger_info("SMARTA", "not in timeperiod, ignore to check %s",
+			sensor->name);
+		return sensor->interval;	
+	}
 	sensor_check(sensor, smarta.collectd_port);
 #endif
     return AE_NOMORE;
+}
+
+//Rewrite these finds.
+TimePeriod *smarta_find_timeperiod(char *name) 
+{
+	listNode *node;
+	TimePeriod *tp, *ret_tp= NULL;
+	listIter *iter = listGetIterator(smarta.timeperiods, AL_START_HEAD);
+	while((node = listNext(iter)) != NULL) {
+		tp =(TimePeriod *)node->value; 
+		if( !sdscmp(tp->name, name) ) {
+			ret_tp = tp;
+			break;
+		}
+	}
+	listReleaseIterator(iter);
+	return ret_tp;
 }
 
 Sensor *smarta_find_sensor_by_name(char *name)
@@ -1187,7 +1241,7 @@ static void collectd_handler(aeEventLoop *el, int fd, void *privdata, int mask) 
         logger_warning("COLLECTD", "no data");
         return;
     }
-    logger_info("COLLECTD", "RECV: \n%s", buf);
+    logger_debug("COLLECTD", "RECV: \n%s", buf);
 	
 	if(strncasecmp(buf, "sensor/", 7) == 0) {//sensor 
 		handle_sensor_result(xmpp, buf+7);
