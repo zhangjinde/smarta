@@ -5,8 +5,8 @@ uname=`uname`
 if [ "$uname" = "Linux" ]; then
 	num=`cat /proc/cpuinfo | grep processor | wc -l`
 	model=`cat /proc/cpuinfo | grep "model name" | head -n 1 | cut -d: -f2`
-	usage=`top -b -n 1 | grep "CPU states:" | cut -d: -f2`
-	echo "CPU Cores: $num,  CPU Model: $model"
+	usage=`top -b -n 1 | grep "Cpu(s)" | cut -d: -f2`
+	echo "CPU Cores: $num, CPU Model: $model"
 	echo ""
 	echo "CPU Usage: $usage"
 elif [ "$uname" = "Darwin" ]; then
