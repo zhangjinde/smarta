@@ -1,7 +1,7 @@
 #ifndef __CJOB_H
 #define __CJOB_H
 
-#include <bitstring.h>
+#include "bitstring.h"
 
 #include "sds.h"
 
