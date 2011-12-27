@@ -39,3 +39,4 @@ tags
 smarta.conf
 *.log
 .deps
+deps

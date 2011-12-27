@@ -1256,6 +1256,7 @@ void smarta_presence_update()
 {
 	sds s;
 	int presence = STATUS_OK;
+	char *show;
 	Sensor *sensor;
 	Status *status, *last = NULL;
     listNode *node;
@@ -1275,15 +1276,19 @@ void smarta_presence_update()
 	if(presence != smarta.presence) {
 		//send presence
 		if(presence > STATUS_WARNING) {
+			show = "xa";
+		} else {
+			show = "chat";
+		}
+		if(presence >= STATUS_WARNING) {
 			s = sdscatprintf(sdsempty(), "%s - %s",
 				i18n_status(smarta.lang, presence),
 				last->title);
-			xmpp_send_presence(smarta.xmpp, "xa", s);
-			sdsfree(s);
 		} else {
-			xmpp_send_presence(smarta.xmpp, "chat", 
-				i18n_status(smarta.lang, presence));
+			s =	sdsnew(i18n_status(smarta.lang, presence));
 		}
+		xmpp_send_presence(smarta.xmpp, show, s);
+		sdsfree(s);
 	}
 	smarta.presence = presence;
 }
