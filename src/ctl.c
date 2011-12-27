@@ -22,12 +22,14 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <signal.h>
+#include <unistd.h>
 
 #include "smarta.h"
 
 extern Smarta smarta;
 
-void smarta_ctl_status() {
+void 
+smarta_ctl_status() {
 	char pid[20] = {0};
 	FILE *fp = fopen(smarta.pidfile, "r");
 	if(!fp) {
@@ -38,7 +40,8 @@ void smarta_ctl_status() {
 	printf("Smarta is running as pid %s\n", pid);
 }
 
-void smarta_ctl_stop() 
+void 
+smarta_ctl_stop() 
 {
 	int status = 0;
 	char pid[20] = {0};
@@ -54,3 +57,17 @@ void smarta_ctl_stop()
 	}
 }
 
+//FIXME: not work
+void 
+smarta_ctl_restart() {
+    pid_t pid = 0;
+    pid = fork();
+    if(pid == -1) {
+        logger_error("SMARTA", "fork error when restart.");
+		return;
+    } else if(pid == 0) {//
+		system("./smarta");	
+    } else { //stop current process.
+		exit(0);
+    }
+}

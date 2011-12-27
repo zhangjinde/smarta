@@ -34,15 +34,20 @@
 
 extern Smarta smarta;
 
-static Slave *slave_create(int slave_fd, int xmpp_fd);
+static Slave *
+slave_create(int slave_fd, int xmpp_fd);
 
-static void read_from_slave(aeEventLoop *el, int fd, void *privdata, int mask); 
+static void 
+read_from_slave(aeEventLoop *el, int fd, void *privdata, int mask); 
 
-static void read_from_xmpp(aeEventLoop *el, int fd, void *privdata, int mask); 
+static void 
+read_from_xmpp(aeEventLoop *el, int fd, void *privdata, int mask); 
 
-static void slave_release(Slave *slave);
+static void 
+slave_release(Slave *slave);
 
-void slave_accept_handler(aeEventLoop *el, int listenfd, void *privdata, int mask)
+void 
+slave_accept_handler(aeEventLoop *el, int listenfd, void *privdata, int mask)
 {
     char ip[128] = {0};
     int port, fd, xmppfd;
@@ -72,7 +77,8 @@ void slave_accept_handler(aeEventLoop *el, int listenfd, void *privdata, int mas
     }
 }
 
-static Slave *slave_create(int fd, int xmppfd) {
+static Slave *
+slave_create(int fd, int xmppfd) {
     Slave *slave = zmalloc(sizeof(Slave));
     slave->fd = fd;
     slave->xmppfd = xmppfd;
@@ -97,7 +103,8 @@ static Slave *slave_create(int fd, int xmppfd) {
     return slave;
 }
 
-static void read_from_slave(aeEventLoop *el, int fd, void *privdata, int mask) 
+static void 
+read_from_slave(aeEventLoop *el, int fd, void *privdata, int mask) 
 { 
     int nread;
     char buf[4096] = {0};
@@ -113,7 +120,8 @@ static void read_from_slave(aeEventLoop *el, int fd, void *privdata, int mask)
     anetWrite(slave->xmppfd, buf, nread);
 }
 
-static void read_from_xmpp(aeEventLoop *el, int fd, void *privdata, int mask) 
+static void 
+read_from_xmpp(aeEventLoop *el, int fd, void *privdata, int mask) 
 { 
     int nread;
     char buf[4096] = {0};
@@ -129,7 +137,8 @@ static void read_from_xmpp(aeEventLoop *el, int fd, void *privdata, int mask)
     anetWrite(slave->fd, buf, nread);
 }
 
-static void slave_release(Slave *slave) 
+static void 
+slave_release(Slave *slave) 
 {
     listNode *node = NULL;
     if(slave->xmppfd > 0) {

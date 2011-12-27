@@ -69,78 +69,96 @@ extern int log_level;
 
 extern char *log_file;
 
-static void setupSignalHandlers(void);
+static void 
+setupSignalHandlers(void);
 
-static void daemonize(void); 
+static void 
+daemonize(void); 
 
-static void smarta_run(void); 
+static void 
+smarta_run(void); 
 
-static void smarta_xmpp_connect(void);
+static void 
+smarta_xmpp_connect(void);
 
-static void smarta_collectd_start(void);
+static void 
+smarta_collectd_start(void);
 
-static void smarta_masterd_start(void);
+static void 
+smarta_masterd_start(void);
 
-static void smarta_proxy_start(void);
+static void 
+smarta_proxy_start(void);
 
-static void smarta_presence_update();
+static void 
+smarta_presence_update();
 
-static void sched_sensors(void);
+static void 
+sched_sensors(void);
 
-static int smarta_cron(aeEventLoop *eventLoop, 
-    long long id, void *clientData);
+static int 
+smarta_cron(aeEventLoop *eventLoop, long long id, void *clientData);
 
-static int smarta_system_status(aeEventLoop *eventLoop,
-    long long id, void *clientData);
+static int 
+smarta_system_status(aeEventLoop *eventLoop, long long id, void *clientData);
 
-static int smarta_sched_cronjobs(aeEventLoop *eventLoop,
-    long long id, void *clientData);
+static int 
+smarta_sched_cronjobs(aeEventLoop *eventLoop, long long id, void *clientData);
 
-static Sensor *smarta_find_sensor_by_id(int id);
+static Sensor *
+smarta_find_sensor_by_id(int id);
 
-TimePeriod *smarta_find_timeperiod(char *name);
+TimePeriod *
+smarta_find_timeperiod(char *name);
 
-static void conn_handler(Xmpp *xmpp, 
-    XmppStreamState state); 
+static void 
+conn_handler(Xmpp *xmpp, XmppStreamState state); 
 
-static void presence_handler(Xmpp *xmpp,
-    Stanza *presence);
+static void 
+presence_handler(Xmpp *xmpp, Stanza *presence);
 
-static void command_handler(Xmpp *xmpp, 
-    Stanza *stanza); 
+static void 
+command_handler(Xmpp *xmpp, Stanza *stanza); 
 
-static void roster_handler(Xmpp *xmpp,
-    Stanza *iq);
+static void 
+roster_handler(Xmpp *xmpp, Stanza *iq);
 
-static void collectd_handler(aeEventLoop *el,
-    int fd, void *privdata, int mask);
+static void 
+collectd_handler(aeEventLoop *el, int fd, void *privdata, int mask);
 
-static int check_sensor(struct aeEventLoop *el,
-    long long id, void *clientdata);
+static int 
+check_sensor(struct aeEventLoop *el, long long id, void *clientdata);
 
-static void smarta_emit_status(Xmpp *xmpp, 
-	Sensor *sensor);
+static void 
+smarta_emit_status(Xmpp *xmpp, Sensor *sensor);
 
-static void smarta_emit_metrics(Xmpp *xmpp, 
-	Sensor *sensor);
+static void 
+smarta_emit_metrics(Xmpp *xmpp, Sensor *sensor);
 
-static sds execute(char *from, char *incmd);
+static sds 
+execute(char *from, char *incmd);
 
-static void create_pid_file(void);
+static void 
+create_pid_file(void);
 
-static int yesnotoi(char *s); 
+static int 
+yesnotoi(char *s); 
 
-static int strcompare(const void *s1, const void *s2); 
+static int 
+strcompare(const void *s1, const void *s2); 
 
-static void sortlines(void *array, unsigned int len);
+static void 
+sortlines(void *array, unsigned int len);
 
-static void version() 
+static void 
+version() 
 {
     printf("Smart agent version %s\n", SMARTA_VERSION);
     exit(0);
 }
 
-static void usage() 
+static void 
+usage() 
 {
     fprintf(stderr,"Usage:  ./smarta [/path/to/smarta.conf]\n"
 		"\t./smarta status\n\t./smarta stop\n");
@@ -150,7 +168,8 @@ static void usage()
 /*
 ** call in parent process
 */
-static void smarta_prepare() 
+static void 
+smarta_prepare() 
 {
     log_level = LOG_INFO;
     log_file = "var/log/smarta.log";
@@ -173,7 +192,8 @@ static void smarta_prepare()
 /*
 ** call in fork process
 */
-static void smarta_init() 
+static void 
+smarta_init() 
 {
     signal(SIGCHLD, SIG_IGN);
     signal(SIGPIPE, SIG_IGN);
@@ -198,7 +218,8 @@ static void smarta_init()
     srand(time(NULL)^getpid());
 }
 
-static void smarta_config(char *filename) {
+static void 
+smarta_config(char *filename) {
     FILE *fp;
     char buf[CONFIGLINE_MAX+1], *err = NULL;
     int linenum = 0;
@@ -379,7 +400,8 @@ loaderr:
 
 #ifdef __CYGWIN__
 
-Plugin *find_plugin(char *name)
+Plugin *
+find_plugin(char *name)
 {
 	listNode *node;
 	Plugin *retplugin = NULL;
@@ -395,7 +417,8 @@ Plugin *find_plugin(char *name)
 	return retplugin;
 }
 
-void load_plugin_dll(TCHAR *dllName)
+void 
+load_plugin_dll(TCHAR *dllName)
 {
 	HMODULE dll;
 	Plugin *plugin;
@@ -417,7 +440,8 @@ void load_plugin_dll(TCHAR *dllName)
 	}
 }
 
-void load_plugins(void)
+void 
+load_plugins(void)
 {
 	HANDLE hFind=INVALID_HANDLE_VALUE;
 	WIN32_FIND_DATA ffd;
@@ -434,12 +458,14 @@ void load_plugins(void)
 
 #endif
 
-static void sigtermHandler(int sig) {
+static void 
+sigtermHandler(int sig) {
     logger_info("SMARTA", "SIGTERM, scheduling shutdown...");
     smarta.shutdown_asap = 1;
 }       
 
-static void setupSignalHandlers(void) {
+static void 
+setupSignalHandlers(void) {
     struct sigaction act;
 
     /* When the SA_SIGINFO flag is set in sa_flags then sa_sigaction is used.
@@ -452,7 +478,8 @@ static void setupSignalHandlers(void) {
     return;
 }
 
-static int pidfile_existed() {
+static int 
+pidfile_existed() {
     if(smarta.pidfile) {
     FILE *fp = fopen(smarta.pidfile, "r");
     return fp ? 1 : 0;
@@ -460,7 +487,8 @@ static int pidfile_existed() {
     return 0;
 }  
 
-int main(int argc, char **argv) {
+int 
+main(int argc, char **argv) {
 
     smarta_prepare();
 	
@@ -519,7 +547,8 @@ int main(int argc, char **argv) {
     return 0;
 }
 
-static void smarta_xmpp_connect(void) 
+static void 
+smarta_xmpp_connect(void) 
 {
     /* create xmpp */
 	Xmpp *xmpp = NULL;
@@ -550,7 +579,8 @@ static void smarta_xmpp_connect(void)
     xmpp_add_iq_ns_callback(xmpp, "nodebus:iq:roster", (iq_callback)roster_handler);
 }
 
-static void smarta_collectd_start(void)
+static void 
+smarta_collectd_start(void)
 {
     int ret = -1;
     struct sockaddr_in sa;
@@ -579,7 +609,8 @@ static void smarta_collectd_start(void)
     aeCreateFileEvent(smarta.el, smarta.collectd, AE_READABLE, collectd_handler, smarta.xmpp);
 }
 
-static void smarta_proxy_start(void) 
+static void 
+smarta_proxy_start(void) 
 {
 //    smarta.proxyfd = anetTcpServer(smarta.neterr, smarta.proxyport, NULL);
 //    if(smarta.proxyfd <= 0) {
@@ -591,7 +622,8 @@ static void smarta_proxy_start(void)
 //    aeCreateFileEvent(smarta.el, smarta.proxyfd, AE_READABLE, proxy_accept_handler, NULL);
 }
 
-static void smarta_masterd_start(void) 
+static void 
+smarta_masterd_start(void) 
 {
     smarta.masterfd = anetTcpServer(smarta.neterr, smarta.masterport, NULL);
     if(smarta.masterfd < 0) {
@@ -603,7 +635,8 @@ static void smarta_masterd_start(void)
     aeCreateFileEvent(smarta.el, smarta.masterfd, AE_READABLE, slave_accept_handler, NULL);
 }
 
-static void conn_handler(Xmpp *xmpp, XmppStreamState state) 
+static void 
+conn_handler(Xmpp *xmpp, XmppStreamState state) 
 {
     if(state == XMPP_STREAM_DISCONNECTED) {
         logger_error("SMARTA", "disconnected from server.");
@@ -639,7 +672,8 @@ static void conn_handler(Xmpp *xmpp, XmppStreamState state)
     }
 }
 
-static void roster_handler(Xmpp *xmpp, Stanza *iq) 
+static void 
+roster_handler(Xmpp *xmpp, Stanza *iq) 
 {
     Buddy *buddy;
     Stanza *presence;
@@ -699,7 +733,8 @@ static void roster_handler(Xmpp *xmpp, Stanza *iq)
     }
 }
 
-static void presence_handler(Xmpp *xmpp, Stanza *presence) 
+static void 
+presence_handler(Xmpp *xmpp, Stanza *presence) 
 {
     Stanza *stanza;
 	sds phrase = NULL;
@@ -755,7 +790,8 @@ static void presence_handler(Xmpp *xmpp, Stanza *presence)
 	zfree(domain);
 }
 
-static void command_handler(Xmpp *xmpp, Stanza *stanza) 
+static void 
+command_handler(Xmpp *xmpp, Stanza *stanza) 
 {
     sds output;
 	char *from, *incmd;
@@ -782,7 +818,8 @@ static void command_handler(Xmpp *xmpp, Stanza *stanza)
 	sdsfree(output);
 }
 
-static Command *find_command(char *usage)
+static Command *
+find_command(char *usage)
 {
     listNode *node;
 	Command *retcmd = NULL;
@@ -798,17 +835,20 @@ static Command *find_command(char *usage)
     return retcmd;
 }
 
-static int strcompare(const void *s1, const void *s2) 
+static int 
+strcompare(const void *s1, const void *s2) 
 {
     return strcmp(*(const char **)s1, *(const char **)s2);
 }
 
-static void sortlines(void *lines, unsigned int len)
+static void 
+sortlines(void *lines, unsigned int len)
 {
     qsort(lines, len, sizeof(char *), strcompare);
 }
 
-static sds execute(char *from, char *incmd)
+static sds 
+execute(char *from, char *incmd)
 {
 	int c = 0;
 	int count = 0;
@@ -889,6 +929,8 @@ static sds execute(char *from, char *incmd)
             listReleaseIterator(iter);
             smarta.cmdusage = sdsdup(output);
         }
+	} else if(strcmp(incmd, "smarta restart") == 0) {
+		smarta_ctl_restart();
 	}else if( (command = find_command(incmd) )) {
 		//FIXME: not work.
         #ifdef __CYGWIN__
@@ -930,7 +972,8 @@ static sds execute(char *from, char *incmd)
     return output;
 }
 
-static void daemonize(void) {
+static void 
+daemonize(void) {
     int fd;
     FILE *fp;
 
@@ -954,7 +997,8 @@ static void daemonize(void) {
     }
 }
 
-static void before_sleep(struct aeEventLoop *eventLoop) {
+static void 
+before_sleep(struct aeEventLoop *eventLoop) {
     if(smarta.xmpp->prepare_reset == 1) {
         logger_debug("SMARTA", "before sleep... reset parser");
         parser_reset(smarta.xmpp->parser);
@@ -962,13 +1006,15 @@ static void before_sleep(struct aeEventLoop *eventLoop) {
     }
 }
 
-static void smarta_run() {
+static void 
+smarta_run() {
     aeSetBeforeSleepProc(smarta.el, before_sleep);
     aeMain(smarta.el);
     aeDeleteEventLoop(smarta.el);
 }
 
-static int smarta_cron(aeEventLoop *eventLoop,
+static int 
+smarta_cron(aeEventLoop *eventLoop,
     long long id, void *clientData) {
     if(smarta.shutdown_asap) {
         //TODO: ok???
@@ -981,7 +1027,8 @@ static int smarta_cron(aeEventLoop *eventLoop,
     return 1000;
 }
 
-static int smarta_system_status(aeEventLoop *eventLoop,
+static int 
+smarta_system_status(aeEventLoop *eventLoop,
     long long id, void *clientData) {
     pid_t pid = 0;
     pid = fork();
@@ -997,7 +1044,8 @@ static int smarta_system_status(aeEventLoop *eventLoop,
     return 60000;
 }
 
-static int smarta_sched_cronjobs(aeEventLoop *eventLoop,
+static int 
+smarta_sched_cronjobs(aeEventLoop *eventLoop,
     long long id, void *clientData) 
 {
 	Sensor *sensor = NULL;
@@ -1018,7 +1066,8 @@ static int smarta_sched_cronjobs(aeEventLoop *eventLoop,
     return 60000;
 }
 
-static void sched_sensors() {
+static void 
+sched_sensors() {
     long taskid;
     int delay = 0;
     Sensor *sensor;
@@ -1037,7 +1086,8 @@ static void sched_sensors() {
     listReleaseIterator(iter);
 }
 
-int check_sensor(struct aeEventLoop *el, long long id, void *clientdata) {
+int 
+check_sensor(struct aeEventLoop *el, long long id, void *clientdata) {
     Sensor *sensor = (Sensor *)clientdata;
 #ifdef __CYGWIN__ //FIXME: not work now
     int i,argc;
@@ -1076,7 +1126,8 @@ int check_sensor(struct aeEventLoop *el, long long id, void *clientdata) {
 }
 
 //Rewrite these finds.
-TimePeriod *smarta_find_timeperiod(char *name) 
+TimePeriod *
+smarta_find_timeperiod(char *name) 
 {
 	listNode *node;
 	TimePeriod *tp, *ret_tp= NULL;
@@ -1092,7 +1143,8 @@ TimePeriod *smarta_find_timeperiod(char *name)
 	return ret_tp;
 }
 
-Sensor *smarta_find_sensor_by_name(char *name)
+Sensor *
+smarta_find_sensor_by_name(char *name)
 {
 	listNode *node;
 	Sensor *sensor, *retsensor = NULL;
@@ -1108,7 +1160,8 @@ Sensor *smarta_find_sensor_by_name(char *name)
 	return retsensor;
 }
 
-Sensor *smarta_find_sensor_by_id(int id)
+Sensor *
+smarta_find_sensor_by_id(int id)
 {
 	listNode *node;
 	Sensor *sensor = NULL;
@@ -1123,7 +1176,8 @@ Sensor *smarta_find_sensor_by_id(int id)
 	return sensor;
 }
 
-static listNode *smarta_find_request(int reqid)
+static listNode *
+smarta_find_request(int reqid)
 {
 	Request *req;
 	listIter *iter;
@@ -1140,7 +1194,8 @@ static listNode *smarta_find_request(int reqid)
 	return reqnode;
 }
 
-static void handle_sensor_result(Xmpp *xmpp, char *buf)
+static void 
+handle_sensor_result(Xmpp *xmpp, char *buf)
 {
 	int id = -1;
 	int interval;
@@ -1210,7 +1265,8 @@ static void handle_sensor_result(Xmpp *xmpp, char *buf)
 	}
 }
 
-static void handle_command_reply(Xmpp *xmpp, char *buf)
+static void 
+handle_command_reply(Xmpp *xmpp, char *buf)
 {
 	int id;
 	char *ptr;
@@ -1232,7 +1288,8 @@ static void handle_command_reply(Xmpp *xmpp, char *buf)
 	listDelNode(smarta.requests, node);
 }
 
-static void collectd_handler(aeEventLoop *el, int fd, void *privdata, int mask) {
+static void 
+collectd_handler(aeEventLoop *el, int fd, void *privdata, int mask) {
     int nread;
     char buf[4096] = {0};
     nread = read(fd, buf, 4095);
@@ -1252,7 +1309,8 @@ static void collectd_handler(aeEventLoop *el, int fd, void *privdata, int mask) 
 	}
 }
 
-void smarta_presence_update()
+void 
+smarta_presence_update()
 {
 	sds s;
 	int presence = STATUS_OK;
@@ -1293,7 +1351,8 @@ void smarta_presence_update()
 	smarta.presence = presence;
 }
 
-Emitted *emitted_find(char *jid, int sensor)
+Emitted *
+emitted_find(char *jid, int sensor)
 {
     listNode *node;
     listIter *iter;
@@ -1310,7 +1369,8 @@ Emitted *emitted_find(char *jid, int sensor)
     return NULL;
 }
 
-Emitted *emitted_new(char *jid, int sensor, int status) 
+Emitted *
+emitted_new(char *jid, int sensor, int status) 
 {
     Emitted *e = zmalloc(sizeof(Emitted));
     e->jid = zstrdup(jid);
@@ -1319,7 +1379,8 @@ Emitted *emitted_new(char *jid, int sensor, int status)
     return e;
 }
 
-static int should_emit(Xmpp *xmpp, char *jid, Sensor *sensor) 
+static int 
+should_emit(Xmpp *xmpp, char *jid, Sensor *sensor) 
 {
     int yes;
     int status = sensor->status->code;
@@ -1345,7 +1406,8 @@ static int should_emit(Xmpp *xmpp, char *jid, Sensor *sensor)
     return yes;
 }
 
-static void smarta_emit_status(Xmpp *xmpp, Sensor *sensor) 
+static void 
+smarta_emit_status(Xmpp *xmpp, Sensor *sensor) 
 {
 	Message *msg;
     listNode *node;
@@ -1389,7 +1451,8 @@ static void smarta_emit_status(Xmpp *xmpp, Sensor *sensor)
 	sdsfree(phrase);
 }
 
-static void smarta_emit_metrics(Xmpp *xmpp, Sensor *sensor) 
+static void 
+smarta_emit_metrics(Xmpp *xmpp, Sensor *sensor) 
 {
     sds body = NULL;
 	Message *msg = NULL;
@@ -1407,7 +1470,8 @@ static void smarta_emit_metrics(Xmpp *xmpp, Sensor *sensor)
 	}
 }
 
-static void create_pid_file(void) {
+static void 
+create_pid_file(void) {
     FILE *fp = fopen(smarta.pidfile,"w");
     if (fp) {
         fprintf(fp,"%d\n",(int)getpid());
@@ -1415,7 +1479,8 @@ static void create_pid_file(void) {
     }
 }
 
-static int yesnotoi(char *s) {
+static int 
+yesnotoi(char *s) {
     if (!strcasecmp(s,"yes")) return 1;
     else if (!strcasecmp(s,"no")) return 0;
     else return -1;

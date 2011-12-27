@@ -59,7 +59,8 @@ get_number(int  *numptr,        /* where does the result go? */
         char    *names[],       /* symbolic names, if any, for enums */
         char    *s);          /* source */
 
-CronJob *cronjob_new()
+CronJob *
+cronjob_new()
 {
 	CronJob *job = zmalloc(sizeof(CronJob));
 	
@@ -69,26 +70,30 @@ CronJob *cronjob_new()
 	return job;
 }
 
-TimePeriod *timeperiod_new() 
+TimePeriod *
+timeperiod_new() 
 {
 	TimePeriod *tp = zmalloc(sizeof(TimePeriod));
 	memset(tp, 0, sizeof(TimePeriod));
 	return tp;
 }
 
-void timeperiod_free(TimePeriod *tp) 
+void
+timeperiod_free(TimePeriod *tp) 
 {
 	if(tp->name) sdsfree(tp->name);
 	zfree(tp);
 }
 
-char *timeperiod_err(int e)
+char *
+timeperiod_err(int e) 
 {
 	return ecodes[e];
 }
 
 //# m h dom mon dow
-int timeperiod_feed(TimePeriod *tp, int argc, sds *argv)
+int
+timeperiod_feed(TimePeriod *tp, int argc, sds *argv) 
 {
 	char *s;
 
@@ -153,7 +158,8 @@ int timeperiod_feed(TimePeriod *tp, int argc, sds *argv)
 }
 
 //Credits: copy from cron.
-int timeperiod_ready(TimePeriod *tp) 
+int
+timeperiod_ready(TimePeriod *tp) 
 {
 	time_t now;
 	struct tm *tm; 
@@ -188,7 +194,8 @@ int timeperiod_ready(TimePeriod *tp)
 	return 0;
 }
 
-void cronjob_free(CronJob *job)
+void
+cronjob_free(CronJob *job) 
 {
 	if(job->tp) timeperiod_free(job->tp);
 	zfree(job);

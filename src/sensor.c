@@ -50,7 +50,8 @@ static void linefree(void *s);
 
 static sds strsub(char *s, char *o, char *n);
 
-Sensor *sensor_new(int type) 
+Sensor *
+sensor_new(int type) 
 {
 	Sensor *sensor = zmalloc(sizeof(Sensor));
 	sensor->id = 0;
@@ -74,7 +75,8 @@ Sensor *sensor_new(int type)
 	return sensor;
 }
 
-Status *status_new()
+Status *
+status_new()
 {
 	Status *status = zmalloc(sizeof(Status));
 	status->type = STATUS_PERMANENT;
@@ -87,7 +89,8 @@ Status *status_new()
 	return status;
 }
 
-int status_has_heads(Status *status) 
+int 
+status_has_heads(Status *status) 
 {
 	if(status->heads) {
 		return listLength(status->heads);       
@@ -95,7 +98,8 @@ int status_has_heads(Status *status)
 	return 0;
 }
 
-sds status_heads_string(Status *status)
+sds 
+status_heads_string(Status *status)
 {
     listNode *node;
     sds buf = sdsempty();
@@ -107,7 +111,8 @@ sds status_heads_string(Status *status)
     return buf;
 }
 
-sds status_metrics_string(Status *status)
+sds 
+status_metrics_string(Status *status)
 {
     listNode *node;
     sds buf = sdsempty();
@@ -122,7 +127,8 @@ sds status_metrics_string(Status *status)
     return buf;
 }
 
-static char *sensor_result_preparse(char *output, char *status)
+static char *
+sensor_result_preparse(char *output, char *status)
 {
 	int i =0;
 	char *p = output;
@@ -144,7 +150,8 @@ static char *sensor_result_preparse(char *output, char *status)
 	return p;
 }
 
-void sensor_check(Sensor *sensor, int replyport)
+void 
+sensor_check(Sensor *sensor, int replyport)
 {
     pid_t pid = 0;
     pid = fork();
@@ -232,7 +239,8 @@ internal_error:
     }
 }
 
-char *sensor_parse_name(char *buf, char *retname)
+char *
+sensor_parse_name(char *buf, char *retname)
 {
 	char *ptr = buf;
 
@@ -248,7 +256,8 @@ char *sensor_parse_name(char *buf, char *retname)
 	return ptr;
 }
 
-char *sensor_parse_id(char *buf, int *id)
+char *
+sensor_parse_id(char *buf, int *id)
 {
 	int i = 0;
 	char *ptr = buf;
@@ -267,31 +276,36 @@ char *sensor_parse_id(char *buf, int *id)
 	return NULL;
 }
 
-void sensor_flapping_detect(Sensor *sensor) 
+void 
+sensor_flapping_detect(Sensor *sensor) 
 {
 	//TODO:			
 }
 
-static int is_permanent_ok(Status *status) 
+static int 
+is_permanent_ok(Status *status) 
 {
 	return (status->type == STATUS_PERMANENT
 			&& status->code == STATUS_OK);
 }
 
-static int is_transient_ok(Status *status) 
+static int 
+is_transient_ok(Status *status) 
 {
 	return (status->type == STATUS_TRANSIENT
 			&& status->code == STATUS_OK);
 }
 
-static int is_permanent_nonok(Status *status)
+static int 
+is_permanent_nonok(Status *status)
 {
 	return ( status->type == STATUS_PERMANENT && 
 			 (status->code > STATUS_OK ||
 			 status->code == STATUS_UNKNOWN) );
 }
 
-static int is_transient_nonok(Status *status)
+static int 
+is_transient_nonok(Status *status)
 {
 	return ( status->type == STATUS_TRANSIENT && 
 			 (status->code > STATUS_OK ||
@@ -299,7 +313,8 @@ static int is_transient_nonok(Status *status)
 }
 
 //FIXME: fsm
-static int status_transfer(Sensor *sensor, Status *new)
+static int 
+status_transfer(Sensor *sensor, Status *new)
 {
 	Status *old = sensor->status;
 
@@ -349,7 +364,8 @@ static int status_transfer(Sensor *sensor, Status *new)
 	return ret;
 }
 
-int sensor_set_status(Sensor *sensor, Status *status) 
+int 
+sensor_set_status(Sensor *sensor, Status *status) 
 {
 	int interval = sensor->interval;
 	if(sensor->status) {
@@ -371,7 +387,8 @@ int sensor_set_status(Sensor *sensor, Status *status)
 	return interval;
 }
 
-Status *sensor_parse_status(char *buf)
+Status *
+sensor_parse_status(char *buf)
 {
 	int i=0;
 	char code[4]={0};
@@ -409,7 +426,8 @@ error:
 	return NULL;
 }
 
-static char *parse_status_heads(Status *status, char *buf)
+static char *
+parse_status_heads(Status *status, char *buf)
 {
     sds line;
     char *p = buf;
@@ -437,7 +455,8 @@ static char *parse_status_heads(Status *status, char *buf)
     return p;
 }
 
-static void parse_status_body(Status *status, char *buf)
+static void 
+parse_status_body(Status *status, char *buf)
 {
     int len = 0;
     char *p = buf;
@@ -446,7 +465,8 @@ static void parse_status_body(Status *status, char *buf)
     if(len) status->body = sdsnewlen(buf, len);
 }
 
-void status_free(Status *status)
+void 
+status_free(Status *status)
 {
 	if(status->phrase) sdsfree(status->phrase);
 	if(status->title) sdsfree(status->title);
@@ -457,7 +477,8 @@ void status_free(Status *status)
 }
 
 
-void sensor_free(Sensor *sensor) 
+void 
+sensor_free(Sensor *sensor) 
 {
 	if(sensor->name) sdsfree(sensor->name);
 	if(sensor->command) sdsfree(sensor->command);
@@ -465,14 +486,16 @@ void sensor_free(Sensor *sensor)
 	zfree(sensor);
 }
 
-char *i18n_status(int lang, int status)
+char *
+i18n_status(int lang, int status)
 {
 	if(status > STATUS_CRITICAL) 
 		return unknow_tab[lang]; 
 	return status_tab[lang][status];
 }
 
-sds i18n_phrase(int lang, Status *status)
+sds 
+i18n_phrase(int lang, Status *status)
 {
 	int code = status->code;
 	sds phrase = status->phrase;
@@ -489,12 +512,14 @@ sds i18n_phrase(int lang, Status *status)
 	return sdsdup(phrase);
 }
 
-static void linefree(void *s) {
+static void 
+linefree(void *s) {
     sdsfree( (sds) s);
 }
 
 //FIXME: better replace?
-static sds strsub(sds s, char *o, char *n) {
+static sds 
+strsub(sds s, char *o, char *n) {
 	char buffer[1024]={0};
 	char *c;
 	if (!(c = strstr(s, o))) 

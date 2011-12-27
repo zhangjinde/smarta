@@ -6,9 +6,9 @@
 
 #include "zmalloc.h"
 
-char *jid_new(const char *node,
-				   const char *domain,
-				   const char *resource) {
+char *
+jid_new(const char *node, const char *domain, const char *resource) 
+{
     char *result;
     int len,nlen,dlen,rlen;
 
@@ -45,7 +45,9 @@ char *jid_new(const char *node,
  *
  *  @return an allocated string with the bare JID or NULL on an error
  */
-char *jid_bare(const char *jid) {
+char *
+jid_bare(const char *jid) 
+{
     char *result;
     const char *c;
 
@@ -68,7 +70,9 @@ char *jid_bare(const char *jid) {
  *  @return an allocated string with the node or NULL if no node is found
  *      or an error occurs
  */
-char *jid_node(const char *jid) {
+char *
+jid_node(const char *jid) 
+{
     char *result = NULL;
     const char *c;
 
@@ -88,7 +92,9 @@ char *jid_node(const char *jid) {
  *
  *  @return an allocated string with the domain or NULL on an error
  */
-char *jid_domain(const char *jid) {
+char *
+jid_domain(const char *jid) 
+{
     char *result = NULL;
     const char *c,*s;
 
@@ -119,7 +125,9 @@ char *jid_domain(const char *jid) {
  *  @return an allocated string with the resource or NULL if no resource 
  *      is found or an error occurs
  */
-char *jid_resource(const char *jid) {
+char *
+jid_resource(const char *jid) 
+{
     char *result = NULL;
     const char *c;
     int len;
@@ -136,7 +144,8 @@ char *jid_resource(const char *jid) {
     return result;
 }
 
-int jid_bare_compare(const char *jid1, const char *jid2) 
+int 
+jid_bare_compare(const char *jid1, const char *jid2) 
 {
     return strcmp(jid_bare(jid1), jid_bare(jid2));
 }

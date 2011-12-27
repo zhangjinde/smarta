@@ -13,21 +13,21 @@
 #include "zmalloc.h"
 #include "logger.h"
 
-static void _start_element(void *userdata,
-    const XML_Char *name,
-    const XML_Char **attrs);
+static void 
+_start_element(void *userdata, const XML_Char *name, const XML_Char **attrs);
 
-static void _end_element(void *userdata,
-    const XML_Char *name);
+static void 
+_end_element(void *userdata, const XML_Char *name);
 
-static void _characters(void *userdata,
-    const XML_Char *s,
-    int len);
+static void 
+_characters(void *userdata, const XML_Char *s, int len);
 
-Parser *parser_new(parser_start_callback startcb,
-                   parser_end_callback endcb,
-                   parser_stanza_callback stanzacb,
-                   void *userdata) {
+Parser *
+parser_new(parser_start_callback startcb,
+		   parser_end_callback endcb,
+		   parser_stanza_callback stanzacb,
+		   void *userdata) 
+{
     Parser *parser;
 
     parser = zmalloc(sizeof(Parser));
@@ -45,7 +45,9 @@ Parser *parser_new(parser_start_callback startcb,
     return parser;
 }
 
-int parser_reset(Parser *parser) {
+int 
+parser_reset(Parser *parser) 
+{
     if (parser->expat) {
         XML_ParserFree(parser->expat);
     }
@@ -66,11 +68,15 @@ int parser_reset(Parser *parser) {
     return 1;
 }
 
-int parser_feed(Parser *parser, char *chunk, int len) {
+int 
+parser_feed(Parser *parser, char *chunk, int len) 
+{
     return XML_Parse(parser->expat, chunk, len, 0);
 }
 
-void parser_free(Parser *parser) {
+void 
+parser_free(Parser *parser) 
+{
     if (parser->expat) {
         XML_ParserFree(parser->expat);
     }
@@ -78,7 +84,9 @@ void parser_free(Parser *parser) {
 }
 
 
-static void _set_attributes(Stanza *stanza, const XML_Char **attrs) {
+static void 
+_set_attributes(Stanza *stanza, const XML_Char **attrs) 
+{
     int i;
 
     if (!attrs) return;
@@ -88,10 +96,9 @@ static void _set_attributes(Stanza *stanza, const XML_Char **attrs) {
     }
 }
 
-static void _start_element(void *userdata,
-    const XML_Char *name,
-    const XML_Char **attrs) {
-
+static void 
+_start_element(void *userdata, const XML_Char *name, const XML_Char **attrs) 
+{
     Parser *parser = (Parser *)userdata;
     Stanza *child;
 
@@ -131,7 +138,9 @@ static void _start_element(void *userdata,
     
 }
 
-static void _end_element(void *userdata, const XML_Char *name) {
+static void 
+_end_element(void *userdata, const XML_Char *name) 
+{
 
     Parser *parser = (Parser *)userdata;
 
@@ -156,7 +165,9 @@ static void _end_element(void *userdata, const XML_Char *name) {
     }
 }
 
-static void _characters(void *userdata, const XML_Char *s, int len) {
+static void 
+_characters(void *userdata, const XML_Char *s, int len) 
+{
     Parser *parser = (Parser *)userdata;
     Stanza *stanza;
 

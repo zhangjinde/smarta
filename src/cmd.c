@@ -31,7 +31,8 @@
 #include "zmalloc.h"
 
 /* why not req_new? I think reqnew is cool.*/
-Request *reqnew(int id, char *from, Command *cmd)
+Request *
+reqnew(int id, char *from, Command *cmd)
 {
 	Request *p = zmalloc(sizeof(Request));
 	p->id = id;
@@ -40,13 +41,15 @@ Request *reqnew(int id, char *from, Command *cmd)
 	return p;
 }
 
-void reqfree(Request *p) 
+void 
+reqfree(Request *p) 
 {
 	if(p->from) sdsfree(p->from);
 	zfree(p);
 }
 
-int reqcall(Request *req, int replyport) 
+int 
+reqcall(Request *req, int replyport) 
 {
     pid_t pid = 0;
     pid = fork();
@@ -102,7 +105,8 @@ int reqcall(Request *req, int replyport)
 	return 0;
 }
 
-char *rep_parse_id(char *buf, int *id) 
+char *
+rep_parse_id(char *buf, int *id) 
 {
 	int i = 0;
 	char *p = buf;
@@ -116,7 +120,8 @@ char *rep_parse_id(char *buf, int *id)
 	return p;
 }
 
-sds rep_parse(char *buf) 
+sds 
+rep_parse(char *buf) 
 {
 	char *p = buf;
 	while(p && *p && *p != '\n') p++;

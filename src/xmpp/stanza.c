@@ -11,7 +11,8 @@
 #include "logger.h"
 #include "zmalloc.h"
 
-Stanza *stanza_new()
+Stanza *
+stanza_new()
 {
 
     Stanza *stanza;
@@ -30,7 +31,8 @@ Stanza *stanza_new()
     return stanza; 
 }
 
-Stanza *stanza_tag(const char *name) 
+Stanza *
+stanza_tag(const char *name) 
 {
     Stanza *stanza = stanza_new();
     stanza->type = STANZA_TAG;
@@ -38,7 +40,8 @@ Stanza *stanza_tag(const char *name)
     return stanza;
 }
 
-Stanza *stanza_text(const char *text) 
+Stanza *
+stanza_text(const char *text) 
 {
     Stanza *stanza = stanza_new();
     stanza->type = STANZA_TEXT;
@@ -46,7 +49,8 @@ Stanza *stanza_text(const char *text)
     return stanza;
 }
 
-Stanza *stanza_cdata(const char *data) 
+Stanza *
+stanza_cdata(const char *data) 
 {
     Stanza *stanza = stanza_new();
     stanza->type = STANZA_CDATA;
@@ -54,14 +58,18 @@ Stanza *stanza_cdata(const char *data)
     return stanza;
 }
 
-Stanza *stanza_clone(Stanza *  stanza) {
+Stanza *
+stanza_clone(Stanza *  stanza) 
+{
 
     stanza->ref++;
 
     return stanza;
 }
 
-Stanza *stanza_copy(Stanza * stanza) {
+Stanza *
+stanza_copy(Stanza * stanza) 
+{
     Stanza *copy, *child, *copychild, *tail;
     hash_iterator_t *iter;
     const char *key;
@@ -103,7 +111,9 @@ Stanza *stanza_copy(Stanza * stanza) {
 
 }
 
-int stanza_release(Stanza *stanza) {
+int 
+stanza_release(Stanza *stanza) 
+{
     int released = 0;
     Stanza *child, *tchild;
     
@@ -132,21 +142,23 @@ int stanza_release(Stanza *stanza) {
     return released;
 }
 
-int stanza_is_text(Stanza *stanza) {
+int 
+stanza_is_text(Stanza *stanza) 
+{
     return (stanza && stanza->type == STANZA_TEXT);
 }
 
-int stanza_is_tag(Stanza *stanza) {
+int 
+stanza_is_tag(Stanza *stanza) 
+{
     return (stanza && stanza->type == STANZA_TAG);
 }
 
 /* small helper function */
-static inline void _render_update(
-               int *written, 
-               int length,
-			   int lastwrite,
-			   size_t *left,
-               char **ptr) {
+static inline void 
+_render_update(int *written, int length, 
+		int lastwrite, size_t *left, char **ptr) 
+{
     *written += lastwrite;
 
     if (*written > length) {
@@ -158,8 +170,10 @@ static inline void _render_update(
     }
 }
 
-static int _render_stanza_recursive(Stanza *stanza,
-			     char *buf, size_t buflen) {
+static int 
+_render_stanza_recursive(Stanza *stanza,
+			     char *buf, size_t buflen) 
+{
     char *ptr = buf;
     size_t left = buflen;
     int ret, written;
@@ -239,11 +253,9 @@ static int _render_stanza_recursive(Stanza *stanza,
     return written;
 }
 
-int stanza_to_text(
-    Stanza * stanza,
-    char **buf,
-    size_t *buflen) {
-
+int 
+stanza_to_text(Stanza * stanza, char **buf, size_t *buflen) 
+{
     char *buffer, *tmp;
     size_t length;
     int ret;
@@ -272,7 +284,9 @@ int stanza_to_text(
     return 0;
 }
 
-int stanza_set_name(Stanza *stanza, const char *name) {
+int 
+stanza_set_name(Stanza *stanza, const char *name) 
+{
     if (stanza->type == STANZA_UNKNOWN) stanza->type = STANZA_TAG;
     if (stanza->type != STANZA_TAG) return -2;
 
@@ -283,13 +297,15 @@ int stanza_set_name(Stanza *stanza, const char *name) {
     return 0;
 }
 
-char *stanza_get_name(Stanza *stanza) 
+char *
+stanza_get_name(Stanza *stanza) 
 {
     if (stanza->type == STANZA_TEXT) return NULL;
     return stanza->data;
 }
 
-int stanza_get_attribute_count(Stanza *stanza) 
+int 
+stanza_get_attribute_count(Stanza *stanza) 
 {
     if (stanza->attributes == NULL) {
         return 0;
@@ -297,8 +313,10 @@ int stanza_get_attribute_count(Stanza *stanza)
     return hash_num_keys(stanza->attributes);
 }
 
-int stanza_get_attributes(Stanza * const stanza,
-			      const char **attr, int attrlen) {
+int 
+stanza_get_attributes(Stanza * const stanza,
+		  const char **attr, int attrlen) 
+{
     hash_iterator_t *iter;
     const char *key;
     int num = 0;
@@ -327,9 +345,9 @@ int stanza_get_attributes(Stanza * const stanza,
     return num;
 }
 
-int stanza_set_attribute(Stanza *stanza,
-			     const char *key,
-			     const char *value) {
+int 
+stanza_set_attribute(Stanza *stanza, const char *key, const char *value) 
+{
     char *val;
 
     if (stanza->type != STANZA_TAG) return -2;
@@ -345,11 +363,14 @@ int stanza_set_attribute(Stanza *stanza,
     return 0;
 }
 
-int stanza_set_ns(Stanza *stanza, char *ns) {
+int
+stanza_set_ns(Stanza *stanza, char *ns) 
+{
     return stanza_set_attribute(stanza, "xmlns", ns);
 }
 
-void stanza_add_child(Stanza *stanza, Stanza *child) 
+void
+stanza_add_child(Stanza *stanza, Stanza *child) 
 {
 	Stanza *s;
 
@@ -368,7 +389,9 @@ void stanza_add_child(Stanza *stanza, Stanza *child)
     }
 }
 
-int stanza_set_text(Stanza *stanza, char *text) {
+int
+stanza_set_text(Stanza *stanza, char *text) 
+{
     
     if(stanza->type == STANZA_UNKNOWN) stanza->type = STANZA_TEXT;
     if (stanza->type != STANZA_TEXT) return -2;
@@ -382,9 +405,8 @@ int stanza_set_text(Stanza *stanza, char *text) {
     return 0;
 }
 
-int stanza_set_text_with_size(Stanza *stanza,
-				  const char *text,
-				  size_t size)
+int 
+stanza_set_text_with_size(Stanza *stanza, const char *text, size_t size)
 {
     if(stanza->type == STANZA_UNKNOWN) stanza->type = STANZA_TEXT;
     if (stanza->type != STANZA_TEXT) return -2;
@@ -398,7 +420,8 @@ int stanza_set_text_with_size(Stanza *stanza,
     return 0;
 }
 
-char *stanza_get_id(Stanza *stanza)
+char *
+stanza_get_id(Stanza *stanza)
 {
     if (stanza->type != STANZA_TAG) return NULL;
 
@@ -407,7 +430,8 @@ char *stanza_get_id(Stanza *stanza)
     return (char *)hash_get(stanza->attributes, "id");
 }
 
-char *stanza_get_ns(Stanza *stanza)
+char *
+stanza_get_ns(Stanza *stanza)
 {
     if (stanza->type != STANZA_TAG)
 	return NULL;
@@ -418,7 +442,8 @@ char *stanza_get_ns(Stanza *stanza)
     return (char *)hash_get(stanza->attributes, "xmlns");
 }
 
-char *stanza_get_type(Stanza *stanza)
+char *
+stanza_get_type(Stanza *stanza)
 {
     if (stanza->type != STANZA_TAG)
 	return NULL;
@@ -429,7 +454,8 @@ char *stanza_get_type(Stanza *stanza)
     return (char *)hash_get(stanza->attributes, "type");
 }
 
-Stanza *stanza_get_child_by_name(Stanza *stanza, char *name)
+Stanza *
+stanza_get_child_by_name(Stanza *stanza, char *name)
 {
     Stanza *child;
     
@@ -442,7 +468,8 @@ Stanza *stanza_get_child_by_name(Stanza *stanza, char *name)
     return child;
 }
 
-Stanza *stanza_get_child_by_ns(Stanza *stanza, char *ns)
+Stanza *
+stanza_get_child_by_ns(Stanza *stanza, char *ns)
 {
     Stanza *child;
 
@@ -455,17 +482,20 @@ Stanza *stanza_get_child_by_ns(Stanza *stanza, char *ns)
     return child;
 }
 
-Stanza *stanza_get_children(Stanza *stanza) 
+Stanza *
+stanza_get_children(Stanza *stanza) 
 {
     return stanza->children;
 }
 
-Stanza *stanza_get_next(Stanza *stanza)
+Stanza *
+stanza_get_next(Stanza *stanza)
 {
     return stanza->next;
 }
 
-char *stanza_get_text(Stanza *stanza)
+char *
+stanza_get_text(Stanza *stanza)
 {
     size_t len, clen;
     Stanza *child;
@@ -501,26 +531,28 @@ char *stanza_get_text(Stanza *stanza)
     return text;
 }
 
-char *stanza_get_text_ptr(Stanza *stanza)
+char *
+stanza_get_text_ptr(Stanza *stanza)
 {
     if (stanza->type == STANZA_TEXT)
 	return stanza->data;
     return NULL;
 }
 
-int stanza_set_id(Stanza *stanza, char *id) 
+int 
+stanza_set_id(Stanza *stanza, char *id) 
 {
     return stanza_set_attribute(stanza, "id", id);
 }
 
-int stanza_set_type(Stanza *stanza,
-			char * const type)
+int 
+stanza_set_type(Stanza *stanza, char * const type)
 {
     return stanza_set_attribute(stanza, "type", type);
 }
 
-char *stanza_get_attribute(Stanza *stanza,
-				const char *name)
+char *
+stanza_get_attribute(Stanza *stanza, const char *name)
 {
     if (stanza->type != STANZA_TAG) return NULL;
     
@@ -529,7 +561,8 @@ char *stanza_get_attribute(Stanza *stanza,
     return hash_get(stanza->attributes, name);
 }
 
-char *stanza_attrs_get_value(char **attrs, char *name) 
+char *
+stanza_attrs_get_value(char **attrs, char *name) 
 {
     int i;
 

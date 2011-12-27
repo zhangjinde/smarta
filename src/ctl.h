@@ -23,6 +23,8 @@
 
 void smarta_ctl_status();
 
+void smarta_ctl_restart();
+
 void smarta_ctl_stop();
 
 #endif
