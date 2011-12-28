@@ -1,3 +1,7 @@
+Changes with smarta 0.7.1                                       30 Dec 2011
+
+	*) Bugfix: return -1 when cannot resolve domain.
+
 Changes with smarta 0.7.0                                       25 Dec 2011
 
 	*) Bugfix: 'xa' presence to show status title.
