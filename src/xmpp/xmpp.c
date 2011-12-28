@@ -193,7 +193,7 @@ xmpp_connect(Xmpp *xmpp)
     char server[1024] = {0};
     if(anetResolve(err, xmpp->server, server) != ANET_OK) {
         logger_error("XMPP", "cannot resolve %s, error: %s", xmpp->server, err);
-        exit(-1);
+		return -1;
     } 
     logger_debug("XMPP", "connect to %s", server);
     int fd = anetTcpConnect(err, server, xmpp->port);
