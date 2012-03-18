@@ -1,0 +1,20 @@
+1. node {
+	linkto nodea
+}
+
+2. node {
+	in node
+}
+
+3. graph {
+
+	#like rrdtgrahp
+}
+
+4. entry {
+	name disks
+}
+
+5. sensor {
+
+}
